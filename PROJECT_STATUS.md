@@ -4,14 +4,14 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible.
+MVP local testeable disponible y publicado en GitHub.
 
-- App React/Vite levantada en `http://localhost:5173`.
+- App React/Vite levantada en `http://localhost:5174` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
 - Dependencias instaladas con `npm install`.
 - Build productivo verificado con `npm run build`.
 - Lint verificado con `npm run lint`.
-- Dominio, repositorio local, pantallas MVP y migracion Supabase inicial creados.
+- Dominio, repositorio local, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 
 ## Comprension del producto
 
@@ -36,14 +36,15 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
-- No hay remoto GitHub configurado en este repo local.
+- El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
 
 ## Verificacion realizada
 
 - Node.js LTS + npm instalados a nivel de usuario.
 - Git disponible por ruta explicita: `C:\Users\Mauricio\AppData\Local\Programs\Git\cmd\git.exe`.
 - `http://localhost:4173` responde `200`.
-- `http://localhost:5173` responde `200`.
+- `http://localhost:5173` respondio `200` en validaciones previas.
+- `http://localhost:5174` usado como puerto de desarrollo fresco para evitar cache vieja del service worker.
 - `npm run build` pasa.
 - `npm run lint` pasa.
 - Browser integrado confirmo:
@@ -70,18 +71,24 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Feed:
   - pull-to-refresh mobile preparado en el tope del feed;
   - hoy refresca estado local y queda listo para refetch Supabase.
+- GitHub:
+  - remoto `origin` configurado;
+  - rama `codex/base-mvp-local` publicada en `origin/codex/base-mvp-local`.
 
 ## Git
 
 - Rama local: `codex/base-mvp-local`.
+- Remoto: `origin` -> `https://github.com/MauricioLaratro/padelito.git`.
+- Rama remota publicada: `origin/codex/base-mvp-local`.
 - Commit inicial: `f5751ac Construir base local del MVP`.
 - Commit UX: `5244e9d Corregir bloqueos UX mobile del MVP`.
-- Remotos configurados: ninguno.
+- Commit solicitudes: `402da64 Mejorar flujo de solicitudes de partido`.
+- Commit partidos e historial: `0dc3cb7 Refinar modulo de partidos e historial`.
 
 ## Regla de idioma
 
-- Código: nombres internos en inglés.
-- Documentación, versionamiento y comunicación con el usuario: siempre en español.
+- Codigo: nombres internos en ingles.
+- Documentacion, versionamiento y comunicacion con el usuario: siempre en espanol.
 
 ## Pendientes inmediatos
 
@@ -89,5 +96,4 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Conectar pull-to-refresh al refetch real de publicaciones Supabase.
 - Probar migracion SQL en un proyecto Supabase.
 - Pulir UX con screenshots mobile.
-- Configurar remoto GitHub cuando exista URL local o `gh` CLI.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

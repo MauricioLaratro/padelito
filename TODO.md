@@ -14,6 +14,8 @@
 - [x] Verificar `npm run lint`.
 - [x] Levantar app React en `http://localhost:5173`.
 - [x] Crear commit inicial de etapa con Git.
+- [x] Configurar remoto GitHub.
+- [x] Publicar rama base del MVP en GitHub.
 
 ## Etapa 2 - Dominio y arquitectura interna
 - [x] Crear modelos TypeScript de perfiles.

@@ -94,6 +94,18 @@ Rama actual:
 codex/base-mvp-local
 ```
 
+Remoto GitHub:
+
+```txt
+https://github.com/MauricioLaratro/padelito.git
+```
+
+Rama publicada:
+
+```txt
+origin/codex/base-mvp-local
+```
+
 ## Deploy
 
 Cloudflare Pages:
