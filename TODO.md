@@ -68,3 +68,15 @@
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
 - [ ] Pulir UX.
 - [ ] Deploy Cloudflare Pages.
+
+## Etapa 9 - MVP+ Partidos e historial
+- [ ] Crear modelo de partido completo con participantes sin limite fijo.
+- [ ] Permitir crear partido completo seleccionando usuarios seguidos.
+- [ ] Permitir marcar partido como incompleto para buscar jugadores.
+- [ ] Convertir postulantes aceptados en participantes del partido.
+- [ ] Registrar resultado al finalizar partido.
+- [ ] Mostrar historial de partidos en perfil de cada participante.
+- [ ] Crear dashboard simple de estadisticas: jugados, victorias, derrotas y porcentaje.
+- [ ] Crear desafios recurrentes entre parejas o grupos.
+- [ ] Registrar partidos dentro de un desafio recurrente.
+- [ ] Mostrar marcador acumulado del desafio recurrente.

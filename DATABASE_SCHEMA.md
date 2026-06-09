@@ -159,6 +159,96 @@ Buckets:
 - avatars
 - event-images
 
+## MVP+ sugerido: matches
+
+Partidos ya armados o derivados de publicaciones.
+
+- id
+- creator_profile_id
+- source_post_id nullable
+- visibility
+- status: scheduled / completed / cancelled
+- scheduled_date
+- scheduled_start_time
+- place_text
+- play_style
+- note nullable
+- created_at
+- updated_at
+
+## MVP+ sugerido: match_participants
+
+Participantes del partido.
+
+- id
+- match_id
+- profile_id
+- team_label nullable
+- partner_group nullable
+- participation_status: invited / confirmed / declined / removed
+- created_at
+
+Notas:
+- no limitar cantidad de participantes;
+- permitir rotativos y multiples parejas;
+- usar `team_label` o `partner_group` para agrupar jugadores cuando haya parejas/equipos.
+
+## MVP+ sugerido: match_results
+
+Resultado final.
+
+- id
+- match_id
+- reported_by_profile_id
+- winner_team_label nullable
+- score_text
+- completed_at
+- note nullable
+- created_at
+- updated_at
+
+## MVP+ sugerido: recurring_challenges
+
+Desafios recurrentes entre parejas o grupos.
+
+- id
+- creator_profile_id
+- title
+- frequency: weekly / biweekly / monthly / manual
+- usual_day_of_week nullable
+- usual_time nullable
+- usual_place_text nullable
+- status: active / paused / archived
+- created_at
+- updated_at
+
+## MVP+ sugerido: recurring_challenge_participants
+
+Participantes base del desafio.
+
+- id
+- challenge_id
+- profile_id
+- team_label nullable
+- created_at
+
+## MVP+ sugerido: recurring_challenge_matches
+
+Relaciona partidos jugados con un desafio recurrente.
+
+- challenge_id
+- match_id
+- created_at
+
+Unique:
+- challenge_id + match_id
+
+## MVP+ sugerido: estadisticas
+
+Las estadisticas pueden calcularse desde `matches`, `match_participants` y `match_results` al inicio.
+
+Evitar materializar agregados hasta que exista volumen o performance lo justifique.
+
 ## RLS
 
 Activar RLS en todas las tablas.
@@ -172,5 +262,8 @@ Reglas generales:
 - solicitudes visibles para requester y owner
 - invitaciones visibles para inviter e invited
 - notificaciones visibles solo por recipient
+- partidos visibles segun visibilidad o participacion
+- resultados visibles para participantes y perfiles autorizados por visibilidad
+- desafios recurrentes visibles para participantes o segun visibilidad futura
 
 El agente debe escribir migraciones SQL completas y seguras.

@@ -138,6 +138,42 @@ supabase/
     202606090001_initial_schema.sql
 ```
 
+## Modulo MVP+ previsto: Partidos e Historial
+
+Este modulo debe implementarse separado de publicaciones.
+
+Separacion propuesta:
+
+```txt
+src/
+  features/
+    matches/
+    recurringChallenges/
+    statistics/
+  domain/
+    models/
+      matchModels.ts
+      recurringChallengeModels.ts
+      statisticsModels.ts
+  services/
+    repositories/
+      matchRepository.ts
+      recurringChallengeRepository.ts
+      statisticsRepository.ts
+```
+
+Principios:
+
+- `posts` sigue resolviendo descubrimiento y feed.
+- `matches` representa partidos concretos, completos o incompletos.
+- una publicacion `looking_for_player` puede originar o estar vinculada a un partido;
+- participantes aceptados deben vivir en `match_participants`;
+- resultados deben vivir en `match_results`;
+- estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
+- desafios recurrentes deben tener entidad propia y asociar multiples partidos.
+
+La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento social/local del MVP.
+
 ## Decision reversible actual
 
 Mientras no existan credenciales Supabase, el MVP usa un repositorio local para probar flujos en navegador. La UI consume hook/repositorio, no Supabase directo, por lo que el reemplazo por repositorios remotos es controlado.

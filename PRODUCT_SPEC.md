@@ -285,6 +285,113 @@ No implementar:
 - búsqueda por distancia
 - ciudades/regiones complejas
 
+## MVP+: Partidos, resultados y desafios recurrentes
+
+Este modulo queda refinado como evolucion posterior al MVP base. No debe bloquear la validacion inicial de feeds, perfiles, solicitudes, invitaciones y notificaciones.
+
+### Objetivo
+
+Permitir que Padelito tambien registre partidos ya armados, participantes, resultados e historial entre jugadores o parejas frecuentes.
+
+El valor principal es:
+- recordar quienes jugaron;
+- registrar resultado al finalizar;
+- reflejar historial en perfiles;
+- mostrar estadisticas simples;
+- sostener desafios recurrentes entre parejas o grupos que juegan todas las semanas.
+
+### Crear partido completo
+
+El usuario creador debe poder crear un partido aunque no le falten jugadores.
+
+Campos:
+- fecha
+- hora
+- lugar/cancha/club escrito
+- tipo de juego
+- nota corta opcional
+- participantes seleccionados dentro de usuarios que sigue o perfiles disponibles
+- estado: programado, finalizado, cancelado
+
+Participantes:
+- sin limite fijo de jugadores;
+- soporta partidos rotativos;
+- soporta 3 o 4 parejas;
+- cada participante debe referenciar un perfil existente cuando sea posible;
+- debe permitir marcar pareja/equipo si aplica.
+
+### Partido incompleto
+
+El creador debe poder marcar que el partido busca jugadores.
+
+Esto mantiene compatibilidad con `Busco jugador`:
+- si faltan jugadores, aparece en feed como oportunidad;
+- si esta completo, aparece como actividad propia o de seguidos segun visibilidad;
+- los postulantes aceptados pasan a participantes.
+
+### Resultado de partido
+
+Al finalizar, el creador puede registrar resultado.
+
+Campos sugeridos:
+- ganador: jugador, pareja o equipo;
+- marcador por sets o formato flexible;
+- notas cortas opcionales;
+- fecha de cierre;
+- confirmacion opcional de participantes en version futura.
+
+El resultado debe reflejarse en:
+- perfil del creador;
+- perfil de cada participante;
+- historial del partido;
+- estadisticas generales.
+
+### Estadisticas de jugador
+
+Dashboard simple en perfil:
+- partidos jugados;
+- victorias;
+- derrotas;
+- porcentaje de victoria;
+- racha actual si es simple;
+- ultimos resultados;
+- resultados por pareja si existe suficiente informacion.
+
+No convertirlo inicialmente en ranking publico global.
+
+### Desafio recurrente
+
+Apartado para parejas o grupos que juegan de forma fija.
+
+Caso de uso:
+- dos parejas juegan todos los martes;
+- quieren llevar historial acumulado;
+- cada encuentro semanal suma al historial del desafio.
+
+Campos:
+- nombre del desafio;
+- participantes o parejas base;
+- frecuencia: semanal, quincenal, mensual o manual;
+- dia/hora habitual;
+- lugar habitual;
+- historial de partidos asociados;
+- marcador acumulado por pareja/equipo.
+
+Acciones:
+- crear proximo partido del desafio;
+- registrar resultado;
+- ver historial;
+- ver marcador acumulado;
+- pausar o archivar desafio.
+
+### UX esperada
+
+- No saturar el feed principal con estadisticas.
+- El resultado debe aparecer como card compacta en perfil.
+- El desafio recurrente debe tener una pantalla propia o seccion clara dentro de perfil.
+- Usar chips para estado, ganador, fecha y marcador.
+- Evitar rankings globales en esta etapa para no cambiar el posicionamiento del MVP.
+
 ## Filtros MVP
 
 Filtrar por:

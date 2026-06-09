@@ -28,6 +28,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Repositorio local temporal para probar flujos sin pedir credenciales.
 - Supabase queda preparado como cliente y contrato backend, pero sin exigir URL ni anon key todavia.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
+- Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
 
 ## Riesgos tecnicos
 
@@ -89,3 +90,4 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar migracion SQL en un proyecto Supabase.
 - Pulir UX con screenshots mobile.
 - Configurar remoto GitHub cuando exista URL local o `gh` CLI.
+- Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.
