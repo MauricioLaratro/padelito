@@ -91,7 +91,7 @@ C:\Users\Mauricio\AppData\Local\Programs\Git\cmd\git.exe
 Rama actual:
 
 ```txt
-codex/mvp-local-foundation
+codex/base-mvp-local
 ```
 
 ## Deploy

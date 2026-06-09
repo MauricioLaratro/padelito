@@ -63,9 +63,15 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Git
 
-- Rama local: `codex/mvp-local-foundation`.
-- Commit inicial: `a1dbb43 Build local MVP foundation`.
+- Rama local: `codex/base-mvp-local`.
+- Commit inicial: `f5751ac Construir base local del MVP`.
+- Commit UX: `5244e9d Corregir bloqueos UX mobile del MVP`.
 - Remotos configurados: ninguno.
+
+## Regla de idioma
+
+- Código: nombres internos en inglés.
+- Documentación, versionamiento y comunicación con el usuario: siempre en español.
 
 ## Pendientes inmediatos
 

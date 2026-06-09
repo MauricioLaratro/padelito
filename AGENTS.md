@@ -166,6 +166,22 @@ La documentación debe estar en español.
 
 ---
 
+## Versionamiento y comunicación
+
+Todo lo relacionado con versionamiento y comunicación debe estar en español.
+
+Obligatorio:
+
+* mensajes de commit en español
+* nombres de ramas en español, manteniendo el prefijo técnico requerido cuando aplique
+* pull requests, descripciones y notas en español
+* documentación de proyecto en español
+* comunicación con el usuario en español
+
+La única excepción es el desarrollo del código, donde los nombres internos deben mantenerse en inglés según la regla de nombres.
+
+---
+
 ## UX/UI
 
 Prioridades:
