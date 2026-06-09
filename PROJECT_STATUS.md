@@ -4,7 +4,7 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente.
+MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contrasena, registro, sesion persistente y magic link como alternativa.
 
 - App React/Vite levantada en `http://localhost:5174` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
@@ -29,7 +29,9 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - MVP sin app nativa, rankings, marketplace, chat, geolocalizacion ni torneos internos.
 - Repositorio local temporal para probar flujos sin pedir credenciales.
 - Supabase queda conectado por cliente browser con fallback demo local.
-- Auth real se implementa con magic link por email y mantiene modo demo local.
+- Auth real usa email/contrasena para el acceso diario, magic link como alternativa y mantiene modo demo local.
+- Supabase mantiene sesion persistente en el navegador con refresh automatico de token.
+- Magic link tiene cooldown local para evitar el rate limit de emails y mensajes tecnicos visibles al usuario.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
@@ -86,7 +88,10 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - tablas, funcion `can_read_post` y buckets `avatars` / `event-images` quedaron creados;
   - login por magic link y perfil real validados por el usuario;
   - cerrar sesion vuelve a AuthScreen sin borrar perfil ni actividad persistida;
-  - `npm run build` pasa con repositorio Supabase y Auth magic link;
+  - login/registro por email y contrasena implementados en la app;
+  - sesion persistente se recupera al cargar la app antes de mostrar el formulario;
+  - magic link queda como alternativa con cooldown local de 60 segundos;
+  - `npm run build` pasa con repositorio Supabase y Auth real;
   - `npm run lint` pasa.
 
 ## Git
@@ -100,6 +105,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit partidos e historial: `0dc3cb7 Refinar modulo de partidos e historial`.
 - Commit GitHub: `2b7b811 Documentar publicacion en GitHub`.
 - Commit Supabase/Auth: `acf5a94 Conectar Supabase y auth real`.
+- Commit logout/UI: `72fc11a Agregar cierre de sesion y limpiar UI`.
 
 ## Regla de idioma
 
@@ -108,6 +114,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
+- Probar manualmente registro/login por contrasena con una cuenta nueva y una existente.
+- Implementar recuperacion de contrasena.
 - Pulir flujo de edicion de perfil.
 - Pulir UX con screenshots mobile.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

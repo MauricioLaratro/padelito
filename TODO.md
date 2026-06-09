@@ -39,12 +39,17 @@
 
 ## Etapa 4 - Auth y perfiles
 - [x] Auth simple con Supabase por magic link.
+- [x] Auth con email y contrasena para login cotidiano.
+- [x] Registro con email y contrasena.
+- [x] Sesion persistente al reabrir la app.
+- [x] Cooldown local para magic link y mensajes humanos ante rate limit.
 - [x] Auth demo local.
 - [x] Onboarding local de perfil jugador.
 - [x] Onboarding local de perfil organizacion.
 - [x] Validar login magic link con email real.
 - [x] Validar creacion de perfil real en Supabase.
 - [x] Cerrar sesion desde perfil sin borrar datos persistidos.
+- [ ] Recuperacion de contrasena.
 - [ ] Edicion de perfil.
 
 ## Etapa 5 - Feeds

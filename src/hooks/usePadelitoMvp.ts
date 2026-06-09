@@ -31,6 +31,12 @@ import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
 
 export type MainViewIdentifier = "feed" | "profile" | "notifications";
 export type BackendModeIdentifier = "local" | "supabase";
+export type AuthLoadingActionIdentifier =
+  | "magicLink"
+  | "passwordSignIn"
+  | "passwordSignUp";
+
+const MAGIC_LINK_COOLDOWN_MILLISECONDS = 60_000;
 
 /**
  * Orquesta el estado funcional del MVP local.
@@ -65,7 +71,17 @@ export function usePadelitoMvp() {
     null,
   );
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
-  const [isEmailAuthLoading, setIsEmailAuthLoading] = useState(false);
+  const [authLoadingAction, setAuthLoadingAction] =
+    useState<AuthLoadingActionIdentifier | null>(null);
+  const [isAuthSessionChecking, setIsAuthSessionChecking] = useState(
+    Boolean(supabaseBrowserClient),
+  );
+  const [magicLinkCooldownExpiresAt, setMagicLinkCooldownExpiresAt] =
+    useLocalStorageState<number | null>(
+      "padelito-magic-link-cooldown-expires-at-v1",
+      () => null,
+    );
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
   const [remoteErrorMessage, setRemoteErrorMessage] = useState<string | null>(
     null,
   );
@@ -82,6 +98,16 @@ export function usePadelitoMvp() {
   const isSupabaseMode =
     backendMode === "supabase" && Boolean(supabaseRepository);
   const database = isSupabaseMode ? remoteDatabase : localDatabase;
+  const magicLinkCooldownSeconds = useMemo(() => {
+    if (!magicLinkCooldownExpiresAt) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.ceil((magicLinkCooldownExpiresAt - currentTimestamp) / 1000),
+    );
+  }, [currentTimestamp, magicLinkCooldownExpiresAt]);
 
   const sessionProfile = getSessionProfile(database);
 
@@ -134,28 +160,102 @@ export function usePadelitoMvp() {
   }, [supabaseRepository]);
 
   useEffect(() => {
-    if (!supabaseBrowserClient || !supabaseRepository) {
+    if (!magicLinkCooldownExpiresAt) {
       return;
     }
 
-    if (backendMode === "supabase") {
-      void loadRemoteSnapshot();
+    const intervalId = window.setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [magicLinkCooldownExpiresAt]);
+
+  useEffect(() => {
+    if (!magicLinkCooldownExpiresAt) {
+      return;
     }
 
-    const { data: authListener } =
-      supabaseBrowserClient.auth.onAuthStateChange((authEvent) => {
-        if (authEvent === "SIGNED_IN") {
+    if (magicLinkCooldownExpiresAt <= currentTimestamp) {
+      setMagicLinkCooldownExpiresAt(null);
+    }
+  }, [
+    currentTimestamp,
+    magicLinkCooldownExpiresAt,
+    setMagicLinkCooldownExpiresAt,
+  ]);
+
+  useEffect(() => {
+    if (!supabaseBrowserClient || !supabaseRepository) {
+      setIsAuthSessionChecking(false);
+      return;
+    }
+
+    let isEffectActive = true;
+    const configuredSupabaseClient = supabaseBrowserClient;
+
+    /**
+     * Recupera la sesion guardada antes de mostrar el formulario.
+     * Se construye para evitar pedir login si Supabase ya mantiene sesion.
+     * Lo usa el efecto inicial de auth.
+     * Sirve para reabrir la app y volver al perfil persistido.
+     */
+    async function initializeStoredSession() {
+      try {
+        const { data, error } = await configuredSupabaseClient.auth.getSession();
+
+        if (error) {
+          throw error;
+        }
+
+        if (!isEffectActive) {
+          return;
+        }
+
+        if (data.session) {
           setBackendMode("supabase");
-          void loadRemoteSnapshot();
+          await loadRemoteSnapshot();
+          return;
         }
 
-        if (authEvent === "SIGNED_OUT") {
-          setRemoteDatabase(createEmptyRepositorySnapshot());
+        setRemoteDatabase(createEmptyRepositorySnapshot());
+      } catch (error) {
+        if (isEffectActive) {
+          setAuthErrorMessage(getReadableAuthErrorMessage(error));
         }
-      });
+      } finally {
+        if (isEffectActive) {
+          setIsAuthSessionChecking(false);
+        }
+      }
+    }
 
-    return () => authListener.subscription.unsubscribe();
-  }, [backendMode, loadRemoteSnapshot, setBackendMode, supabaseRepository]);
+    void initializeStoredSession();
+
+    const { data: authListener } =
+      configuredSupabaseClient.auth.onAuthStateChange(
+        (authEvent, authSession) => {
+          if (
+            (authEvent === "INITIAL_SESSION" ||
+              authEvent === "SIGNED_IN" ||
+              authEvent === "TOKEN_REFRESHED") &&
+            authSession
+          ) {
+            setBackendMode("supabase");
+            void loadRemoteSnapshot();
+          }
+
+          if (authEvent === "SIGNED_OUT") {
+            setRemoteDatabase(createEmptyRepositorySnapshot());
+          }
+        },
+      );
+
+    return () => {
+      isEffectActive = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [loadRemoteSnapshot, setBackendMode, supabaseRepository]);
 
   /**
    * Ejecuta una accion remota y refresca snapshot.
@@ -165,7 +265,7 @@ export function usePadelitoMvp() {
    */
   async function runRemoteAction(action: () => Promise<void>) {
     if (!supabaseRepository) {
-      setRemoteErrorMessage("Supabase no esta configurado en este entorno.");
+      setRemoteErrorMessage("El acceso real no esta disponible en este entorno.");
       return false;
     }
 
@@ -192,6 +292,81 @@ export function usePadelitoMvp() {
     setAuthStatusMessage(null);
     setRemoteErrorMessage(null);
     setLocalDatabase((currentDatabase) => signInWithDemoProfile(currentDatabase));
+  }
+
+  /**
+   * Inicia sesion con email y contrasena.
+   * Se construye para que el acceso diario no dependa del email.
+   * Lo usa AuthScreen.
+   * Sirve para recuperar el perfil persistido con una accion directa.
+   */
+  async function handlePasswordSignInRequest(email: string, password: string) {
+    if (!supabaseBrowserClient) {
+      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      return;
+    }
+
+    setAuthLoadingAction("passwordSignIn");
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+
+    const { error } = await supabaseBrowserClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setAuthLoadingAction(null);
+      setAuthErrorMessage(getReadableAuthErrorMessage(error));
+      return;
+    }
+
+    setBackendMode("supabase");
+    await loadRemoteSnapshot();
+    setAuthLoadingAction(null);
+  }
+
+  /**
+   * Crea cuenta con email y contrasena.
+   * Se construye para evitar depender de magic link en cada ingreso.
+   * Lo usa AuthScreen.
+   * Sirve para registrar usuarios reales y mantener el perfil por auth.users.id.
+   */
+  async function handlePasswordSignUpRequest(email: string, password: string) {
+    if (!supabaseBrowserClient) {
+      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      return;
+    }
+
+    setAuthLoadingAction("passwordSignUp");
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+
+    const { data, error } = await supabaseBrowserClient.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setAuthLoadingAction(null);
+      setAuthErrorMessage(getReadableAuthErrorMessage(error));
+      return;
+    }
+
+    if (data.session) {
+      setBackendMode("supabase");
+      await loadRemoteSnapshot();
+      setAuthStatusMessage("Cuenta creada. Ya podes completar tu perfil.");
+    } else {
+      setAuthStatusMessage(
+        "Te enviamos un email para confirmar la cuenta. Despues entra con tu contrasena.",
+      );
+    }
+
+    setAuthLoadingAction(null);
   }
 
   /**
@@ -234,11 +409,18 @@ export function usePadelitoMvp() {
    */
   async function handleEmailSignInRequest(email: string) {
     if (!supabaseBrowserClient) {
-      setAuthErrorMessage("Supabase no esta configurado en este entorno.");
+      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
       return;
     }
 
-    setIsEmailAuthLoading(true);
+    if (magicLinkCooldownSeconds > 0) {
+      setAuthErrorMessage(
+        `Espera ${magicLinkCooldownSeconds} s antes de pedir otro enlace.`,
+      );
+      return;
+    }
+
+    setAuthLoadingAction("magicLink");
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
 
@@ -249,14 +431,23 @@ export function usePadelitoMvp() {
       },
     });
 
-    setIsEmailAuthLoading(false);
-
     if (error) {
-      setAuthErrorMessage(getReadableErrorMessage(error));
+      setAuthLoadingAction(null);
+      setAuthErrorMessage(getReadableAuthErrorMessage(error));
+
+      if (isRateLimitError(error)) {
+        setMagicLinkCooldownExpiresAt(
+          Date.now() + MAGIC_LINK_COOLDOWN_MILLISECONDS,
+        );
+      }
+
       return;
     }
 
-    setBackendMode("supabase");
+    setMagicLinkCooldownExpiresAt(
+      Date.now() + MAGIC_LINK_COOLDOWN_MILLISECONDS,
+    );
+    setAuthLoadingAction(null);
     setAuthStatusMessage("Te enviamos un enlace de acceso al email.");
   }
 
@@ -594,14 +785,16 @@ export function usePadelitoMvp() {
     activeFeedTab,
     activeMainView,
     authErrorMessage,
+    authLoadingAction,
     authStatusMessage,
     backendMode,
     database,
     invitedProfileId,
     isEmailAuthEnabled: Boolean(supabaseBrowserClient),
-    isEmailAuthLoading,
+    isAuthSessionChecking,
     isCreatePostOpen,
     isRemoteSnapshotLoading,
+    magicLinkCooldownSeconds,
     lastFeedRefreshAt,
     remoteErrorMessage,
     sessionProfile,
@@ -614,6 +807,8 @@ export function usePadelitoMvp() {
     handleDemoSignIn,
     handleSignOut,
     handleEmailSignInRequest,
+    handlePasswordSignInRequest,
+    handlePasswordSignUpRequest,
     handleDirectInvitationCreate,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
@@ -643,4 +838,43 @@ function getReadableErrorMessage(error: unknown) {
   }
 
   return "Ocurrio un error inesperado.";
+}
+
+/**
+ * Convierte errores de auth en mensajes aptos para jugadores.
+ * Se construye para esconder textos tecnicos del proveedor.
+ * Lo usan acciones de acceso por contrasena y magic link.
+ * Sirve para que la pantalla de entrada explique el siguiente paso.
+ */
+function getReadableAuthErrorMessage(error: unknown) {
+  const readableMessage = getReadableErrorMessage(error);
+  const normalizedMessage = readableMessage.toLowerCase();
+
+  if (normalizedMessage.includes("rate limit")) {
+    return "Pedimos un email hace muy poco. Espera un minuto y vuelve a intentar.";
+  }
+
+  if (normalizedMessage.includes("invalid login credentials")) {
+    return "El email o la contrasena no coinciden.";
+  }
+
+  if (normalizedMessage.includes("email not confirmed")) {
+    return "Todavia falta confirmar el email desde el enlace que te enviamos.";
+  }
+
+  if (normalizedMessage.includes("password")) {
+    return "Revisa la contrasena. Debe tener al menos 6 caracteres.";
+  }
+
+  return readableMessage;
+}
+
+/**
+ * Detecta errores de limite de envio de emails.
+ * Se construye para activar cooldown aunque Supabase rechace la solicitud.
+ * Lo usa el flujo de magic link.
+ * Sirve para evitar reintentos que empeoren el bloqueo temporal.
+ */
+function isRateLimitError(error: unknown) {
+  return getReadableErrorMessage(error).toLowerCase().includes("rate limit");
 }

@@ -36,11 +36,15 @@ export function App() {
     return (
       <AuthScreen
         authErrorMessage={padelitoMvp.authErrorMessage}
+        authLoadingAction={padelitoMvp.authLoadingAction}
         authStatusMessage={padelitoMvp.authStatusMessage}
+        isAuthSessionChecking={padelitoMvp.isAuthSessionChecking}
         isEmailAuthEnabled={padelitoMvp.isEmailAuthEnabled}
-        isEmailAuthLoading={padelitoMvp.isEmailAuthLoading}
+        magicLinkCooldownSeconds={padelitoMvp.magicLinkCooldownSeconds}
         onDemoSignIn={padelitoMvp.handleDemoSignIn}
         onEmailSignInRequest={padelitoMvp.handleEmailSignInRequest}
+        onPasswordSignInRequest={padelitoMvp.handlePasswordSignInRequest}
+        onPasswordSignUpRequest={padelitoMvp.handlePasswordSignUpRequest}
       />
     );
   }

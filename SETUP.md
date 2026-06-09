@@ -94,10 +94,15 @@ Estado de esta instancia:
 
 ## Sesion de usuario
 
-- Acceso real: el usuario ingresa con el mismo email y recibe magic link.
+- Acceso real recomendado: email y contrasena.
+- Registro real: crear cuenta con email y contrasena desde la pantalla inicial.
+- Acceso alternativo: magic link por email para primer acceso o recuperacion puntual.
 - Persistencia: Supabase mantiene el perfil en `public.profiles` vinculado a `auth.users.id`.
+- Persistencia de sesion: el cliente Supabase conserva la sesion del navegador, refresca token y la app intenta recuperarla antes de mostrar el formulario de acceso.
+- Rate limit de email: el boton de magic link usa cooldown local de 60 segundos y muestra un mensaje humano si Supabase rechaza el envio por limite.
 - Cierre de sesion: desde Perfil, `Cerrar sesion` elimina la sesion local del navegador pero no borra datos.
-- Reingreso: usando el mismo email, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
+- Reingreso: usando el mismo email/contrasena, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
+- Pendiente: recuperacion de contrasena completa.
 
 ## Git local
 
