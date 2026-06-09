@@ -84,6 +84,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - SQL Editor ejecuto `supabase/migrations/202606090001_initial_schema.sql` corregida;
   - verificacion compacta devolvio `schema_ok`;
   - tablas, funcion `can_read_post` y buckets `avatars` / `event-images` quedaron creados;
+  - login por magic link y perfil real validados por el usuario;
+  - cerrar sesion vuelve a AuthScreen sin borrar perfil ni actividad persistida;
   - `npm run build` pasa con repositorio Supabase y Auth magic link;
   - `npm run lint` pasa.
 
@@ -106,7 +108,6 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
-- Probar login real por magic link con un email de usuario.
-- Validar creacion de perfil real contra Supabase despues del primer login.
+- Pulir flujo de edicion de perfil.
 - Pulir UX con screenshots mobile.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

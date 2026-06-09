@@ -195,6 +195,38 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Cierra la sesion actual.
+   * Se construye para separar salida local y salida Supabase.
+   * Lo usa ProfileScreen.
+   * Sirve para volver a AuthScreen sin borrar perfil ni actividad persistida.
+   */
+  async function handleSignOut() {
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+    setRemoteErrorMessage(null);
+    setActiveMainView("feed");
+    setIsCreatePostOpen(false);
+    setInvitedProfileId(null);
+
+    if (isSupabaseMode && supabaseBrowserClient) {
+      const { error } = await supabaseBrowserClient.auth.signOut();
+
+      if (error) {
+        setRemoteErrorMessage(getReadableErrorMessage(error));
+        return;
+      }
+
+      setRemoteDatabase(createEmptyRepositorySnapshot());
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) => ({
+      ...currentDatabase,
+      sessionProfileId: undefined,
+    }));
+  }
+
+  /**
    * Solicita enlace magico de Supabase.
    * Se construye para iniciar auth real sin password.
    * Lo usa AuthScreen.
@@ -580,6 +612,7 @@ export function usePadelitoMvp() {
     setInvitedProfileId,
     setIsCreatePostOpen,
     handleDemoSignIn,
+    handleSignOut,
     handleEmailSignInRequest,
     handleDirectInvitationCreate,
     handleDirectInvitationStatusChange,

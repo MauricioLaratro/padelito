@@ -92,6 +92,13 @@ Estado de esta instancia:
 - Verificacion SQL: `schema_ok`.
 - Buckets creados por migracion: `avatars` y `event-images`.
 
+## Sesion de usuario
+
+- Acceso real: el usuario ingresa con el mismo email y recibe magic link.
+- Persistencia: Supabase mantiene el perfil en `public.profiles` vinculado a `auth.users.id`.
+- Cierre de sesion: desde Perfil, `Cerrar sesion` elimina la sesion local del navegador pero no borra datos.
+- Reingreso: usando el mismo email, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
+
 ## Git local
 
 Git fue instalado a nivel de usuario. En esta sesion puede usarse por ruta explicita:

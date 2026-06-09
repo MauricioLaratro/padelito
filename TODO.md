@@ -42,8 +42,9 @@
 - [x] Auth demo local.
 - [x] Onboarding local de perfil jugador.
 - [x] Onboarding local de perfil organizacion.
-- [ ] Validar login magic link con email real.
-- [ ] Validar creacion de perfil real en Supabase.
+- [x] Validar login magic link con email real.
+- [x] Validar creacion de perfil real en Supabase.
+- [x] Cerrar sesion desde perfil sin borrar datos persistidos.
 - [ ] Edicion de perfil.
 
 ## Etapa 5 - Feeds

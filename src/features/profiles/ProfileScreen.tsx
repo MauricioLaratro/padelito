@@ -1,4 +1,4 @@
-import { BellRing, Settings, UserPlus, UsersRound } from "lucide-react";
+import { BellRing, LogOut, UserPlus, UsersRound } from "lucide-react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import {
@@ -24,6 +24,7 @@ interface ProfileScreenProps {
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onQuickAccessReset: () => void;
+  onSignOut: () => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function ProfileScreen({
   onJoinRequestCancel,
   onJoinRequestStatusChange,
   onQuickAccessReset,
+  onSignOut,
 }: ProfileScreenProps) {
   const followersCount = database.follows.filter(
     (followRelation) =>
@@ -89,11 +91,11 @@ export function ProfileScreen({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button icon={Settings} variant="secondary">
-            Configuracion
-          </Button>
           <Button icon={BellRing} onClick={onQuickAccessReset} variant="primary">
             Agregar acceso rapido
+          </Button>
+          <Button icon={LogOut} onClick={onSignOut} variant="secondary">
+            Cerrar sesion
           </Button>
         </div>
       </article>

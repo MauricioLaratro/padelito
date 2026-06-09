@@ -2,7 +2,6 @@ import { Save } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
-import { Chip } from "../../components/common/Chip";
 import { FormField } from "../../components/forms/FormField";
 import { ScreenShell } from "../../components/layout/ScreenShell";
 import {
@@ -28,7 +27,7 @@ interface OnboardingProfileScreenProps {
 /**
  * Onboarding de perfil.
  * Se construye para capturar datos minimos antes de usar el feed completo.
- * La usa App despues del login demo.
+ * La usa App despues del acceso demo o real.
  * Sirve para configurar jugador u organizacion segun el MVP.
  */
 export function OnboardingProfileScreen({
@@ -261,12 +260,6 @@ export function OnboardingProfileScreen({
               />
             </>
           )}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Chip tone="lime">Mobile-first</Chip>
-          <Chip>Sin chat propio</Chip>
-          <Chip>Coordina por WhatsApp</Chip>
         </div>
 
         <Button className="mt-6 w-full" icon={Save} type="submit" variant="primary">

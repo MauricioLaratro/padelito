@@ -1,4 +1,4 @@
-import { LogIn, Mail, Smartphone } from "lucide-react";
+import { LogIn, Mail } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
@@ -61,8 +61,8 @@ export function AuthScreen({
           Encontrar partido ya no depende de mil chats.
         </h1>
         <p className="mt-4 text-sm leading-6 text-text-secondary">
-          Entra con email para usar Supabase o usa el demo local para probar el
-          MVP sin depender del backend.
+          Entra con tu email. Si ya tenes cuenta, vas a recuperar tu perfil y
+          actividad.
         </p>
 
         {isEmailAuthEnabled ? (
@@ -102,10 +102,6 @@ export function AuthScreen({
           <Button icon={LogIn} onClick={onDemoSignIn} variant="secondary">
             Entrar en modo demo
           </Button>
-          <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3 text-sm text-text-secondary">
-            <Smartphone aria-hidden="true" className="text-accent-lime" size={18} />
-            <span>PWA mobile-first lista para acceso rapido.</span>
-          </div>
         </div>
       </section>
     </ScreenShell>
