@@ -96,6 +96,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit UX: `5244e9d Corregir bloqueos UX mobile del MVP`.
 - Commit solicitudes: `402da64 Mejorar flujo de solicitudes de partido`.
 - Commit partidos e historial: `0dc3cb7 Refinar modulo de partidos e historial`.
+- Commit GitHub: `2b7b811 Documentar publicacion en GitHub`.
+- Commit Supabase/Auth: `acf5a94 Conectar Supabase y auth real`.
 
 ## Regla de idioma
 
