@@ -47,6 +47,12 @@ URL:
 http://localhost:5173
 ```
 
+Si el navegador conserva cache vieja de service worker en `5173`, usar un puerto fresco durante desarrollo:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5174
+```
+
 ## Verificacion
 
 ```bash
@@ -73,6 +79,20 @@ Pasos cuando llegue la etapa de backend real:
 4. Copiar URL y anon key al `.env`.
 
 La migracion ya crea tablas, enums, politicas RLS y buckets.
+
+## Git local
+
+Git fue instalado a nivel de usuario. En esta sesion puede usarse por ruta explicita:
+
+```txt
+C:\Users\Mauricio\AppData\Local\Programs\Git\cmd\git.exe
+```
+
+Rama actual:
+
+```txt
+codex/mvp-local-foundation
+```
 
 ## Deploy
 

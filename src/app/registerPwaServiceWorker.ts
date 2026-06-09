@@ -5,6 +5,18 @@
  * Sirve para preparar cache basico y futuras notificaciones web.
  */
 export function registerPwaServiceWorker() {
+  if (import.meta.env.DEV) {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+        });
+      });
+    }
+
+    return;
+  }
+
   if (!("serviceWorker" in navigator)) {
     return;
   }

@@ -50,7 +50,7 @@ export function AvailableToPlayCard({
         onFollowToggle={onFollowToggle}
       />
 
-      <div className="mt-4 flex items-start justify-between gap-3">
+      <div className="mt-4 grid gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
             Estoy disponible
@@ -59,13 +59,15 @@ export function AvailableToPlayCard({
             Busca partido
           </h2>
         </div>
-        <Chip icon={CalendarDays} tone="lime">
-          {formatScheduledDateTime(
-            post.scheduledDate,
-            post.scheduledStartTime,
-            post.scheduledEndTime,
-          )}
-        </Chip>
+        <div className="flex max-w-full">
+          <Chip icon={CalendarDays} tone="lime">
+            {formatScheduledDateTime(
+              post.scheduledDate,
+              post.scheduledStartTime,
+              post.scheduledEndTime,
+            )}
+          </Chip>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">

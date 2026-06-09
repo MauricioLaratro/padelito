@@ -2,7 +2,12 @@ import { Check, Clock, Send, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
-import { postTypeLabels } from "../../constants/postOptions";
+import {
+  eventInteractionLabels,
+  invitationStatusLabels,
+  postTypeLabels,
+  requestStatusLabels,
+} from "../../constants/postOptions";
 import { playStyleLabels } from "../../constants/profileOptions";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
@@ -79,7 +84,7 @@ export function ProfileActivitySection({
           sentRequests.map((matchJoinRequest) => (
             <ActivityRow
               key={matchJoinRequest.requestId}
-              meta={matchJoinRequest.status}
+              meta={requestStatusLabels[matchJoinRequest.status]}
               title="Solicitud para unirme"
             />
           ))
@@ -93,7 +98,7 @@ export function ProfileActivitySection({
           receivedRequests.map((matchJoinRequest) => (
             <div className="grid gap-2" key={matchJoinRequest.requestId}>
               <ActivityRow
-                meta={matchJoinRequest.status}
+                meta={requestStatusLabels[matchJoinRequest.status]}
                 title="Postulante a partido"
               />
               {matchJoinRequest.status === "pending" ? (
@@ -136,7 +141,7 @@ export function ProfileActivitySection({
           sentInvitations.map((directMatchInvitation) => (
             <ActivityRow
               key={directMatchInvitation.invitationId}
-              meta={directMatchInvitation.status}
+              meta={invitationStatusLabels[directMatchInvitation.status]}
               title={`Partido ${playStyleLabels[directMatchInvitation.desiredPlayStyle]}`}
             />
           ))
@@ -150,7 +155,7 @@ export function ProfileActivitySection({
           receivedInvitations.map((directMatchInvitation) => (
             <div className="grid gap-2" key={directMatchInvitation.invitationId}>
               <ActivityRow
-                meta={directMatchInvitation.status}
+                meta={invitationStatusLabels[directMatchInvitation.status]}
                 title={formatScheduledDateTime(
                   directMatchInvitation.scheduledDate,
                   directMatchInvitation.scheduledStartTime,
@@ -196,7 +201,7 @@ export function ProfileActivitySection({
           eventInteractions.map((postInteraction) => (
             <ActivityRow
               key={postInteraction.interactionId}
-              meta={postInteraction.interactionType}
+              meta={eventInteractionLabels[postInteraction.interactionType]}
               title="Evento marcado"
             />
           ))
@@ -246,7 +251,7 @@ function ActivityRow({ meta, title }: ActivityRowProps) {
         <p className="text-sm font-black">{title}</p>
         <p className="text-xs text-text-secondary">{meta}</p>
       </div>
-      <Chip icon={meta === "pending" ? Clock : Send}>{meta}</Chip>
+      <Chip icon={meta === "Pendiente" ? Clock : Send}>{meta}</Chip>
     </div>
   );
 }

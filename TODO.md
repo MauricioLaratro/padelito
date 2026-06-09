@@ -13,7 +13,7 @@
 - [x] Verificar `npm run build`.
 - [x] Verificar `npm run lint`.
 - [x] Levantar app React en `http://localhost:5173`.
-- [ ] Crear commit de etapa cuando Git este disponible.
+- [x] Crear commit inicial de etapa con Git.
 
 ## Etapa 2 - Dominio y arquitectura interna
 - [x] Crear modelos TypeScript de perfiles.
@@ -59,5 +59,8 @@
 ## Etapa 8 - PWA, QA y deploy
 - [x] Onboarding de acceso rapido local.
 - [x] Preparar arquitectura para notificaciones push.
+- [x] Corregir overflow horizontal mobile.
+- [x] Evitar service worker en desarrollo para no romper HMR.
+- [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
 - [ ] Pulir UX.
 - [ ] Deploy Cloudflare Pages.

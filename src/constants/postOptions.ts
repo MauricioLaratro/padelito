@@ -1,4 +1,10 @@
-import type { PostType, PostVisibility } from "../domain/enums/postEnums";
+import type {
+  EventInteractionType,
+  InvitationStatus,
+  PostType,
+  PostVisibility,
+  RequestStatus,
+} from "../domain/enums/postEnums";
 
 export const postTypeLabels: Record<PostType, string> = {
   looking_for_player: "Busco jugador",
@@ -9,6 +15,25 @@ export const postTypeLabels: Record<PostType, string> = {
 export const postVisibilityLabels: Record<PostVisibility, string> = {
   public: "Publica",
   followers_only: "Solo seguidores",
+};
+
+export const requestStatusLabels: Record<RequestStatus, string> = {
+  pending: "Pendiente",
+  accepted: "Aceptada",
+  rejected: "Rechazada",
+  cancelled: "Cancelada",
+};
+
+export const invitationStatusLabels: Record<InvitationStatus, string> = {
+  pending: "Pendiente",
+  accepted: "Aceptada",
+  rejected: "Rechazada",
+  cancelled: "Cancelada",
+};
+
+export const eventInteractionLabels: Record<EventInteractionType, string> = {
+  interested: "Me interesa",
+  attending: "Asistire",
 };
 
 export const postTypeOptions = Object.entries(postTypeLabels).map(

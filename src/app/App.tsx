@@ -1,4 +1,5 @@
 import { Bell, Home, Plus, UserRound } from "lucide-react";
+import { useEffect } from "react";
 import { IconButton } from "../components/common/IconButton";
 import { ScreenShell } from "../components/layout/ScreenShell";
 import { FloatingCreatePostButton } from "../components/navigation/FloatingCreatePostButton";
@@ -21,6 +22,15 @@ import { usePadelitoMvp } from "../hooks/usePadelitoMvp";
  */
 export function App() {
   const padelitoMvp = usePadelitoMvp();
+
+  useEffect(() => {
+    // Reinicia posicion visual al cambiar pantallas para que tabs flotantes no tapen el primer contenido.
+    window.scrollTo(0, 0);
+  }, [
+    padelitoMvp.activeFeedTab,
+    padelitoMvp.activeMainView,
+    padelitoMvp.sessionProfile?.isOnboardingComplete,
+  ]);
 
   if (!padelitoMvp.sessionProfile) {
     return <AuthScreen onDemoSignIn={padelitoMvp.handleDemoSignIn} />;

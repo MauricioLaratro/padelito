@@ -65,7 +65,7 @@ export function FeedScreen({
           </Chip>
           <Chip>{filteredPosts.length} publicaciones</Chip>
         </div>
-        <div className="grid grid-cols-[1fr_1.2fr] gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[430px]:grid-cols-[1fr_1.2fr]">
           <FormField
             fieldType="select"
             label="Tipo"

@@ -5,8 +5,16 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
-import { playerLevelLabels, playerPositionLabels, playStyleLabels } from "../../constants/profileOptions";
-import type { MatchJoinRequest, LookingForPlayerPost } from "../../domain/models/postModels";
+import { requestStatusLabels } from "../../constants/postOptions";
+import {
+  playerLevelLabels,
+  playerPositionLabels,
+  playStyleLabels,
+} from "../../constants/profileOptions";
+import type {
+  LookingForPlayerPost,
+  MatchJoinRequest,
+} from "../../domain/models/postModels";
 import type { FollowRelation, Profile } from "../../domain/models/profileModels";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 import { Button } from "../common/Button";
@@ -59,7 +67,7 @@ export function LookingForPlayerCard({
         onFollowToggle={onFollowToggle}
       />
 
-      <div className="mt-4 flex items-start justify-between gap-3">
+      <div className="mt-4 grid gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
             Busco jugador
@@ -68,13 +76,15 @@ export function LookingForPlayerCard({
             Partido incompleto
           </h2>
         </div>
-        <Chip icon={CalendarDays} tone="lime">
-          {formatScheduledDateTime(
-            post.scheduledDate,
-            post.scheduledStartTime,
-            post.scheduledEndTime,
-          )}
-        </Chip>
+        <div className="flex max-w-full">
+          <Chip icon={CalendarDays} tone="lime">
+            {formatScheduledDateTime(
+              post.scheduledDate,
+              post.scheduledStartTime,
+              post.scheduledEndTime,
+            )}
+          </Chip>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -106,7 +116,7 @@ export function LookingForPlayerCard({
           {isOwnPost
             ? "Tu partido"
             : existingRequest
-              ? `Solicitud ${existingRequest.status}`
+              ? `Solicitud ${requestStatusLabels[existingRequest.status]}`
               : "Solicitar unirme"}
         </Button>
       </div>

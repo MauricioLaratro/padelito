@@ -34,12 +34,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - RLS de Supabase requiere mucho cuidado por publicaciones `public` y `followers_only`.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
-- Git no esta disponible en PATH, por lo que no se pudo crear commit de etapa.
+- Git fue instalado a nivel de usuario y se creo el commit inicial local.
+- No hay remoto GitHub configurado en este repo local.
 
 ## Verificacion realizada
 
 - Node.js LTS + npm instalados a nivel de usuario.
-- `git` no disponible en PATH.
+- Git disponible por ruta explicita: `C:\Users\Mauricio\AppData\Local\Programs\Git\cmd\git.exe`.
 - `http://localhost:4173` responde `200`.
 - `http://localhost:5173` responde `200`.
 - `npm run build` pasa.
@@ -54,10 +55,21 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - modal de publicacion `Nueva publicacion`;
   - filtros de feed;
   - navegacion a perfil y notificaciones disponible.
+- Revision mobile 390px:
+  - overflow horizontal corregido;
+  - estados internos traducidos;
+  - service worker deshabilitado en desarrollo para evitar pantalla blanca por cache;
+  - scroll inicial corregido al cambiar de vista/onboarding.
+
+## Git
+
+- Rama local: `codex/mvp-local-foundation`.
+- Commit inicial: `a1dbb43 Build local MVP foundation`.
+- Remotos configurados: ninguno.
 
 ## Pendientes inmediatos
 
 - Crear repositorios Supabase reales cuando existan credenciales.
 - Probar migracion SQL en un proyecto Supabase.
 - Pulir UX con screenshots mobile.
-- Crear commits por etapa cuando `git` este disponible.
+- Configurar remoto GitHub cuando exista URL local o `gh` CLI.

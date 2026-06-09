@@ -90,7 +90,7 @@ export function EventPostCard({
           onFollowToggle={onFollowToggle}
         />
 
-        <div className="mt-4 flex items-start justify-between gap-3">
+        <div className="mt-4 grid gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               Evento
@@ -99,9 +99,14 @@ export function EventPostCard({
               {post.title}
             </h2>
           </div>
-          <Chip icon={CalendarDays} tone="lime">
-            {formatScheduledDateTime(post.scheduledDate, post.scheduledStartTime)}
-          </Chip>
+          <div className="flex max-w-full">
+            <Chip icon={CalendarDays} tone="lime">
+              {formatScheduledDateTime(
+                post.scheduledDate,
+                post.scheduledStartTime,
+              )}
+            </Chip>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
