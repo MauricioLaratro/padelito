@@ -120,6 +120,10 @@ src/
     repositories/
       localPadelitoDatabase.ts
       localPadelitoRepository.ts
+      padelitoRepository.ts
+      supabasePadelitoMappers.ts
+      supabasePadelitoRepository.ts
+      supabasePadelitoTypes.ts
     supabase/
       supabaseClient.ts
   styles/
@@ -136,6 +140,7 @@ supabase/
   README.md
   migrations/
     202606090001_initial_schema.sql
+    202606090002_harden_social_update_policies.sql
 ```
 
 ## Modulo MVP+ previsto: Partidos e Historial
@@ -176,7 +181,14 @@ La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento socia
 
 ## Decision reversible actual
 
-Mientras no existan credenciales Supabase, el MVP usa un repositorio local para probar flujos en navegador. La UI consume hook/repositorio, no Supabase directo, por lo que el reemplazo por repositorios remotos es controlado.
+El MVP mantiene dos modos detras del mismo contrato:
+
+- `local`: usa `localStorage` y datos demo para validar UX sin backend.
+- `supabase`: usa Auth magic link, snapshot remoto y repositorio Supabase.
+
+La UI consume `usePadelitoMvp` y modelos de dominio; no habla directo con Supabase. Los mappers convierten `snake_case` SQL a modelos TypeScript en ingles.
+
+Esta decision permite probar localmente aunque Supabase Auth o RLS necesiten ajustes, sin romper el MVP demo.
 
 ## Migrabilidad futura
 

@@ -32,13 +32,18 @@
 - [x] Crear migracion SQL inicial.
 - [x] Crear politicas RLS.
 - [x] Documentar buckets `avatars` y `event-images`.
-- [ ] Crear repositorios Supabase para reemplazar repositorio local.
+- [x] Configurar `.env.local` con Supabase.
+- [x] Ejecutar migracion inicial en Supabase Cloud.
+- [x] Verificar esquema aplicado con `schema_ok`.
+- [x] Crear repositorios Supabase para reemplazar repositorio local.
 
 ## Etapa 4 - Auth y perfiles
-- [ ] Auth simple con Supabase.
+- [x] Auth simple con Supabase por magic link.
 - [x] Auth demo local.
 - [x] Onboarding local de perfil jugador.
 - [x] Onboarding local de perfil organizacion.
+- [ ] Validar login magic link con email real.
+- [ ] Validar creacion de perfil real en Supabase.
 - [ ] Edicion de perfil.
 
 ## Etapa 5 - Feeds
@@ -46,6 +51,7 @@
 - [x] Feed Siguiendo local.
 - [x] Filtros MVP locales.
 - [x] Pull-to-refresh mobile preparado para refetch futuro.
+- [x] Pull-to-refresh conectado a snapshot Supabase en modo remoto.
 
 ## Etapa 6 - Publicaciones
 - [x] Crear Busco jugador local.

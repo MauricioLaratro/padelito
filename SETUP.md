@@ -67,18 +67,30 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-No commitear `.env`.
+No commitear `.env` ni `.env.local`.
+
+En esta maquina, `.env.local` ya esta configurado para el proyecto Supabase:
+
+```txt
+zrddjpvtkqebvmazauhu
+```
 
 ## Supabase
 
-Pasos cuando llegue la etapa de backend real:
+Pasos para un entorno nuevo:
 
 1. Crear proyecto en Supabase Cloud.
 2. Ejecutar `supabase/migrations/202606090001_initial_schema.sql`.
-3. Crear buckets Storage `avatars` y `event-images`.
-4. Copiar URL y anon key al `.env`.
+3. Copiar URL y publishable/anon key al `.env.local`.
 
 La migracion ya crea tablas, enums, politicas RLS y buckets.
+
+Estado de esta instancia:
+
+- Proyecto Supabase: `zrddjpvtkqebvmazauhu`.
+- Migracion inicial ejecutada desde SQL Editor.
+- Verificacion SQL: `schema_ok`.
+- Buckets creados por migracion: `avatars` y `event-images`.
 
 ## Git local
 

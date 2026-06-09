@@ -4,14 +4,16 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible y publicado en GitHub.
+MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente.
 
 - App React/Vite levantada en `http://localhost:5174` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
 - Dependencias instaladas con `npm install`.
 - Build productivo verificado con `npm run build`.
 - Lint verificado con `npm run lint`.
-- Dominio, repositorio local, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
+- Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
+- Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
+- `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
 
 ## Comprension del producto
 
@@ -26,7 +28,9 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Creacion: boton flotante inferior derecho.
 - MVP sin app nativa, rankings, marketplace, chat, geolocalizacion ni torneos internos.
 - Repositorio local temporal para probar flujos sin pedir credenciales.
-- Supabase queda preparado como cliente y contrato backend, pero sin exigir URL ni anon key todavia.
+- Supabase queda conectado por cliente browser con fallback demo local.
+- Auth real se implementa con magic link por email y mantiene modo demo local.
+- La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
 
@@ -37,6 +41,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
+- La migracion inicial tenia una funcion SQL creada antes de sus tablas dependientes; se corrigio moviendo `can_read_post` despues de `posts` y `follows`.
 
 ## Verificacion realizada
 
@@ -70,10 +75,17 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - build y lint siguen correctos.
 - Feed:
   - pull-to-refresh mobile preparado en el tope del feed;
-  - hoy refresca estado local y queda listo para refetch Supabase.
+  - refresca estado local en modo demo;
+  - recarga snapshot remoto en modo Supabase.
 - GitHub:
   - remoto `origin` configurado;
   - rama `codex/base-mvp-local` publicada en `origin/codex/base-mvp-local`.
+- Supabase:
+  - SQL Editor ejecuto `supabase/migrations/202606090001_initial_schema.sql` corregida;
+  - verificacion compacta devolvio `schema_ok`;
+  - tablas, funcion `can_read_post` y buckets `avatars` / `event-images` quedaron creados;
+  - `npm run build` pasa con repositorio Supabase y Auth magic link;
+  - `npm run lint` pasa.
 
 ## Git
 
@@ -92,8 +104,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
-- Crear repositorios Supabase reales cuando existan credenciales.
-- Conectar pull-to-refresh al refetch real de publicaciones Supabase.
-- Probar migracion SQL en un proyecto Supabase.
+- Probar login real por magic link con un email de usuario.
+- Validar creacion de perfil real contra Supabase despues del primer login.
 - Pulir UX con screenshots mobile.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

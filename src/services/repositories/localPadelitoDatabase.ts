@@ -1,24 +1,7 @@
-import type { InternalNotification } from "../../domain/models/notificationModels";
-import type {
-  DirectMatchInvitation,
-  MatchJoinRequest,
-  Post,
-  PostInteraction,
-} from "../../domain/models/postModels";
-import type { FollowRelation, Profile } from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
+import type { PadelitoRepositorySnapshot } from "./padelitoRepository";
 
-export interface PadelitoLocalDatabase {
-  profiles: Profile[];
-  follows: FollowRelation[];
-  posts: Post[];
-  postInteractions: PostInteraction[];
-  matchJoinRequests: MatchJoinRequest[];
-  directMatchInvitations: DirectMatchInvitation[];
-  notifications: InternalNotification[];
-  sessionProfileId?: string;
-  quickAccessPromptDismissed: boolean;
-}
+export type PadelitoLocalDatabase = PadelitoRepositorySnapshot;
 
 const currentTimestamp = createCurrentIsoDate();
 

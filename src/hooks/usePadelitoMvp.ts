@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FeedTabIdentifier } from "../domain/enums/postEnums";
 import type { Post } from "../domain/models/postModels";
 import type { Profile } from "../domain/models/profileModels";
@@ -25,8 +25,12 @@ import {
   createInitialLocalDatabase,
   type PadelitoLocalDatabase,
 } from "../services/repositories/localPadelitoDatabase";
+import { createEmptyRepositorySnapshot } from "../services/repositories/padelitoRepository";
+import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
+import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
 
 export type MainViewIdentifier = "feed" | "profile" | "notifications";
+export type BackendModeIdentifier = "local" | "supabase";
 
 /**
  * Orquesta el estado funcional del MVP local.
@@ -35,9 +39,18 @@ export type MainViewIdentifier = "feed" | "profile" | "notifications";
  * Sirve para validar flujos antes de conectar repositorios Supabase.
  */
 export function usePadelitoMvp() {
-  const [database, setDatabase] = useLocalStorageState<PadelitoLocalDatabase>(
-    "padelito-local-database-v1",
-    createInitialLocalDatabase,
+  const [backendMode, setBackendMode] =
+    useLocalStorageState<BackendModeIdentifier>(
+      "padelito-backend-mode-v1",
+      () => (supabaseBrowserClient ? "supabase" : "local"),
+    );
+  const [localDatabase, setLocalDatabase] =
+    useLocalStorageState<PadelitoLocalDatabase>(
+      "padelito-local-database-v1",
+      createInitialLocalDatabase,
+    );
+  const [remoteDatabase, setRemoteDatabase] = useState<PadelitoLocalDatabase>(
+    createEmptyRepositorySnapshot,
   );
   const [activeFeedTab, setActiveFeedTab] =
     useState<FeedTabIdentifier>("community");
@@ -48,6 +61,27 @@ export function usePadelitoMvp() {
   const [lastFeedRefreshAt, setLastFeedRefreshAt] = useState(
     createCurrentIsoDate(),
   );
+  const [authStatusMessage, setAuthStatusMessage] = useState<string | null>(
+    null,
+  );
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const [isEmailAuthLoading, setIsEmailAuthLoading] = useState(false);
+  const [remoteErrorMessage, setRemoteErrorMessage] = useState<string | null>(
+    null,
+  );
+  const [isRemoteSnapshotLoading, setIsRemoteSnapshotLoading] = useState(false);
+
+  const supabaseRepository = useMemo(() => {
+    if (!supabaseBrowserClient) {
+      return null;
+    }
+
+    return createSupabasePadelitoRepository(supabaseBrowserClient);
+  }, []);
+
+  const isSupabaseMode =
+    backendMode === "supabase" && Boolean(supabaseRepository);
+  const database = isSupabaseMode ? remoteDatabase : localDatabase;
 
   const sessionProfile = getSessionProfile(database);
 
@@ -76,13 +110,122 @@ export function usePadelitoMvp() {
   }, [database.notifications, sessionProfile]);
 
   /**
+   * Carga snapshot remoto de Supabase.
+   * Se construye para mantener la UI actual basada en estado completo.
+   * Lo usan auth, pull-to-refresh y acciones remotas.
+   * Sirve para sincronizar feeds, perfil y actividad despues de cada cambio.
+   */
+  const loadRemoteSnapshot = useCallback(async () => {
+    if (!supabaseRepository) {
+      return;
+    }
+
+    setIsRemoteSnapshotLoading(true);
+
+    try {
+      const snapshot = await supabaseRepository.loadApplicationSnapshot();
+      setRemoteDatabase(snapshot);
+      setRemoteErrorMessage(null);
+    } catch (error) {
+      setRemoteErrorMessage(getReadableErrorMessage(error));
+    } finally {
+      setIsRemoteSnapshotLoading(false);
+    }
+  }, [supabaseRepository]);
+
+  useEffect(() => {
+    if (!supabaseBrowserClient || !supabaseRepository) {
+      return;
+    }
+
+    if (backendMode === "supabase") {
+      void loadRemoteSnapshot();
+    }
+
+    const { data: authListener } =
+      supabaseBrowserClient.auth.onAuthStateChange((authEvent) => {
+        if (authEvent === "SIGNED_IN") {
+          setBackendMode("supabase");
+          void loadRemoteSnapshot();
+        }
+
+        if (authEvent === "SIGNED_OUT") {
+          setRemoteDatabase(createEmptyRepositorySnapshot());
+        }
+      });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [backendMode, loadRemoteSnapshot, setBackendMode, supabaseRepository]);
+
+  /**
+   * Ejecuta una accion remota y refresca snapshot.
+   * Se construye para no duplicar manejo de errores Supabase.
+   * Lo usan handlers principales.
+   * Sirve para mantener consistencia despues de escrituras remotas.
+   */
+  async function runRemoteAction(action: () => Promise<void>) {
+    if (!supabaseRepository) {
+      setRemoteErrorMessage("Supabase no esta configurado en este entorno.");
+      return false;
+    }
+
+    try {
+      setRemoteErrorMessage(null);
+      await action();
+      await loadRemoteSnapshot();
+      return true;
+    } catch (error) {
+      setRemoteErrorMessage(getReadableErrorMessage(error));
+      return false;
+    }
+  }
+
+  /**
    * Inicia sesion demo.
    * Se construye para validar auth simple sin credenciales externas.
    * Lo usa AuthScreen.
    * Sirve para entrar al flujo de onboarding.
    */
   function handleDemoSignIn() {
-    setDatabase((currentDatabase) => signInWithDemoProfile(currentDatabase));
+    setBackendMode("local");
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+    setRemoteErrorMessage(null);
+    setLocalDatabase((currentDatabase) => signInWithDemoProfile(currentDatabase));
+  }
+
+  /**
+   * Solicita enlace magico de Supabase.
+   * Se construye para iniciar auth real sin password.
+   * Lo usa AuthScreen.
+   * Sirve para activar backend real cuando Supabase esta configurado.
+   */
+  async function handleEmailSignInRequest(email: string) {
+    if (!supabaseBrowserClient) {
+      setAuthErrorMessage("Supabase no esta configurado en este entorno.");
+      return;
+    }
+
+    setIsEmailAuthLoading(true);
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+
+    const { error } = await supabaseBrowserClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    setIsEmailAuthLoading(false);
+
+    if (error) {
+      setAuthErrorMessage(getReadableErrorMessage(error));
+      return;
+    }
+
+    setBackendMode("supabase");
+    setAuthStatusMessage("Te enviamos un enlace de acceso al email.");
   }
 
   /**
@@ -92,7 +235,12 @@ export function usePadelitoMvp() {
    * Sirve para persistir identidad local.
    */
   function handleProfileSave(updatedProfile: Profile) {
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() => supabaseRepository.saveProfile(updatedProfile));
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       updateOwnProfile(currentDatabase, updatedProfile),
     );
   }
@@ -104,7 +252,21 @@ export function usePadelitoMvp() {
    * Sirve para agregar posts a feeds y actividad.
    */
   function handlePostCreate(post: Post) {
-    setDatabase((currentDatabase) => createPost(currentDatabase, post));
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() => supabaseRepository.createPost(post)).then(
+        (wasSaved) => {
+          if (!wasSaved) {
+            return;
+          }
+
+          setIsCreatePostOpen(false);
+          setActiveMainView("feed");
+        },
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) => createPost(currentDatabase, post));
     setIsCreatePostOpen(false);
     setActiveMainView("feed");
   }
@@ -120,7 +282,17 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.toggleFollowProfile(
+          sessionProfile.profileId,
+          followedProfileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       toggleFollowProfile(
         currentDatabase,
         sessionProfile.profileId,
@@ -140,7 +312,17 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.createMatchJoinRequest(
+          postId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       createMatchJoinRequest(currentDatabase, postId, sessionProfile.profileId),
     );
   }
@@ -156,7 +338,17 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.cancelMatchJoinRequest(
+          requestId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       cancelMatchJoinRequest(
         currentDatabase,
         requestId,
@@ -175,7 +367,14 @@ export function usePadelitoMvp() {
     requestId: string,
     status: "accepted" | "rejected",
   ) {
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.updateMatchJoinRequestStatus(requestId, status),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       updateMatchJoinRequestStatus(currentDatabase, requestId, status),
     );
   }
@@ -193,7 +392,21 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.createDirectMatchInvitation(
+          sessionProfile.profileId,
+          invitationInput,
+        ),
+      ).then((wasSaved) => {
+        if (wasSaved) {
+          setInvitedProfileId(null);
+        }
+      });
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       createDirectMatchInvitation(
         currentDatabase,
         sessionProfile.profileId,
@@ -213,7 +426,17 @@ export function usePadelitoMvp() {
     invitationId: string,
     status: "accepted" | "rejected",
   ) {
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.updateDirectMatchInvitationStatus(
+          invitationId,
+          status,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       updateDirectMatchInvitationStatus(currentDatabase, invitationId, status),
     );
   }
@@ -232,7 +455,18 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.toggleEventInteraction(
+          postId,
+          sessionProfile.profileId,
+          interactionType,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       toggleEventInteraction(
         currentDatabase,
         postId,
@@ -250,7 +484,13 @@ export function usePadelitoMvp() {
    */
   function handleFeedRefresh() {
     setLastFeedRefreshAt(createCurrentIsoDate());
-    setDatabase((currentDatabase) => ({ ...currentDatabase }));
+
+    if (isSupabaseMode) {
+      void loadRemoteSnapshot();
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) => ({ ...currentDatabase }));
   }
 
   /**
@@ -264,7 +504,14 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setDatabase((currentDatabase) =>
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.markNotificationsAsRead(sessionProfile.profileId),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
       markNotificationsAsRead(currentDatabase, sessionProfile.profileId),
     );
   }
@@ -276,7 +523,16 @@ export function usePadelitoMvp() {
    * Sirve para guardar la decision local.
    */
   function handleQuickAccessDismiss() {
-    setDatabase((currentDatabase) => dismissQuickAccessPrompt(currentDatabase));
+    if (isSupabaseMode) {
+      setRemoteDatabase((currentDatabase) =>
+        dismissQuickAccessPrompt(currentDatabase),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      dismissQuickAccessPrompt(currentDatabase),
+    );
   }
 
   /**
@@ -286,7 +542,16 @@ export function usePadelitoMvp() {
    * Sirve para que el usuario active el acceso rapido despues del onboarding.
    */
   function handleQuickAccessShow() {
-    setDatabase((currentDatabase) => ({
+    if (isSupabaseMode) {
+      setRemoteDatabase((currentDatabase) => ({
+        ...currentDatabase,
+        quickAccessPromptDismissed: false,
+      }));
+      setActiveMainView("feed");
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) => ({
       ...currentDatabase,
       quickAccessPromptDismissed: false,
     }));
@@ -296,10 +561,17 @@ export function usePadelitoMvp() {
   return {
     activeFeedTab,
     activeMainView,
+    authErrorMessage,
+    authStatusMessage,
+    backendMode,
     database,
     invitedProfileId,
+    isEmailAuthEnabled: Boolean(supabaseBrowserClient),
+    isEmailAuthLoading,
     isCreatePostOpen,
+    isRemoteSnapshotLoading,
     lastFeedRefreshAt,
+    remoteErrorMessage,
     sessionProfile,
     unreadNotificationsCount,
     visiblePosts,
@@ -308,6 +580,7 @@ export function usePadelitoMvp() {
     setInvitedProfileId,
     setIsCreatePostOpen,
     handleDemoSignIn,
+    handleEmailSignInRequest,
     handleDirectInvitationCreate,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
@@ -323,4 +596,18 @@ export function usePadelitoMvp() {
     handleQuickAccessShow,
     createCurrentIsoDate,
   };
+}
+
+/**
+ * Convierte errores desconocidos en texto legible.
+ * Se construye para no filtrar objetos tecnicos a la UI.
+ * Lo usa usePadelitoMvp.
+ * Sirve para mostrar fallas de Supabase y auth con contexto minimo.
+ */
+function getReadableErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Ocurrio un error inesperado.";
 }

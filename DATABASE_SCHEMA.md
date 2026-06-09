@@ -1,6 +1,12 @@
-# DATABASE SCHEMA — SUPABASE / POSTGRES
+# DATABASE SCHEMA - SUPABASE / POSTGRES
 
 Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, pero debe conservar los conceptos.
+
+## Estado actual
+
+- Migracion aplicada en Supabase Cloud para el proyecto `zrddjpvtkqebvmazauhu`.
+- Verificacion SQL devolvio `schema_ok`.
+- La funcion `can_read_post` se crea despues de `posts` y `follows` para evitar errores de referencia durante la migracion.
 
 ## Enums sugeridos
 
@@ -30,7 +36,8 @@ create type notification_type as enum (
 
 Perfil principal.
 
-Campos sugeridos:
+Campos:
+
 - id uuid primary key references auth.users(id)
 - profile_type
 - display_name
@@ -48,13 +55,14 @@ Campos sugeridos:
 
 ## follows
 
-Relación seguir/seguidores.
+Relacion seguir/seguidores.
 
 - follower_profile_id
 - followed_profile_id
 - created_at
 
 Unique:
+
 - follower_profile_id + followed_profile_id
 
 ## posts
@@ -62,6 +70,7 @@ Unique:
 Tabla principal de publicaciones.
 
 Campos comunes:
+
 - id uuid
 - author_profile_id
 - post_type
@@ -75,20 +84,23 @@ Campos comunes:
 - short_note nullable
 - is_active
 
-Campos para looking_for_player:
+Campos para `looking_for_player`:
+
 - desired_level
 - desired_position
 - desired_play_style
 - missing_players_count
 - confirmed_players_text nullable
 
-Campos para available_to_play:
+Campos para `available_to_play`:
+
 - available_level
 - available_position
 - available_play_style
 - preferred_place_text nullable
 
-Campos para event:
+Campos para `event`:
+
 - title
 - description
 - image_url
@@ -99,6 +111,7 @@ Campos para event:
 ## post_interactions
 
 Para eventos:
+
 - id
 - post_id
 - profile_id
@@ -106,11 +119,12 @@ Para eventos:
 - created_at
 
 Unique:
+
 - post_id + profile_id + interaction_type
 
 ## match_join_requests
 
-Solicitudes para unirse a publicación tipo looking_for_player.
+Solicitudes para unirse a publicacion tipo `looking_for_player`.
 
 - id
 - post_id
@@ -123,7 +137,7 @@ Solicitudes para unirse a publicación tipo looking_for_player.
 
 ## direct_match_invitations
 
-Invitación directa desde perfil.
+Invitacion directa desde perfil.
 
 - id
 - inviter_profile_id
@@ -156,6 +170,7 @@ Notificaciones internas.
 ## storage
 
 Buckets:
+
 - avatars
 - event-images
 
@@ -189,6 +204,7 @@ Participantes del partido.
 - created_at
 
 Notas:
+
 - no limitar cantidad de participantes;
 - permitir rotativos y multiples parejas;
 - usar `team_label` o `partner_group` para agrupar jugadores cuando haya parejas/equipos.
@@ -241,6 +257,7 @@ Relaciona partidos jugados con un desafio recurrente.
 - created_at
 
 Unique:
+
 - challenge_id + match_id
 
 ## MVP+ sugerido: estadisticas
@@ -254,13 +271,18 @@ Evitar materializar agregados hasta que exista volumen o performance lo justifiq
 Activar RLS en todas las tablas.
 
 Reglas generales:
-- perfiles públicos pueden leerse
+
+- perfiles publicos pueden leerse
 - cada usuario edita solo su perfil
-- publicaciones públicas pueden leerse
-- publicaciones followers_only solo por autor o seguidores
+- publicaciones publicas pueden leerse
+- publicaciones `followers_only` solo por autor o seguidores
 - cada autor administra sus publicaciones
 - solicitudes visibles para requester y owner
+- requester solo puede cancelar o reabrir sus solicitudes
+- owner solo puede aceptar o rechazar solicitudes pendientes
 - invitaciones visibles para inviter e invited
+- invited solo puede aceptar o rechazar invitaciones pendientes
+- inviter solo puede cancelar invitaciones pendientes
 - notificaciones visibles solo por recipient
 - partidos visibles segun visibilidad o participacion
 - resultados visibles para participantes y perfiles autorizados por visibilidad

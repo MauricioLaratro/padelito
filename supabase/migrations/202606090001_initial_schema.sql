@@ -37,32 +37,6 @@ begin
 end;
 $$;
 
--- Determina si una publicacion puede ser leida por el perfil actual.
-create or replace function public.can_read_post(target_post_id uuid, viewer_profile_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.posts visible_post
-    where visible_post.id = target_post_id
-      and visible_post.is_active = true
-      and (
-        visible_post.visibility = 'public'
-        or visible_post.author_profile_id = viewer_profile_id
-        or exists (
-          select 1
-          from public.follows visible_follow
-          where visible_follow.follower_profile_id = viewer_profile_id
-            and visible_follow.followed_profile_id = visible_post.author_profile_id
-        )
-      )
-  );
-$$;
-
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   profile_type public.profile_type not null,
@@ -165,6 +139,33 @@ create trigger posts_set_updated_at
 before update on public.posts
 for each row execute function public.set_updated_at();
 
+-- Determina si una publicacion puede ser leida por el perfil actual.
+-- Se crea despues de posts/follows porque PostgreSQL valida referencias al compilar funciones SQL.
+create or replace function public.can_read_post(target_post_id uuid, viewer_profile_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.posts visible_post
+    where visible_post.id = target_post_id
+      and visible_post.is_active = true
+      and (
+        visible_post.visibility = 'public'
+        or visible_post.author_profile_id = viewer_profile_id
+        or exists (
+          select 1
+          from public.follows visible_follow
+          where visible_follow.follower_profile_id = viewer_profile_id
+            and visible_follow.followed_profile_id = visible_post.author_profile_id
+        )
+      )
+  );
+$$;
+
 create table public.post_interactions (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
@@ -194,6 +195,28 @@ create trigger match_join_requests_set_updated_at
 before update on public.match_join_requests
 for each row execute function public.set_updated_at();
 
+-- Evita que un cliente modifique la identidad de una solicitud al cambiar estado.
+create or replace function public.prevent_match_join_request_core_update()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.post_id is distinct from old.post_id
+    or new.requester_profile_id is distinct from old.requester_profile_id
+    or new.owner_profile_id is distinct from old.owner_profile_id
+    or new.message is distinct from old.message
+    or new.created_at is distinct from old.created_at then
+    raise exception 'Solo se permite actualizar el estado de la solicitud';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger match_join_requests_prevent_core_update
+before update on public.match_join_requests
+for each row execute function public.prevent_match_join_request_core_update();
+
 create table public.direct_match_invitations (
   id uuid primary key default gen_random_uuid(),
   inviter_profile_id uuid not null references public.profiles(id) on delete cascade,
@@ -215,6 +238,31 @@ create index direct_match_invitations_invited_idx on public.direct_match_invitat
 create trigger direct_match_invitations_set_updated_at
 before update on public.direct_match_invitations
 for each row execute function public.set_updated_at();
+
+-- Evita que una respuesta a invitacion cambie datos centrales del partido.
+create or replace function public.prevent_direct_match_invitation_core_update()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.inviter_profile_id is distinct from old.inviter_profile_id
+    or new.invited_profile_id is distinct from old.invited_profile_id
+    or new.scheduled_date is distinct from old.scheduled_date
+    or new.scheduled_start_time is distinct from old.scheduled_start_time
+    or new.place_text is distinct from old.place_text
+    or new.desired_play_style is distinct from old.desired_play_style
+    or new.note is distinct from old.note
+    or new.created_at is distinct from old.created_at then
+    raise exception 'Solo se permite actualizar el estado de la invitacion';
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger direct_match_invitations_prevent_core_update
+before update on public.direct_match_invitations
+for each row execute function public.prevent_direct_match_invitation_core_update();
 
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -321,10 +369,20 @@ with check (
   )
 );
 
-create policy "requester or owner update join request"
+create policy "requesters cancel pending join requests"
 on public.match_join_requests for update
-using (requester_profile_id = auth.uid() or owner_profile_id = auth.uid())
-with check (requester_profile_id = auth.uid() or owner_profile_id = auth.uid());
+using (requester_profile_id = auth.uid() and status = 'pending')
+with check (requester_profile_id = auth.uid() and status = 'cancelled');
+
+create policy "requesters reopen cancelled join requests"
+on public.match_join_requests for update
+using (requester_profile_id = auth.uid() and status = 'cancelled')
+with check (requester_profile_id = auth.uid() and status = 'pending');
+
+create policy "owners answer pending join requests"
+on public.match_join_requests for update
+using (owner_profile_id = auth.uid() and status = 'pending')
+with check (owner_profile_id = auth.uid() and status in ('accepted', 'rejected'));
 
 create policy "invitations visible to participants"
 on public.direct_match_invitations for select
@@ -334,10 +392,15 @@ create policy "users create direct invitations"
 on public.direct_match_invitations for insert
 with check (inviter_profile_id = auth.uid());
 
-create policy "participants update direct invitations"
+create policy "invited users answer direct invitations"
 on public.direct_match_invitations for update
-using (inviter_profile_id = auth.uid() or invited_profile_id = auth.uid())
-with check (inviter_profile_id = auth.uid() or invited_profile_id = auth.uid());
+using (invited_profile_id = auth.uid() and status = 'pending')
+with check (invited_profile_id = auth.uid() and status in ('accepted', 'rejected'));
+
+create policy "inviters cancel direct invitations"
+on public.direct_match_invitations for update
+using (inviter_profile_id = auth.uid() and status = 'pending')
+with check (inviter_profile_id = auth.uid() and status = 'cancelled');
 
 create policy "recipients read their notifications"
 on public.notifications for select

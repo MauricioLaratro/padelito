@@ -33,7 +33,16 @@ export function App() {
   ]);
 
   if (!padelitoMvp.sessionProfile) {
-    return <AuthScreen onDemoSignIn={padelitoMvp.handleDemoSignIn} />;
+    return (
+      <AuthScreen
+        authErrorMessage={padelitoMvp.authErrorMessage}
+        authStatusMessage={padelitoMvp.authStatusMessage}
+        isEmailAuthEnabled={padelitoMvp.isEmailAuthEnabled}
+        isEmailAuthLoading={padelitoMvp.isEmailAuthLoading}
+        onDemoSignIn={padelitoMvp.handleDemoSignIn}
+        onEmailSignInRequest={padelitoMvp.handleEmailSignInRequest}
+      />
+    );
   }
 
   if (!padelitoMvp.sessionProfile.isOnboardingComplete) {
@@ -94,6 +103,24 @@ export function App() {
           />
         </nav>
       </header>
+
+      <div className="px-4 pt-3">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-primary px-3 py-2 text-xs text-text-secondary">
+          <span>
+            {padelitoMvp.backendMode === "supabase"
+              ? "Supabase"
+              : "Demo local"}
+          </span>
+          {padelitoMvp.isRemoteSnapshotLoading ? (
+            <span className="text-accent-lime">Sincronizando</span>
+          ) : null}
+        </div>
+        {padelitoMvp.remoteErrorMessage ? (
+          <p className="mt-2 rounded-lg border border-feedback-danger/40 bg-feedback-danger/10 p-3 text-sm leading-6 text-feedback-danger">
+            {padelitoMvp.remoteErrorMessage}
+          </p>
+        ) : null}
+      </div>
 
       {padelitoMvp.activeMainView === "feed" ? (
         <div className="grid gap-3">

@@ -1,5 +1,4 @@
 import type { EventInteractionType } from "../../domain/enums/postEnums";
-import type { PlayStyle } from "../../domain/enums/profileEnums";
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
   DirectMatchInvitation,
@@ -10,15 +9,9 @@ import type { Profile } from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
 import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
+import type { CreateInvitationInput } from "./padelitoRepository";
 
-export interface CreateInvitationInput {
-  invitedProfileId: string;
-  scheduledDate: string;
-  scheduledStartTime: string;
-  placeText: string;
-  desiredPlayStyle: PlayStyle;
-  note?: string;
-}
+export type { CreateInvitationInput } from "./padelitoRepository";
 
 /**
  * Obtiene el perfil de sesion actual.
