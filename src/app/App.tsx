@@ -112,7 +112,9 @@ export function App() {
             }
             onFollowToggle={padelitoMvp.handleFollowToggle}
             onInvitationStart={padelitoMvp.setInvitedProfileId}
+            onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
             onJoinRequestCreate={padelitoMvp.handleJoinRequestCreate}
+            onFeedRefresh={padelitoMvp.handleFeedRefresh}
             onPostCreateStart={() => padelitoMvp.setIsCreatePostOpen(true)}
             visiblePosts={padelitoMvp.visiblePosts}
           />
@@ -134,6 +136,7 @@ export function App() {
           onDirectInvitationStatusChange={
             padelitoMvp.handleDirectInvitationStatusChange
           }
+          onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
           onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
           onQuickAccessReset={padelitoMvp.handleQuickAccessShow}
         />

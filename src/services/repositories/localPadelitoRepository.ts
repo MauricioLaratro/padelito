@@ -193,7 +193,7 @@ export function createMatchJoinRequest(
 ) {
   const requestedPost = database.posts.find((post) => post.postId === postId);
 
-  if (!requestedPost) {
+  if (!requestedPost || requestedPost.postType !== "looking_for_player") {
     return database;
   }
 
@@ -203,13 +203,15 @@ export function createMatchJoinRequest(
       matchJoinRequest.requesterProfileId === requesterProfileId,
   );
 
-  if (existingRequest) {
+  if (existingRequest && existingRequest.status !== "cancelled") {
     return database;
   }
 
   const currentTimestamp = createCurrentIsoDate();
+  const requestId =
+    existingRequest?.requestId ?? createEntityIdentifier("request");
   const request: MatchJoinRequest = {
-    requestId: createEntityIdentifier("request"),
+    requestId,
     postId,
     requesterProfileId,
     ownerProfileId: requestedPost.authorProfileId,
@@ -231,8 +233,41 @@ export function createMatchJoinRequest(
 
   return {
     ...database,
-    matchJoinRequests: [...database.matchJoinRequests, request],
+    matchJoinRequests: existingRequest
+      ? database.matchJoinRequests.map((matchJoinRequest) =>
+          matchJoinRequest.requestId === existingRequest.requestId
+            ? request
+            : matchJoinRequest,
+        )
+      : [...database.matchJoinRequests, request],
     notifications: [...database.notifications, notification],
+  };
+}
+
+/**
+ * Cancela una solicitud pendiente propia.
+ * Se construye para permitir arrepentimiento sin bloquear al jugador.
+ * Lo usan cards y actividad de perfil.
+ * Sirve para que el solicitante pueda retirar su postulacion antes de una respuesta.
+ */
+export function cancelMatchJoinRequest(
+  database: PadelitoLocalDatabase,
+  requestId: string,
+  requesterProfileId: string,
+) {
+  return {
+    ...database,
+    matchJoinRequests: database.matchJoinRequests.map((matchJoinRequest) =>
+      matchJoinRequest.requestId === requestId &&
+      matchJoinRequest.requesterProfileId === requesterProfileId &&
+      matchJoinRequest.status === "pending"
+        ? {
+            ...matchJoinRequest,
+            status: "cancelled" as const,
+            updatedAt: createCurrentIsoDate(),
+          }
+        : matchJoinRequest,
+    ),
   };
 }
 
@@ -252,6 +287,10 @@ export function updateMatchJoinRequestStatus(
   );
 
   if (!request) {
+    return database;
+  }
+
+  if (request.status !== "pending") {
     return database;
   }
 

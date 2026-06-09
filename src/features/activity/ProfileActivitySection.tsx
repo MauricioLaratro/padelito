@@ -1,4 +1,4 @@
-import { Check, Clock, Send, X } from "lucide-react";
+import { CalendarDays, Check, Clock, MapPin, Send, UserRound, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
@@ -9,6 +9,7 @@ import {
   requestStatusLabels,
 } from "../../constants/postOptions";
 import { playStyleLabels } from "../../constants/profileOptions";
+import type { MatchJoinRequest } from "../../domain/models/postModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 
@@ -23,6 +24,7 @@ interface ProfileActivitySectionProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onJoinRequestCancel: (requestId: string) => void;
 }
 
 /**
@@ -35,6 +37,7 @@ export function ProfileActivitySection({
   currentProfileId,
   database,
   onDirectInvitationStatusChange,
+  onJoinRequestCancel,
   onJoinRequestStatusChange,
 }: ProfileActivitySectionProps) {
   const ownPosts = database.posts.filter(
@@ -82,10 +85,13 @@ export function ProfileActivitySection({
       <ActivityCard title="Solicitudes enviadas">
         {sentRequests.length > 0 ? (
           sentRequests.map((matchJoinRequest) => (
-            <ActivityRow
+            <RequestActivityCard
+              database={database}
               key={matchJoinRequest.requestId}
-              meta={requestStatusLabels[matchJoinRequest.status]}
-              title="Solicitud para unirme"
+              mode="sent"
+              onJoinRequestCancel={onJoinRequestCancel}
+              onJoinRequestStatusChange={onJoinRequestStatusChange}
+              request={matchJoinRequest}
             />
           ))
         ) : (
@@ -96,40 +102,14 @@ export function ProfileActivitySection({
       <ActivityCard title="Solicitudes recibidas">
         {receivedRequests.length > 0 ? (
           receivedRequests.map((matchJoinRequest) => (
-            <div className="grid gap-2" key={matchJoinRequest.requestId}>
-              <ActivityRow
-                meta={requestStatusLabels[matchJoinRequest.status]}
-                title="Postulante a partido"
-              />
-              {matchJoinRequest.status === "pending" ? (
-                <div className="flex gap-2">
-                  <Button
-                    icon={Check}
-                    onClick={() =>
-                      onJoinRequestStatusChange(
-                        matchJoinRequest.requestId,
-                        "accepted",
-                      )
-                    }
-                    variant="primary"
-                  >
-                    Aceptar
-                  </Button>
-                  <Button
-                    icon={X}
-                    onClick={() =>
-                      onJoinRequestStatusChange(
-                        matchJoinRequest.requestId,
-                        "rejected",
-                      )
-                    }
-                    variant="danger"
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+            <RequestActivityCard
+              database={database}
+              key={matchJoinRequest.requestId}
+              mode="received"
+              onJoinRequestCancel={onJoinRequestCancel}
+              onJoinRequestStatusChange={onJoinRequestStatusChange}
+              request={matchJoinRequest}
+            />
           ))
         ) : (
           <p className="text-sm text-text-secondary">Sin solicitudes recibidas.</p>
@@ -209,6 +189,129 @@ export function ProfileActivitySection({
           <p className="text-sm text-text-secondary">Sin eventos marcados.</p>
         )}
       </ActivityCard>
+    </div>
+  );
+}
+
+interface RequestActivityCardProps {
+  database: PadelitoLocalDatabase;
+  mode: "sent" | "received";
+  onJoinRequestCancel: (requestId: string) => void;
+  onJoinRequestStatusChange: (
+    requestId: string,
+    status: "accepted" | "rejected",
+  ) => void;
+  request: MatchJoinRequest;
+}
+
+/**
+ * Card contextual de solicitud de partido.
+ * Se construye para que emisor y receptor vean el mismo estado con contexto suficiente.
+ * La usa ProfileActivitySection en solicitudes enviadas y recibidas.
+ * Sirve para cancelar, aceptar, rechazar y entender a que partido pertenece la solicitud.
+ */
+function RequestActivityCard({
+  database,
+  mode,
+  onJoinRequestCancel,
+  onJoinRequestStatusChange,
+  request,
+}: RequestActivityCardProps) {
+  const requestedPost = database.posts.find(
+    (post) => post.postId === request.postId,
+  );
+  const requesterProfile = database.profiles.find(
+    (profile) => profile.profileId === request.requesterProfileId,
+  );
+  const ownerProfile = database.profiles.find(
+    (profile) => profile.profileId === request.ownerProfileId,
+  );
+  const relatedProfile = mode === "sent" ? ownerProfile : requesterProfile;
+  const statusLabel = requestStatusLabels[request.status];
+  const statusTone =
+    request.status === "accepted"
+      ? "success"
+      : request.status === "rejected" || request.status === "cancelled"
+        ? "danger"
+        : "lime";
+
+  return (
+    <div className="grid gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent-lime">
+            {mode === "sent" ? "Solicitud enviada" : "Solicitud recibida"}
+          </p>
+          <h4 className="mt-1 text-sm font-black">
+            {requestedPost?.postType === "looking_for_player"
+              ? "Partido incompleto"
+              : "Partido"}
+          </h4>
+        </div>
+        <Chip tone={statusTone}>{statusLabel}</Chip>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {requestedPost ? (
+          <>
+            <Chip icon={CalendarDays}>
+              {formatScheduledDateTime(
+                requestedPost.scheduledDate,
+                requestedPost.scheduledStartTime,
+                requestedPost.scheduledEndTime,
+              )}
+            </Chip>
+            <Chip icon={MapPin}>{requestedPost.placeText}</Chip>
+          </>
+        ) : null}
+        {relatedProfile ? (
+          <Chip icon={UserRound}>
+            {mode === "sent" ? "Creador" : "Jugador"}:{" "}
+            {relatedProfile.displayName}
+          </Chip>
+        ) : null}
+      </div>
+
+      {request.status === "accepted" && mode === "sent" ? (
+        <p className="text-sm leading-6 text-feedback-success">
+          Te aceptaron para este partido.
+        </p>
+      ) : null}
+
+      {request.status === "pending" ? (
+        <div className="flex flex-wrap gap-2">
+          {mode === "sent" ? (
+            <Button
+              icon={X}
+              onClick={() => onJoinRequestCancel(request.requestId)}
+              variant="danger"
+            >
+              Cancelar solicitud
+            </Button>
+          ) : (
+            <>
+              <Button
+                icon={Check}
+                onClick={() =>
+                  onJoinRequestStatusChange(request.requestId, "accepted")
+                }
+                variant="primary"
+              >
+                Aceptar
+              </Button>
+              <Button
+                icon={X}
+                onClick={() =>
+                  onJoinRequestStatusChange(request.requestId, "rejected")
+                }
+                variant="danger"
+              >
+                Rechazar
+              </Button>
+            </>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

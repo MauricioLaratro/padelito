@@ -5,6 +5,7 @@ import type { Profile } from "../domain/models/profileModels";
 import { createCurrentIsoDate } from "../utils/dateFormatters";
 import { useLocalStorageState } from "./useLocalStorageState";
 import {
+  cancelMatchJoinRequest,
   type CreateInvitationInput,
   createDirectMatchInvitation,
   createMatchJoinRequest,
@@ -44,6 +45,9 @@ export function usePadelitoMvp() {
     useState<MainViewIdentifier>("feed");
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [invitedProfileId, setInvitedProfileId] = useState<string | null>(null);
+  const [lastFeedRefreshAt, setLastFeedRefreshAt] = useState(
+    createCurrentIsoDate(),
+  );
 
   const sessionProfile = getSessionProfile(database);
 
@@ -142,6 +146,26 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Cancela postulacion pendiente propia.
+   * Se construye para que el usuario pueda arrepentirse antes de respuesta.
+   * Lo usan cards y actividad de perfil.
+   * Sirve para retirar una solicitud sin borrar historial.
+   */
+  function handleJoinRequestCancel(requestId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    setDatabase((currentDatabase) =>
+      cancelMatchJoinRequest(
+        currentDatabase,
+        requestId,
+        sessionProfile.profileId,
+      ),
+    );
+  }
+
+  /**
    * Responde solicitud de partido.
    * Se construye para cerrar decisiones del creador.
    * Lo usa ProfileActivitySection.
@@ -219,6 +243,17 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Refresca el feed local.
+   * Se construye para soportar el gesto pull-to-refresh desde el MVP.
+   * Lo usa FeedScreen.
+   * Sirve como punto de reemplazo para refetch Supabase en la siguiente etapa.
+   */
+  function handleFeedRefresh() {
+    setLastFeedRefreshAt(createCurrentIsoDate());
+    setDatabase((currentDatabase) => ({ ...currentDatabase }));
+  }
+
+  /**
    * Marca notificaciones como leidas.
    * Se construye para mantener bandeja simple.
    * Lo usa NotificationsScreen.
@@ -264,6 +299,7 @@ export function usePadelitoMvp() {
     database,
     invitedProfileId,
     isCreatePostOpen,
+    lastFeedRefreshAt,
     sessionProfile,
     unreadNotificationsCount,
     visiblePosts,
@@ -275,8 +311,10 @@ export function usePadelitoMvp() {
     handleDirectInvitationCreate,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
+    handleFeedRefresh,
     handleFollowToggle,
     handleJoinRequestCreate,
+    handleJoinRequestCancel,
     handleJoinRequestStatusChange,
     handleNotificationsRead,
     handlePostCreate,

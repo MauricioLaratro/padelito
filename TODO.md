@@ -43,6 +43,7 @@
 - [x] Feed Comunidad local.
 - [x] Feed Siguiendo local.
 - [x] Filtros MVP locales.
+- [x] Pull-to-refresh mobile preparado para refetch futuro.
 
 ## Etapa 6 - Publicaciones
 - [x] Crear Busco jugador local.
@@ -52,6 +53,9 @@
 
 ## Etapa 7 - Coordinacion social
 - [x] Solicitudes para unirse locales.
+- [x] Cancelacion de solicitudes pendientes.
+- [x] Estado visual de solicitud enviada en cards.
+- [x] Cards de solicitudes enviadas y recibidas en perfil.
 - [x] Invitaciones directas locales.
 - [x] Notificaciones internas locales.
 - [x] Actividad en perfil local.

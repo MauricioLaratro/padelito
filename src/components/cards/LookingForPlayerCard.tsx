@@ -1,9 +1,11 @@
 import {
   CalendarDays,
+  CheckCircle2,
   MapPin,
   Swords,
   Trophy,
   UsersRound,
+  XCircle,
 } from "lucide-react";
 import { requestStatusLabels } from "../../constants/postOptions";
 import {
@@ -27,6 +29,7 @@ interface LookingForPlayerCardProps {
   followRelations: FollowRelation[];
   joinRequests: MatchJoinRequest[];
   onFollowToggle: (profileId: string) => void;
+  onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
   post: LookingForPlayerPost;
 }
@@ -43,6 +46,7 @@ export function LookingForPlayerCard({
   followRelations,
   joinRequests,
   onFollowToggle,
+  onJoinRequestCancel,
   onJoinRequestCreate,
   post,
 }: LookingForPlayerCardProps) {
@@ -57,9 +61,23 @@ export function LookingForPlayerCard({
       joinRequest.postId === post.postId &&
       joinRequest.requesterProfileId === currentProfileId,
   );
+  const isPendingRequest = existingRequest?.status === "pending";
+  const isAcceptedRequest = existingRequest?.status === "accepted";
+  const isRejectedRequest = existingRequest?.status === "rejected";
+  const isVisibleRequestState =
+    isPendingRequest || isAcceptedRequest || isRejectedRequest;
+  const articleStateClassName = isPendingRequest
+    ? "border-accent-lime/70 bg-[linear-gradient(180deg,rgba(215,242,26,0.08),rgba(21,24,29,1)_32%)]"
+    : isAcceptedRequest
+      ? "border-feedback-success/60 bg-[linear-gradient(180deg,rgba(142,234,122,0.08),rgba(21,24,29,1)_32%)]"
+      : isRejectedRequest
+        ? "border-feedback-danger/55"
+        : "border-border-subtle";
 
   return (
-    <article className="rounded-lg border border-border-subtle bg-surface-primary p-4 shadow-floating">
+    <article
+      className={`rounded-lg border bg-surface-primary p-4 shadow-floating ${articleStateClassName}`}
+    >
       <PostAuthorRow
         authorProfile={authorProfile}
         isFollowed={isFollowed}
@@ -69,9 +87,25 @@ export function LookingForPlayerCard({
 
       <div className="mt-4 grid gap-3">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
-            Busco jugador
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
+              Busco jugador
+            </p>
+            {isVisibleRequestState && existingRequest ? (
+              <Chip
+                icon={isAcceptedRequest ? CheckCircle2 : XCircle}
+                tone={
+                  isPendingRequest
+                    ? "lime"
+                    : isAcceptedRequest
+                      ? "success"
+                      : "danger"
+                }
+              >
+                Solicitud {requestStatusLabels[existingRequest.status]}
+              </Chip>
+            ) : null}
+          </div>
           <h2 className="mt-1 text-2xl font-black leading-tight">
             Partido incompleto
           </h2>
@@ -109,13 +143,22 @@ export function LookingForPlayerCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
-          disabled={isOwnPost || Boolean(existingRequest)}
-          onClick={() => onJoinRequestCreate(post.postId)}
-          variant="primary"
+          disabled={isOwnPost || isAcceptedRequest || isRejectedRequest}
+          onClick={() => {
+            if (isPendingRequest && existingRequest) {
+              onJoinRequestCancel(existingRequest.requestId);
+              return;
+            }
+
+            onJoinRequestCreate(post.postId);
+          }}
+          variant={isPendingRequest ? "danger" : "primary"}
         >
           {isOwnPost
             ? "Tu partido"
-            : existingRequest
+            : isPendingRequest
+              ? "Cancelar solicitud"
+              : existingRequest && existingRequest.status !== "cancelled"
               ? `Solicitud ${requestStatusLabels[existingRequest.status]}`
               : "Solicitar unirme"}
         </Button>

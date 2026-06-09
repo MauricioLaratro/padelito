@@ -22,6 +22,7 @@ interface ProfileScreenProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onJoinRequestCancel: (requestId: string) => void;
   onQuickAccessReset: () => void;
 }
 
@@ -35,6 +36,7 @@ export function ProfileScreen({
   currentProfile,
   database,
   onDirectInvitationStatusChange,
+  onJoinRequestCancel,
   onJoinRequestStatusChange,
   onQuickAccessReset,
 }: ProfileScreenProps) {
@@ -100,6 +102,7 @@ export function ProfileScreen({
         currentProfileId={currentProfile.profileId}
         database={database}
         onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+        onJoinRequestCancel={onJoinRequestCancel}
         onJoinRequestStatusChange={onJoinRequestStatusChange}
       />
     </section>

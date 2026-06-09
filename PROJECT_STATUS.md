@@ -60,6 +60,15 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - estados internos traducidos;
   - service worker deshabilitado en desarrollo para evitar pantalla blanca por cache;
   - scroll inicial corregido al cambiar de vista/onboarding.
+- Solicitudes:
+  - enviar solicitud cambia el CTA a `Cancelar solicitud`;
+  - card de partido se resalta con estado `Solicitud Pendiente`;
+  - perfil del solicitante muestra card contextual en `Solicitudes enviadas`;
+  - cancelar desde perfil revierte el feed a `Solicitar unirme`;
+  - build y lint siguen correctos.
+- Feed:
+  - pull-to-refresh mobile preparado en el tope del feed;
+  - hoy refresca estado local y queda listo para refetch Supabase.
 
 ## Git
 
@@ -76,6 +85,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 ## Pendientes inmediatos
 
 - Crear repositorios Supabase reales cuando existan credenciales.
+- Conectar pull-to-refresh al refetch real de publicaciones Supabase.
 - Probar migracion SQL en un proyecto Supabase.
 - Pulir UX con screenshots mobile.
 - Configurar remoto GitHub cuando exista URL local o `gh` CLI.

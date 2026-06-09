@@ -18,6 +18,7 @@ interface PostCardProps {
   ) => void;
   onFollowToggle: (profileId: string) => void;
   onInvitationStart: (profileId: string) => void;
+  onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
   post: Post;
   postInteractions: PostInteraction[];
@@ -37,6 +38,7 @@ export function PostCard({
   onEventInteractionToggle,
   onFollowToggle,
   onInvitationStart,
+  onJoinRequestCancel,
   onJoinRequestCreate,
   post,
   postInteractions,
@@ -58,6 +60,7 @@ export function PostCard({
         followRelations={followRelations}
         joinRequests={joinRequests}
         onFollowToggle={onFollowToggle}
+        onJoinRequestCancel={onJoinRequestCancel}
         onJoinRequestCreate={onJoinRequestCreate}
         post={post}
       />
