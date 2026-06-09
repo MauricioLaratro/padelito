@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Padelito Preview</title>
+    <style>
+      :root {
+        --color-background-primary: #0f1115;
+        --color-background-secondary: #1a1d22;
+        --color-surface-primary: #15181d;
+        --color-surface-secondary: #20242b;
+        --color-text-primary: #d9d9d9;
+        --color-text-secondary: #a6a6a6;
+        --color-accent-lime: #d7f21a;
+        --color-border-subtle: rgba(217, 217, 217, 0.12);
+        --color-danger: #ff5a5f;
+        --color-success: #8eea7a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--color-background-primary);
+        color: var(--color-text-primary);
+        font-family: Inter, Manrope, Sora, system-ui, sans-serif;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .app {
+        position: relative;
+        min-height: 100vh;
+        width: min(100%, 480px);
+        margin: 0 auto;
+        border-inline: 1px solid var(--color-border-subtle);
+        background: var(--color-background-primary);
+      }
+
+      .feed-tabs {
+        position: sticky;
+        top: 12px;
+        z-index: 20;
+        display: flex;
+        width: max-content;
+        margin: 0 auto;
+        padding: 4px;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 999px;
+        background: rgba(21, 24, 29, 0.92);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      }
+
+      .feed-tabs button,
+      .view-actions button,
+      .chip,
+      .primary-button,
+      .secondary-button,
+      .danger-button {
+        border: 0;
+        border-radius: 999px;
+      }
+
+      .feed-tabs button {
+        padding: 9px 14px;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .feed-tabs button.active {
+        background: var(--color-accent-lime);
+        color: var(--color-background-primary);
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 20px 16px 8px;
+      }
+
+      .header img {
+        width: 152px;
+        height: auto;
+      }
+
+      .view-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .view-actions button {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid var(--color-border-subtle);
+        background: var(--color-surface-secondary);
+        color: var(--color-text-primary);
+      }
+
+      .view-actions button.active {
+        color: var(--color-accent-lime);
+      }
+
+      .content {
+        display: grid;
+        gap: 12px;
+        padding: 12px 16px 96px;
+      }
+
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 8px;
+        background: var(--color-surface-primary);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+      }
+
+      .card-body {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--color-accent-lime);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 21px;
+        line-height: 1.1;
+      }
+
+      h3 {
+        font-size: 17px;
+      }
+
+      .muted {
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 9px;
+        background: var(--color-surface-secondary);
+        color: var(--color-text-primary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .chip.lime {
+        background: rgba(215, 242, 26, 0.12);
+        color: var(--color-accent-lime);
+      }
+
+      .event-image {
+        aspect-ratio: 16 / 9;
+        background:
+          radial-gradient(circle at 70% 25%, rgba(215, 242, 26, 0.28), transparent 24%),
+          linear-gradient(135deg, #20242b, #0f1115);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .danger-button {
+        min-height: 40px;
+        padding: 0 14px;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .primary-button {
+        background: var(--color-accent-lime);
+        color: var(--color-background-primary);
+      }
+
+      .secondary-button {
+        border: 1px solid var(--color-border-subtle);
+        background: var(--color-surface-secondary);
+        color: var(--color-text-primary);
+      }
+
+      .danger-button {
+        background: rgba(255, 90, 95, 0.14);
+        color: var(--color-danger);
+      }
+
+      .fab {
+        position: fixed;
+        right: max(18px, calc(50vw - 222px));
+        bottom: 20px;
+        z-index: 30;
+        display: grid;
+        width: 58px;
+        height: 58px;
+        place-items: center;
+        border: 0;
+        border-radius: 999px;
+        background: var(--color-accent-lime);
+        color: var(--color-background-primary);
+        font-size: 36px;
+        font-weight: 500;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.42);
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: none;
+        place-items: end center;
+        background: rgba(0, 0, 0, 0.62);
+      }
+
+      .modal-backdrop.open {
+        display: grid;
+      }
+
+      .modal {
+        width: min(100%, 480px);
+        max-height: 88vh;
+        overflow: auto;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 16px 16px 0 0;
+        background: var(--color-background-secondary);
+        padding: 16px;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 8px;
+        background: var(--color-surface-primary);
+        color: var(--color-text-primary);
+        padding: 11px 12px;
+      }
+
+      textarea {
+        min-height: 82px;
+        resize: vertical;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="feed-tabs" id="feedTabs">
+        <button class="active" data-feed-tab="community">Comunidad</button>
+        <button data-feed-tab="following">Siguiendo</button>
+      </div>
+
+      <header class="header">
+        <img alt="Padelito" src="../public/logo-padelito.svg" />
+        <div class="view-actions">
+          <button class="active" type="button" data-view="feed" aria-label="Feed">⌂</button>
+          <button type="button" data-view="notifications" aria-label="Notificaciones">●</button>
+          <button type="button" data-view="profile" aria-label="Perfil">◉</button>
+        </div>
+      </header>
+
+      <section class="content" id="content"></section>
+      <button class="fab" type="button" id="createPostButton" aria-label="Crear publicacion">+</button>
+    </div>
+
+    <div class="modal-backdrop" id="createPostModal">
+      <form class="modal" id="createPostForm">
+        <div class="card-top">
+          <div>
+            <p class="eyebrow">Crear</p>
+            <h2>Nueva publicacion</h2>
+          </div>
+          <button class="secondary-button" type="button" id="closeCreatePostButton">Cerrar</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Tipo
+            <select name="postType">
+              <option value="looking_for_player">Busco jugador</option>
+              <option value="available_to_play">Estoy disponible</option>
+              <option value="event">Evento</option>
+            </select>
+          </label>
+          <label>
+            Fecha
+            <input name="scheduledDate" type="date" value="2026-06-18" />
+          </label>
+          <label>
+            Hora
+            <input name="scheduledStartTime" type="time" value="20:00" />
+          </label>
+          <label>
+            Lugar
+            <input name="placeText" value="Club Norte" />
+          </label>
+          <label>
+            Categoria
+            <select name="level">
+              <option value="sixth">6ta</option>
+              <option value="fifth">5ta</option>
+              <option value="fourth">4ta</option>
+              <option value="beginner">Principiante</option>
+            </select>
+          </label>
+          <label>
+            Nota
+            <textarea name="shortNote" placeholder="Nota corta"></textarea>
+          </label>
+          <button class="primary-button" type="submit">Publicar</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const initialState = {
+        activeFeedTab: "community",
+        activeView: "feed",
+        notifications: [
+          "Club Norte publico un americano compatible con tu perfil.",
+          "Sofia Rivera empezo a seguir tu actividad.",
+        ],
+        posts: [
+          {
+            postId: "post_match",
+            type: "looking_for_player",
+            feed: "both",
+            author: "Sofia Rivera",
+            title: "Busco jugador",
+            date: "Mie 10 Jun · 20:00",
+            place: "Club Norte",
+            chips: ["5ta", "Competitivo", "Falta 1", "Busca reves"],
+            note: "Partido armado, buscamos alguien puntual.",
+            action: "Solicitar unirme",
+          },
+          {
+            postId: "post_available",
+            type: "available_to_play",
+            feed: "community",
+            author: "Mauricio Demo",
+            title: "Estoy disponible",
+            date: "Vie 12 Jun · 18:00-22:00",
+            place: "Palermo / Club Norte",
+            chips: ["6ta", "Drive", "Ambos"],
+            note: "Puedo sumarme a partido ya armado.",
+            action: "Invitar a jugar",
+          },
+          {
+            postId: "post_event",
+            type: "event",
+            feed: "both",
+            author: "Club Norte",
+            title: "Americano nocturno",
+            date: "Lun 15 Jun · 19:30",
+            place: "Club Norte",
+            chips: ["Evento", "12 interesados", "5 asistentes"],
+            note: "Formato social por categoria, musica y tercer tiempo.",
+            action: "Me interesa",
+          },
+        ],
+      };
+
+      const state = loadState();
+      const contentElement = document.querySelector("#content");
+      const createPostModal = document.querySelector("#createPostModal");
+
+      /**
+       * Lee estado local del preview.
+       * Se construye para que las acciones sobrevivan recargas.
+       * Lo usa el arranque del archivo estatico.
+       * Sirve para probar sin servidor ni dependencias.
+       */
+      function loadState() {
+        const serializedState = window.localStorage.getItem("padelito-preview");
+
+        if (!serializedState) {
+          return structuredClone(initialState);
+        }
+
+        try {
+          return JSON.parse(serializedState);
+        } catch {
+          return structuredClone(initialState);
+        }
+      }
+
+      /**
+       * Guarda estado local del preview.
+       * Se construye para persistir acciones reversibles.
+       * Lo usan eventos de UI.
+       * Sirve para simular repositorio local.
+       */
+      function saveState() {
+        window.localStorage.setItem("padelito-preview", JSON.stringify(state));
+      }
+
+      /**
+       * Renderiza la vista activa.
+       * Se construye para mantener una sola fuente de verdad visual.
+       * Lo usan todos los cambios de navegacion.
+       * Sirve para alternar feed, perfil y notificaciones.
+       */
+      function render() {
+        updateNavigation();
+
+        if (state.activeView === "profile") {
+          renderProfile();
+          return;
+        }
+
+        if (state.activeView === "notifications") {
+          renderNotifications();
+          return;
+        }
+
+        renderFeed();
+      }
+
+      /**
+       * Actualiza estados activos de tabs y acciones.
+       * Se construye para evitar clases duplicadas manualmente.
+       * Lo usa render.
+       * Sirve para mostrar navegacion compacta.
+       */
+      function updateNavigation() {
+        document.querySelectorAll("[data-feed-tab]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.feedTab === state.activeFeedTab);
+        });
+
+        document.querySelectorAll("[data-view]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.view === state.activeView);
+        });
+
+        document.querySelector("#feedTabs").classList.toggle("hidden", state.activeView !== "feed");
+        document.querySelector("#createPostButton").classList.toggle("hidden", state.activeView !== "feed");
+      }
+
+      /**
+       * Renderiza feed Comunidad o Siguiendo.
+       * Se construye para validar cards y acciones centrales.
+       * Lo usa render.
+       * Sirve para probar descubrimiento basico.
+       */
+      function renderFeed() {
+        const visiblePosts = state.posts.filter((post) => {
+          return state.activeFeedTab === "community" || post.feed === "both";
+        });
+
+        contentElement.innerHTML = visiblePosts.map(createPostCardMarkup).join("");
+      }
+
+      /**
+       * Crea HTML de una card de publicacion.
+       * Se construye para reutilizar formato entre tipos.
+       * Lo usa renderFeed.
+       * Sirve para mostrar informacion estructurada en menos de dos segundos.
+       */
+      function createPostCardMarkup(post) {
+        const eventImageMarkup = post.type === "event" ? '<div class="event-image"></div>' : "";
+        const chipMarkup = post.chips
+          .map((chip) => `<span class="chip">${chip}</span>`)
+          .join("");
+
+        return `
+          <article class="card">
+            ${eventImageMarkup}
+            <div class="card-body">
+              <div class="card-top">
+                <div>
+                  <p class="eyebrow">${post.author}</p>
+                  <h2>${post.title}</h2>
+                </div>
+                <span class="chip lime">${post.date}</span>
+              </div>
+              <div class="chips">
+                <span class="chip">📍 ${post.place}</span>
+                ${chipMarkup}
+              </div>
+              <p class="muted">${post.note}</p>
+              <div class="actions">
+                <button class="primary-button" type="button" data-action="${post.action}">${post.action}</button>
+                <button class="secondary-button" type="button">Seguir</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      /**
+       * Renderiza perfil como centro de actividad.
+       * Se construye para validar secciones esperadas del MVP.
+       * Lo usa render.
+       * Sirve para revisar publicaciones, solicitudes e invitaciones.
+       */
+      function renderProfile() {
+        contentElement.innerHTML = `
+          <article class="card">
+            <div class="card-body">
+              <p class="eyebrow">Jugador</p>
+              <h2>Mauricio Demo</h2>
+              <div class="chips">
+                <span class="chip">6ta</span>
+                <span class="chip">Drive</span>
+                <span class="chip">Ambos</span>
+              </div>
+              <p class="muted">Perfil local listo para onboarding, actividad e invitaciones.</p>
+            </div>
+          </article>
+          <article class="card"><div class="card-body"><h3>Publicaciones propias</h3><p class="muted">Estoy disponible · Vie 12 Jun</p></div></article>
+          <article class="card"><div class="card-body"><h3>Solicitudes</h3><p class="muted">Sin solicitudes pendientes.</p></div></article>
+          <article class="card"><div class="card-body"><h3>Invitaciones</h3><p class="muted">Listo para aceptar o rechazar invitaciones directas.</p></div></article>
+          <article class="card"><div class="card-body"><h3>Acceso rapido</h3><p class="muted">Agrega Padelito a tu pantalla principal para entrar con un toque.</p><button class="primary-button" type="button">Agregar acceso rapido</button></div></article>
+        `;
+      }
+
+      /**
+       * Renderiza notificaciones internas.
+       * Se construye para validar avisos del MVP.
+       * Lo usa render.
+       * Sirve para revisar eventos, solicitudes e invitaciones.
+       */
+      function renderNotifications() {
+        contentElement.innerHTML = state.notifications
+          .map(
+            (notification) => `
+              <article class="card">
+                <div class="card-body">
+                  <p class="eyebrow">Notificacion</p>
+                  <h3>${notification}</h3>
+                  <p class="muted">Aviso interno preparado para push web futuro.</p>
+                </div>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      document.querySelectorAll("[data-feed-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeFeedTab = button.dataset.feedTab;
+          saveState();
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeView = button.dataset.view;
+          saveState();
+          render();
+        });
+      });
+
+      document.querySelector("#createPostButton").addEventListener("click", () => {
+        createPostModal.classList.add("open");
+      });
+
+      document.querySelector("#closeCreatePostButton").addEventListener("click", () => {
+        createPostModal.classList.remove("open");
+      });
+
+      document.querySelector("#createPostForm").addEventListener("submit", (submitEvent) => {
+        submitEvent.preventDefault();
+        const formData = new FormData(submitEvent.currentTarget);
+        const postType = formData.get("postType");
+        const title =
+          postType === "looking_for_player"
+            ? "Busco jugador"
+            : postType === "available_to_play"
+              ? "Estoy disponible"
+              : "Evento";
+
+        state.posts.unshift({
+          postId: `post_${Date.now()}`,
+          type: postType,
+          feed: "community",
+          author: "Mauricio Demo",
+          title,
+          date: `${formData.get("scheduledDate")} · ${formData.get("scheduledStartTime")}`,
+          place: formData.get("placeText"),
+          chips: [formData.get("level"), "Nuevo"],
+          note: formData.get("shortNote") || "Publicacion creada desde preview local.",
+          action: postType === "available_to_play" ? "Invitar a jugar" : "Solicitar unirme",
+        });
+        saveState();
+        createPostModal.classList.remove("open");
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

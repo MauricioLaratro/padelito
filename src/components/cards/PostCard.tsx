@@ -1,0 +1,91 @@
+import type {
+  MatchJoinRequest,
+  Post,
+  PostInteraction,
+} from "../../domain/models/postModels";
+import type { FollowRelation, Profile } from "../../domain/models/profileModels";
+import { AvailableToPlayCard } from "./AvailableToPlayCard";
+import { EventPostCard } from "./EventPostCard";
+import { LookingForPlayerCard } from "./LookingForPlayerCard";
+
+interface PostCardProps {
+  currentProfileId: string;
+  followRelations: FollowRelation[];
+  joinRequests: MatchJoinRequest[];
+  onEventInteractionToggle: (
+    postId: string,
+    interactionType: "interested" | "attending",
+  ) => void;
+  onFollowToggle: (profileId: string) => void;
+  onInvitationStart: (profileId: string) => void;
+  onJoinRequestCreate: (postId: string) => void;
+  post: Post;
+  postInteractions: PostInteraction[];
+  profiles: Profile[];
+}
+
+/**
+ * Selector de card por tipo de publicacion.
+ * Se construye para que el feed no conozca detalles de cada formato.
+ * Lo usa FeedScreen.
+ * Sirve para mantener separadas las variantes Busco jugador, Disponible y Evento.
+ */
+export function PostCard({
+  currentProfileId,
+  followRelations,
+  joinRequests,
+  onEventInteractionToggle,
+  onFollowToggle,
+  onInvitationStart,
+  onJoinRequestCreate,
+  post,
+  postInteractions,
+  profiles,
+}: PostCardProps) {
+  const authorProfile = profiles.find(
+    (profile) => profile.profileId === post.authorProfileId,
+  );
+
+  if (!authorProfile) {
+    return null;
+  }
+
+  if (post.postType === "looking_for_player") {
+    return (
+      <LookingForPlayerCard
+        authorProfile={authorProfile}
+        currentProfileId={currentProfileId}
+        followRelations={followRelations}
+        joinRequests={joinRequests}
+        onFollowToggle={onFollowToggle}
+        onJoinRequestCreate={onJoinRequestCreate}
+        post={post}
+      />
+    );
+  }
+
+  if (post.postType === "available_to_play") {
+    return (
+      <AvailableToPlayCard
+        authorProfile={authorProfile}
+        currentProfileId={currentProfileId}
+        followRelations={followRelations}
+        onFollowToggle={onFollowToggle}
+        onInvitationStart={onInvitationStart}
+        post={post}
+      />
+    );
+  }
+
+  return (
+    <EventPostCard
+      authorProfile={authorProfile}
+      currentProfileId={currentProfileId}
+      followRelations={followRelations}
+      interactions={postInteractions}
+      onEventInteractionToggle={onEventInteractionToggle}
+      onFollowToggle={onFollowToggle}
+      post={post}
+    />
+  );
+}

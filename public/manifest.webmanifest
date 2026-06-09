@@ -1,0 +1,19 @@
+{
+  "name": "Padelito",
+  "short_name": "Padelito",
+  "description": "Comunidad local para encontrar jugadores, partidos y eventos de padel.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0F1115",
+  "theme_color": "#0F1115",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
