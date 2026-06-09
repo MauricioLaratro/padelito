@@ -29,10 +29,11 @@ export function App() {
   }, [
     padelitoMvp.activeFeedTab,
     padelitoMvp.activeMainView,
+    padelitoMvp.isPasswordRecoveryMode,
     padelitoMvp.sessionProfile?.isOnboardingComplete,
   ]);
 
-  if (!padelitoMvp.sessionProfile) {
+  if (!padelitoMvp.sessionProfile || padelitoMvp.isPasswordRecoveryMode) {
     return (
       <AuthScreen
         authErrorMessage={padelitoMvp.authErrorMessage}
@@ -40,11 +41,13 @@ export function App() {
         authStatusMessage={padelitoMvp.authStatusMessage}
         isAuthSessionChecking={padelitoMvp.isAuthSessionChecking}
         isEmailAuthEnabled={padelitoMvp.isEmailAuthEnabled}
-        magicLinkCooldownSeconds={padelitoMvp.magicLinkCooldownSeconds}
+        isPasswordRecoveryMode={padelitoMvp.isPasswordRecoveryMode}
         onDemoSignIn={padelitoMvp.handleDemoSignIn}
         onEmailSignInRequest={padelitoMvp.handleEmailSignInRequest}
+        onPasswordResetRequest={padelitoMvp.handlePasswordResetRequest}
         onPasswordSignInRequest={padelitoMvp.handlePasswordSignInRequest}
         onPasswordSignUpRequest={padelitoMvp.handlePasswordSignUpRequest}
+        onPasswordUpdateRequest={padelitoMvp.handlePasswordUpdateRequest}
       />
     );
   }

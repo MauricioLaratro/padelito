@@ -97,12 +97,19 @@ Estado de esta instancia:
 - Acceso real recomendado: email y contrasena.
 - Registro real: crear cuenta con email y contrasena desde la pantalla inicial.
 - Acceso alternativo: magic link por email para primer acceso o recuperacion puntual.
+- Recuperacion: usar `Crear o recuperar contrasena`, abrir el enlace recibido y guardar una nueva contrasena en la app.
 - Persistencia: Supabase mantiene el perfil en `public.profiles` vinculado a `auth.users.id`.
 - Persistencia de sesion: el cliente Supabase conserva la sesion del navegador, refresca token y la app intenta recuperarla antes de mostrar el formulario de acceso.
-- Rate limit de email: el boton de magic link usa cooldown local de 60 segundos y muestra un mensaje humano si Supabase rechaza el envio por limite.
+- Rate limit de email: Supabase controla el limite de envio; la app no persiste cooldown local y muestra un mensaje humano si el servicio rechaza el email.
 - Cierre de sesion: desde Perfil, `Cerrar sesion` elimina la sesion local del navegador pero no borra datos.
 - Reingreso: usando el mismo email/contrasena, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
-- Pendiente: recuperacion de contrasena completa.
+
+## Marca y cache PWA
+
+- Los SVG fuente viven en `assets/`.
+- La app carga SVG desde `public/`.
+- Si cambia `assets/logo-padelito.svg` o `assets/app-icon.svg`, sincronizar tambien `public/logo-padelito.svg` y `public/app-icon.svg`.
+- Si hay una PWA instalada o service worker activo, incrementar `staticCacheName` en `public/service-worker.js` para evitar recursos viejos.
 
 ## Git local
 

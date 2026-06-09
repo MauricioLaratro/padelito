@@ -186,7 +186,7 @@ El MVP mantiene dos modos detras del mismo contrato:
 - `local`: usa `localStorage` y datos demo para validar UX sin backend.
 - `supabase`: usa Auth con email/contrasena, magic link alternativo, snapshot remoto y repositorio Supabase.
 
-La UI consume `usePadelitoMvp` y modelos de dominio; no habla directo con Supabase. El hook concentra sesion, login, registro y cooldown de magic link. Los mappers convierten `snake_case` SQL a modelos TypeScript en ingles.
+La UI consume `usePadelitoMvp` y modelos de dominio; no habla directo con Supabase. El hook concentra sesion, login, registro, recuperacion de contrasena y magic link alternativo. Los mappers convierten `snake_case` SQL a modelos TypeScript en ingles.
 
 Esta decision permite probar localmente aunque Supabase Auth o RLS necesiten ajustes, sin romper el MVP demo.
 

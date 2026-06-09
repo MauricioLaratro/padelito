@@ -33,10 +33,13 @@ export type MainViewIdentifier = "feed" | "profile" | "notifications";
 export type BackendModeIdentifier = "local" | "supabase";
 export type AuthLoadingActionIdentifier =
   | "magicLink"
+  | "passwordReset"
   | "passwordSignIn"
-  | "passwordSignUp";
+  | "passwordSignUp"
+  | "passwordUpdate";
 
-const MAGIC_LINK_COOLDOWN_MILLISECONDS = 60_000;
+const LEGACY_MAGIC_LINK_COOLDOWN_STORAGE_KEY =
+  "padelito-magic-link-cooldown-expires-at-v1";
 
 /**
  * Orquesta el estado funcional del MVP local.
@@ -76,12 +79,7 @@ export function usePadelitoMvp() {
   const [isAuthSessionChecking, setIsAuthSessionChecking] = useState(
     Boolean(supabaseBrowserClient),
   );
-  const [magicLinkCooldownExpiresAt, setMagicLinkCooldownExpiresAt] =
-    useLocalStorageState<number | null>(
-      "padelito-magic-link-cooldown-expires-at-v1",
-      () => null,
-    );
-  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+  const [isPasswordRecoveryMode, setIsPasswordRecoveryMode] = useState(false);
   const [remoteErrorMessage, setRemoteErrorMessage] = useState<string | null>(
     null,
   );
@@ -98,16 +96,6 @@ export function usePadelitoMvp() {
   const isSupabaseMode =
     backendMode === "supabase" && Boolean(supabaseRepository);
   const database = isSupabaseMode ? remoteDatabase : localDatabase;
-  const magicLinkCooldownSeconds = useMemo(() => {
-    if (!magicLinkCooldownExpiresAt) {
-      return 0;
-    }
-
-    return Math.max(
-      0,
-      Math.ceil((magicLinkCooldownExpiresAt - currentTimestamp) / 1000),
-    );
-  }, [currentTimestamp, magicLinkCooldownExpiresAt]);
 
   const sessionProfile = getSessionProfile(database);
 
@@ -160,30 +148,8 @@ export function usePadelitoMvp() {
   }, [supabaseRepository]);
 
   useEffect(() => {
-    if (!magicLinkCooldownExpiresAt) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setCurrentTimestamp(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [magicLinkCooldownExpiresAt]);
-
-  useEffect(() => {
-    if (!magicLinkCooldownExpiresAt) {
-      return;
-    }
-
-    if (magicLinkCooldownExpiresAt <= currentTimestamp) {
-      setMagicLinkCooldownExpiresAt(null);
-    }
-  }, [
-    currentTimestamp,
-    magicLinkCooldownExpiresAt,
-    setMagicLinkCooldownExpiresAt,
-  ]);
+    window.localStorage.removeItem(LEGACY_MAGIC_LINK_COOLDOWN_STORAGE_KEY);
+  }, []);
 
   useEffect(() => {
     if (!supabaseBrowserClient || !supabaseRepository) {
@@ -235,6 +201,14 @@ export function usePadelitoMvp() {
     const { data: authListener } =
       configuredSupabaseClient.auth.onAuthStateChange(
         (authEvent, authSession) => {
+          if (authEvent === "PASSWORD_RECOVERY" && authSession) {
+            setBackendMode("supabase");
+            setAuthErrorMessage(null);
+            setAuthStatusMessage(null);
+            setIsPasswordRecoveryMode(true);
+            return;
+          }
+
           if (
             (authEvent === "INITIAL_SESSION" ||
               authEvent === "SIGNED_IN" ||
@@ -247,6 +221,7 @@ export function usePadelitoMvp() {
 
           if (authEvent === "SIGNED_OUT") {
             setRemoteDatabase(createEmptyRepositorySnapshot());
+            setIsPasswordRecoveryMode(false);
           }
         },
       );
@@ -291,6 +266,7 @@ export function usePadelitoMvp() {
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
     setRemoteErrorMessage(null);
+    setIsPasswordRecoveryMode(false);
     setLocalDatabase((currentDatabase) => signInWithDemoProfile(currentDatabase));
   }
 
@@ -309,6 +285,7 @@ export function usePadelitoMvp() {
     setAuthLoadingAction("passwordSignIn");
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
+    setIsPasswordRecoveryMode(false);
 
     const { error } = await supabaseBrowserClient.auth.signInWithPassword({
       email,
@@ -341,6 +318,7 @@ export function usePadelitoMvp() {
     setAuthLoadingAction("passwordSignUp");
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
+    setIsPasswordRecoveryMode(false);
 
     const { data, error } = await supabaseBrowserClient.auth.signUp({
       email,
@@ -362,11 +340,79 @@ export function usePadelitoMvp() {
       setAuthStatusMessage("Cuenta creada. Ya podes completar tu perfil.");
     } else {
       setAuthStatusMessage(
-        "Te enviamos un email para confirmar la cuenta. Despues entra con tu contrasena.",
+        "Si el email es nuevo, te enviamos confirmacion. Si ya tenias cuenta, usa Crear o recuperar contrasena.",
       );
     }
 
     setAuthLoadingAction(null);
+  }
+
+  /**
+   * Envia email para crear o recuperar contrasena.
+   * Se construye para cuentas existentes nacidas por magic link.
+   * Lo usa AuthScreen.
+   * Sirve para iniciar el flujo correcto antes de llamar updateUser.
+   */
+  async function handlePasswordResetRequest(email: string) {
+    if (!supabaseBrowserClient) {
+      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      return;
+    }
+
+    setAuthLoadingAction("passwordReset");
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+
+    const { error } = await supabaseBrowserClient.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: window.location.origin,
+      },
+    );
+
+    setAuthLoadingAction(null);
+
+    if (error) {
+      setAuthErrorMessage(getReadableAuthErrorMessage(error));
+      return;
+    }
+
+    setAuthStatusMessage(
+      "Te enviamos un enlace para crear o recuperar tu contrasena.",
+    );
+  }
+
+  /**
+   * Guarda una nueva contrasena despues del enlace de recuperacion.
+   * Se construye para completar el flujo PASSWORD_RECOVERY de Supabase.
+   * Lo usa AuthScreen cuando el usuario vuelve desde el email.
+   * Sirve para que cuentas existentes puedan entrar luego con contrasena.
+   */
+  async function handlePasswordUpdateRequest(password: string) {
+    if (!supabaseBrowserClient) {
+      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      return;
+    }
+
+    setAuthLoadingAction("passwordUpdate");
+    setAuthErrorMessage(null);
+    setAuthStatusMessage(null);
+
+    const { error } = await supabaseBrowserClient.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      setAuthLoadingAction(null);
+      setAuthErrorMessage(getReadableAuthErrorMessage(error));
+      return;
+    }
+
+    setBackendMode("supabase");
+    setIsPasswordRecoveryMode(false);
+    setAuthLoadingAction(null);
+    setAuthStatusMessage("Contrasena actualizada.");
+    await loadRemoteSnapshot();
   }
 
   /**
@@ -379,6 +425,7 @@ export function usePadelitoMvp() {
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
     setRemoteErrorMessage(null);
+    setIsPasswordRecoveryMode(false);
     setActiveMainView("feed");
     setIsCreatePostOpen(false);
     setInvitedProfileId(null);
@@ -413,13 +460,6 @@ export function usePadelitoMvp() {
       return;
     }
 
-    if (magicLinkCooldownSeconds > 0) {
-      setAuthErrorMessage(
-        `Espera ${magicLinkCooldownSeconds} s antes de pedir otro enlace.`,
-      );
-      return;
-    }
-
     setAuthLoadingAction("magicLink");
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
@@ -434,19 +474,9 @@ export function usePadelitoMvp() {
     if (error) {
       setAuthLoadingAction(null);
       setAuthErrorMessage(getReadableAuthErrorMessage(error));
-
-      if (isRateLimitError(error)) {
-        setMagicLinkCooldownExpiresAt(
-          Date.now() + MAGIC_LINK_COOLDOWN_MILLISECONDS,
-        );
-      }
-
       return;
     }
 
-    setMagicLinkCooldownExpiresAt(
-      Date.now() + MAGIC_LINK_COOLDOWN_MILLISECONDS,
-    );
     setAuthLoadingAction(null);
     setAuthStatusMessage("Te enviamos un enlace de acceso al email.");
   }
@@ -793,8 +823,8 @@ export function usePadelitoMvp() {
     isEmailAuthEnabled: Boolean(supabaseBrowserClient),
     isAuthSessionChecking,
     isCreatePostOpen,
+    isPasswordRecoveryMode,
     isRemoteSnapshotLoading,
-    magicLinkCooldownSeconds,
     lastFeedRefreshAt,
     remoteErrorMessage,
     sessionProfile,
@@ -807,8 +837,10 @@ export function usePadelitoMvp() {
     handleDemoSignIn,
     handleSignOut,
     handleEmailSignInRequest,
+    handlePasswordResetRequest,
     handlePasswordSignInRequest,
     handlePasswordSignUpRequest,
+    handlePasswordUpdateRequest,
     handleDirectInvitationCreate,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
@@ -851,7 +883,7 @@ function getReadableAuthErrorMessage(error: unknown) {
   const normalizedMessage = readableMessage.toLowerCase();
 
   if (normalizedMessage.includes("rate limit")) {
-    return "Pedimos un email hace muy poco. Espera un minuto y vuelve a intentar.";
+    return "El envio de emails esta limitado temporalmente. Proba con contrasena o intenta mas tarde.";
   }
 
   if (normalizedMessage.includes("invalid login credentials")) {
@@ -867,14 +899,4 @@ function getReadableAuthErrorMessage(error: unknown) {
   }
 
   return readableMessage;
-}
-
-/**
- * Detecta errores de limite de envio de emails.
- * Se construye para activar cooldown aunque Supabase rechace la solicitud.
- * Lo usa el flujo de magic link.
- * Sirve para evitar reintentos que empeoren el bloqueo temporal.
- */
-function isRateLimitError(error: unknown) {
-  return getReadableErrorMessage(error).toLowerCase().includes("rate limit");
 }

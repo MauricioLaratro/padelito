@@ -42,14 +42,14 @@
 - [x] Auth con email y contrasena para login cotidiano.
 - [x] Registro con email y contrasena.
 - [x] Sesion persistente al reabrir la app.
-- [x] Cooldown local para magic link y mensajes humanos ante rate limit.
+- [x] Mensajes humanos ante rate limit de emails.
+- [x] Recuperacion y creacion de contrasena para cuentas existentes.
 - [x] Auth demo local.
 - [x] Onboarding local de perfil jugador.
 - [x] Onboarding local de perfil organizacion.
 - [x] Validar login magic link con email real.
 - [x] Validar creacion de perfil real en Supabase.
 - [x] Cerrar sesion desde perfil sin borrar datos persistidos.
-- [ ] Recuperacion de contrasena.
 - [ ] Edicion de perfil.
 
 ## Etapa 5 - Feeds
@@ -80,6 +80,7 @@
 - [x] Corregir overflow horizontal mobile.
 - [x] Evitar service worker en desarrollo para no romper HMR.
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
+- [x] Invalidar cache PWA para refrescar SVG de marca.
 - [ ] Pulir UX.
 - [ ] Deploy Cloudflare Pages.
 

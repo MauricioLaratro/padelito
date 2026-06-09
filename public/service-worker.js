@@ -1,4 +1,4 @@
-const staticCacheName = "padelito-static-v1";
+const staticCacheName = "padelito-static-v2";
 const staticAssetUrls = ["/", "/index.html", "/manifest.webmanifest", "/app-icon.svg", "/logo-padelito.svg"];
 
 self.addEventListener("install", (installEvent) => {
