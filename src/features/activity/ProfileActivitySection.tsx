@@ -1,4 +1,13 @@
-import { CalendarDays, Check, Clock, MapPin, Send, UserRound, X } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  Clock,
+  MapPin,
+  Send,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
@@ -9,7 +18,10 @@ import {
   requestStatusLabels,
 } from "../../constants/postOptions";
 import { playStyleLabels } from "../../constants/profileOptions";
-import type { MatchJoinRequest } from "../../domain/models/postModels";
+import type {
+  DirectMatchInvitation,
+  MatchJoinRequest,
+} from "../../domain/models/postModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 
@@ -119,10 +131,12 @@ export function ProfileActivitySection({
       <ActivityCard title="Invitaciones enviadas">
         {sentInvitations.length > 0 ? (
           sentInvitations.map((directMatchInvitation) => (
-            <ActivityRow
+            <InvitationActivityCard
+              database={database}
               key={directMatchInvitation.invitationId}
-              meta={invitationStatusLabels[directMatchInvitation.status]}
-              title={`Partido ${playStyleLabels[directMatchInvitation.desiredPlayStyle]}`}
+              invitation={directMatchInvitation}
+              mode="sent"
+              onDirectInvitationStatusChange={onDirectInvitationStatusChange}
             />
           ))
         ) : (
@@ -133,43 +147,13 @@ export function ProfileActivitySection({
       <ActivityCard title="Invitaciones recibidas">
         {receivedInvitations.length > 0 ? (
           receivedInvitations.map((directMatchInvitation) => (
-            <div className="grid gap-2" key={directMatchInvitation.invitationId}>
-              <ActivityRow
-                meta={invitationStatusLabels[directMatchInvitation.status]}
-                title={formatScheduledDateTime(
-                  directMatchInvitation.scheduledDate,
-                  directMatchInvitation.scheduledStartTime,
-                )}
-              />
-              {directMatchInvitation.status === "pending" ? (
-                <div className="flex gap-2">
-                  <Button
-                    icon={Check}
-                    onClick={() =>
-                      onDirectInvitationStatusChange(
-                        directMatchInvitation.invitationId,
-                        "accepted",
-                      )
-                    }
-                    variant="primary"
-                  >
-                    Aceptar
-                  </Button>
-                  <Button
-                    icon={X}
-                    onClick={() =>
-                      onDirectInvitationStatusChange(
-                        directMatchInvitation.invitationId,
-                        "rejected",
-                      )
-                    }
-                    variant="danger"
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+            <InvitationActivityCard
+              database={database}
+              key={directMatchInvitation.invitationId}
+              invitation={directMatchInvitation}
+              mode="received"
+              onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+            />
           ))
         ) : (
           <p className="text-sm text-text-secondary">Sin invitaciones recibidas.</p>
@@ -189,6 +173,117 @@ export function ProfileActivitySection({
           <p className="text-sm text-text-secondary">Sin eventos marcados.</p>
         )}
       </ActivityCard>
+    </div>
+  );
+}
+
+interface InvitationActivityCardProps {
+  database: PadelitoLocalDatabase;
+  invitation: DirectMatchInvitation;
+  mode: "sent" | "received";
+  onDirectInvitationStatusChange: (
+    invitationId: string,
+    status: "accepted" | "rejected",
+  ) => void;
+}
+
+/**
+ * Card contextual de invitacion directa.
+ * Se construye para mostrar partido, jugador y estado en perfil.
+ * La usa ProfileActivitySection en invitaciones enviadas y recibidas.
+ * Sirve para responder invitaciones y entender si ya impactaron en un cupo.
+ */
+function InvitationActivityCard({
+  database,
+  invitation,
+  mode,
+  onDirectInvitationStatusChange,
+}: InvitationActivityCardProps) {
+  const relatedPost = invitation.relatedPostId
+    ? database.posts.find((post) => post.postId === invitation.relatedPostId)
+    : null;
+  const inviterProfile = database.profiles.find(
+    (profile) => profile.profileId === invitation.inviterProfileId,
+  );
+  const invitedProfile = database.profiles.find(
+    (profile) => profile.profileId === invitation.invitedProfileId,
+  );
+  const relatedProfile = mode === "sent" ? invitedProfile : inviterProfile;
+  const statusLabel = invitationStatusLabels[invitation.status];
+  const statusTone =
+    invitation.status === "accepted"
+      ? "success"
+      : invitation.status === "rejected" || invitation.status === "cancelled"
+        ? "danger"
+        : "lime";
+
+  return (
+    <div className="grid gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-accent-lime">
+            {mode === "sent" ? "Invitacion enviada" : "Invitacion recibida"}
+          </p>
+          <h4 className="mt-1 text-sm font-black">
+            Partido {playStyleLabels[invitation.desiredPlayStyle]}
+          </h4>
+        </div>
+        <Chip tone={statusTone}>{statusLabel}</Chip>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Chip icon={CalendarDays}>
+          {formatScheduledDateTime(
+            invitation.scheduledDate,
+            invitation.scheduledStartTime,
+          )}
+        </Chip>
+        <Chip icon={MapPin}>{invitation.placeText}</Chip>
+        {relatedPost?.postType === "looking_for_player" ? (
+          <Chip icon={UsersRound}>Faltan {relatedPost.missingPlayersCount}</Chip>
+        ) : null}
+        {relatedProfile ? (
+          <Chip icon={UserRound}>
+            {mode === "sent" ? "Invitado" : "Invita"}:{" "}
+            {relatedProfile.displayName}
+          </Chip>
+        ) : null}
+      </div>
+
+      {invitation.status === "accepted" && mode === "sent" ? (
+        <p className="text-sm leading-6 text-feedback-success">
+          Aceptaron tu invitacion para este partido.
+        </p>
+      ) : null}
+
+      {invitation.status === "pending" && mode === "received" ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            icon={Check}
+            onClick={() =>
+              onDirectInvitationStatusChange(
+                invitation.invitationId,
+                "accepted",
+              )
+            }
+            variant="primary"
+          >
+            Aceptar
+          </Button>
+          <Button
+            icon={X}
+            onClick={() =>
+              onDirectInvitationStatusChange(
+                invitation.invitationId,
+                "rejected",
+              )
+            }
+            variant="danger"
+          >
+            Rechazar
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

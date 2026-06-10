@@ -112,6 +112,7 @@ export interface SupabaseDirectMatchInvitationRow {
   id: string;
   inviter_profile_id: string;
   invited_profile_id: string;
+  related_post_id: string | null;
   scheduled_date: string;
   scheduled_start_time: string;
   place_text: string;

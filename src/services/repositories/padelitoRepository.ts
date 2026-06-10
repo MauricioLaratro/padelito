@@ -11,6 +11,7 @@ import type { PlayStyle } from "../../domain/enums/profileEnums";
 
 export interface CreateInvitationInput {
   invitedProfileId: string;
+  relatedPostId?: string;
   scheduledDate: string;
   scheduledStartTime: string;
   placeText: string;

@@ -2,6 +2,7 @@ import type { EventInteractionType } from "../../domain/enums/postEnums";
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
   DirectMatchInvitation,
+  LookingForPlayerPost,
   MatchJoinRequest,
   Post,
 } from "../../domain/models/postModels";
@@ -12,6 +13,8 @@ import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
 import type { CreateInvitationInput } from "./padelitoRepository";
 
 export type { CreateInvitationInput } from "./padelitoRepository";
+
+const CONFIRMED_PLAYERS_TEXT_LIMIT = 180;
 
 /**
  * Obtiene el perfil de sesion actual.
@@ -287,6 +290,14 @@ export function updateMatchJoinRequestStatus(
     return database;
   }
 
+  if (status === "accepted" && !canAcceptPlayerOnPost(database.posts, request.postId)) {
+    return database;
+  }
+
+  const currentTimestamp = createCurrentIsoDate();
+  const requesterProfile = database.profiles.find(
+    (profile) => profile.profileId === request.requesterProfileId,
+  );
   const notification = createNotification({
     recipientProfileId: request.requesterProfileId,
     actorProfileId: request.ownerProfileId,
@@ -305,12 +316,21 @@ export function updateMatchJoinRequestStatus(
 
   return {
     ...database,
+    posts:
+      status === "accepted"
+        ? updateAcceptedPlayerOnPost(
+            database.posts,
+            request.postId,
+            requesterProfile?.displayName,
+            currentTimestamp,
+          )
+        : database.posts,
     matchJoinRequests: database.matchJoinRequests.map((matchJoinRequest) =>
       matchJoinRequest.requestId === requestId
         ? {
             ...matchJoinRequest,
             status,
-            updatedAt: createCurrentIsoDate(),
+            updatedAt: currentTimestamp,
           }
         : matchJoinRequest,
     ),
@@ -329,15 +349,33 @@ export function createDirectMatchInvitation(
   inviterProfileId: string,
   invitationInput: CreateInvitationInput,
 ) {
+  const relatedPost = invitationInput.relatedPostId
+    ? database.posts.find(
+        (post): post is LookingForPlayerPost =>
+          post.postId === invitationInput.relatedPostId &&
+          post.authorProfileId === inviterProfileId &&
+          post.postType === "looking_for_player" &&
+          post.isActive &&
+          post.missingPlayersCount > 0,
+      )
+    : undefined;
+
+  if (invitationInput.relatedPostId && !relatedPost) {
+    return database;
+  }
+
   const currentTimestamp = createCurrentIsoDate();
   const invitation: DirectMatchInvitation = {
     invitationId: createEntityIdentifier("invitation"),
     inviterProfileId,
     invitedProfileId: invitationInput.invitedProfileId,
-    scheduledDate: invitationInput.scheduledDate,
-    scheduledStartTime: invitationInput.scheduledStartTime,
-    placeText: invitationInput.placeText,
-    desiredPlayStyle: invitationInput.desiredPlayStyle,
+    relatedPostId: relatedPost?.postId,
+    scheduledDate: relatedPost?.scheduledDate ?? invitationInput.scheduledDate,
+    scheduledStartTime:
+      relatedPost?.scheduledStartTime ?? invitationInput.scheduledStartTime,
+    placeText: relatedPost?.placeText ?? invitationInput.placeText,
+    desiredPlayStyle:
+      relatedPost?.desiredPlayStyle ?? invitationInput.desiredPlayStyle,
     note: invitationInput.note,
     status: "pending",
     createdAt: currentTimestamp,
@@ -348,6 +386,7 @@ export function createDirectMatchInvitation(
     recipientProfileId: invitation.invitedProfileId,
     actorProfileId: inviterProfileId,
     notificationType: "direct_match_invitation_received",
+    relatedPostId: invitation.relatedPostId,
     relatedInvitationId: invitation.invitationId,
     title: "Invitacion a partido",
     body: "Recibiste una invitacion directa para jugar.",
@@ -383,6 +422,22 @@ export function updateDirectMatchInvitationStatus(
     return database;
   }
 
+  if (invitation.status !== "pending") {
+    return database;
+  }
+
+  if (
+    status === "accepted" &&
+    invitation.relatedPostId &&
+    !canAcceptPlayerOnPost(database.posts, invitation.relatedPostId)
+  ) {
+    return database;
+  }
+
+  const currentTimestamp = createCurrentIsoDate();
+  const invitedProfile = database.profiles.find(
+    (profile) => profile.profileId === invitation.invitedProfileId,
+  );
   const notification = createNotification({
     recipientProfileId: invitation.inviterProfileId,
     actorProfileId: invitation.invitedProfileId,
@@ -390,6 +445,7 @@ export function updateDirectMatchInvitationStatus(
       status === "accepted"
         ? "direct_match_invitation_accepted"
         : "direct_match_invitation_rejected",
+    relatedPostId: invitation.relatedPostId,
     relatedInvitationId: invitation.invitationId,
     title:
       status === "accepted" ? "Invitacion aceptada" : "Invitacion rechazada",
@@ -401,13 +457,22 @@ export function updateDirectMatchInvitationStatus(
 
   return {
     ...database,
+    posts:
+      status === "accepted" && invitation.relatedPostId
+        ? updateAcceptedPlayerOnPost(
+            database.posts,
+            invitation.relatedPostId,
+            invitedProfile?.displayName,
+            currentTimestamp,
+          )
+        : database.posts,
     directMatchInvitations: database.directMatchInvitations.map(
       (directMatchInvitation) =>
         directMatchInvitation.invitationId === invitationId
           ? {
               ...directMatchInvitation,
               status,
-              updatedAt: createCurrentIsoDate(),
+              updatedAt: currentTimestamp,
             }
           : directMatchInvitation,
     ),
@@ -511,4 +576,102 @@ function createNotification(
     notificationId: createEntityIdentifier("notification"),
     createdAt: createCurrentIsoDate(),
   };
+}
+
+/**
+ * Verifica si un partido todavia tiene cupo para aceptar jugadores.
+ * Se construye para evitar confirmaciones sobre publicaciones ya completas.
+ * Lo usan respuestas locales de solicitudes e invitaciones.
+ * Sirve para mantener cupos consistentes ante acciones repetidas.
+ */
+function canAcceptPlayerOnPost(posts: Post[], postId: string) {
+  const post = posts.find((candidatePost) => candidatePost.postId === postId);
+
+  return (
+    Boolean(post) &&
+    post?.postType === "looking_for_player" &&
+    post.isActive &&
+    post.missingPlayersCount > 0
+  );
+}
+
+/**
+ * Actualiza el cupo de un partido cuando se acepta un jugador.
+ * Se construye para que solicitudes e invitaciones compartan la misma regla.
+ * Lo usan las respuestas aceptadas del repositorio local.
+ * Sirve para marcar completo el partido cuando ya no faltan jugadores.
+ */
+function updateAcceptedPlayerOnPost(
+  posts: Post[],
+  postId: string,
+  acceptedPlayerName: string | undefined,
+  updatedTimestamp: string,
+) {
+  return posts.map((post) => {
+    if (post.postId !== postId || post.postType !== "looking_for_player") {
+      return post;
+    }
+
+    return updateLookingForPlayerPostAfterAcceptance(
+      post,
+      acceptedPlayerName,
+      updatedTimestamp,
+    );
+  });
+}
+
+/**
+ * Reduce cupo y agrega al jugador confirmado.
+ * Se construye para mantener consistente la card de Busco jugador.
+ * Lo usa updateAcceptedPlayerOnPost.
+ * Sirve para reflejar aceptaciones sin perder el historial visible.
+ */
+function updateLookingForPlayerPostAfterAcceptance(
+  post: LookingForPlayerPost,
+  acceptedPlayerName: string | undefined,
+  updatedTimestamp: string,
+): LookingForPlayerPost {
+  const nextMissingPlayersCount = Math.max(post.missingPlayersCount - 1, 0);
+
+  return {
+    ...post,
+    missingPlayersCount: nextMissingPlayersCount,
+    confirmedPlayersText: appendConfirmedPlayerName(
+      post.confirmedPlayersText,
+      acceptedPlayerName,
+    ),
+    isActive: nextMissingPlayersCount > 0,
+    updatedAt: updatedTimestamp,
+  };
+}
+
+/**
+ * Agrega un nombre al texto de confirmados evitando duplicados simples.
+ * Se construye porque el MVP todavia guarda confirmados como texto compacto.
+ * Lo usan actualizaciones locales de cupo.
+ * Sirve para mostrar rapidamente quienes ya estan dentro del partido.
+ */
+function appendConfirmedPlayerName(
+  confirmedPlayersText: string | undefined,
+  acceptedPlayerName: string | undefined,
+) {
+  const normalizedPlayerName = acceptedPlayerName?.trim();
+
+  if (!normalizedPlayerName) {
+    return confirmedPlayersText;
+  }
+
+  if (
+    confirmedPlayersText
+      ?.toLowerCase()
+      .includes(normalizedPlayerName.toLowerCase())
+  ) {
+    return confirmedPlayersText;
+  }
+
+  const nextConfirmedPlayersText = confirmedPlayersText?.trim()
+    ? `${confirmedPlayersText}, ${normalizedPlayerName}`
+    : normalizedPlayerName;
+
+  return nextConfirmedPlayersText.slice(0, CONFIRMED_PLAYERS_TEXT_LIMIT);
 }

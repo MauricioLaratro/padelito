@@ -36,6 +36,8 @@
 - [x] Ejecutar migracion inicial en Supabase Cloud.
 - [x] Verificar esquema aplicado con `schema_ok`.
 - [x] Crear repositorios Supabase para reemplazar repositorio local.
+- [x] Crear migracion incremental para invitaciones vinculadas a partidos y cupos `0-24`.
+- [ ] Aplicar `supabase/migrations/202606100001_link_invitations_to_posts_and_slots.sql` en Supabase Cloud.
 
 ## Etapa 4 - Auth y perfiles
 - [x] Auth simple con Supabase por magic link.
@@ -71,8 +73,12 @@
 - [x] Estado visual de solicitud enviada en cards.
 - [x] Cards de solicitudes enviadas y recibidas en perfil.
 - [x] Invitaciones directas locales.
+- [x] Vincular invitaciones directas a un partido propio abierto cuando exista.
+- [x] Descontar cupo y marcar partido completo al aceptar solicitudes o invitaciones.
 - [x] Notificaciones internas locales.
+- [x] Notificaciones accionables para abrir solicitudes e invitaciones.
 - [x] Actividad en perfil local.
+- [x] Cards contextuales de invitaciones enviadas y recibidas en perfil.
 - [ ] Buscar jugadores por nombre.
 - [ ] Ver perfil publico de otro jugador.
 - [ ] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.

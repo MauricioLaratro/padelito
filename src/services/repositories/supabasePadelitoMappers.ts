@@ -408,6 +408,7 @@ export function mapSupabaseDirectMatchInvitationRow(
     invitationId: row.id,
     inviterProfileId: row.inviter_profile_id,
     invitedProfileId: row.invited_profile_id,
+    relatedPostId: nullToUndefined(row.related_post_id),
     scheduledDate: row.scheduled_date,
     scheduledStartTime: normalizeTimeValue(row.scheduled_start_time),
     placeText: row.place_text,
@@ -434,6 +435,7 @@ export function mapDirectMatchInvitationToSupabaseInsert(
   return {
     inviter_profile_id: directMatchInvitation.inviterProfileId,
     invited_profile_id: directMatchInvitation.invitedProfileId,
+    related_post_id: directMatchInvitation.relatedPostId ?? null,
     scheduled_date: directMatchInvitation.scheduledDate,
     scheduled_start_time: directMatchInvitation.scheduledStartTime,
     place_text: directMatchInvitation.placeText,

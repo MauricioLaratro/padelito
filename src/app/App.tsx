@@ -13,6 +13,7 @@ import { CreatePostModal } from "../features/posts/CreatePostModal";
 import { DirectInvitationModal } from "../features/posts/DirectInvitationModal";
 import { ProfileScreen } from "../features/profiles/ProfileScreen";
 import { usePadelitoMvp } from "../hooks/usePadelitoMvp";
+import type { LookingForPlayerPost } from "../domain/models/postModels";
 
 /**
  * Componente raiz de Padelito.
@@ -52,10 +53,12 @@ export function App() {
     );
   }
 
-  if (!padelitoMvp.sessionProfile.isOnboardingComplete) {
+  const currentSessionProfile = padelitoMvp.sessionProfile;
+
+  if (!currentSessionProfile.isOnboardingComplete) {
     return (
       <OnboardingProfileScreen
-        currentProfile={padelitoMvp.sessionProfile}
+        currentProfile={currentSessionProfile}
         onProfileSave={padelitoMvp.handleProfileSave}
       />
     );
@@ -66,6 +69,13 @@ export function App() {
         (profile) => profile.profileId === padelitoMvp.invitedProfileId,
       )
     : null;
+  const availableInvitationPosts = padelitoMvp.database.posts.filter(
+    (post): post is LookingForPlayerPost =>
+      post.authorProfileId === currentSessionProfile.profileId &&
+      post.postType === "looking_for_player" &&
+      post.isActive &&
+      post.missingPlayersCount > 0,
+  );
 
   return (
     <ScreenShell>
@@ -129,7 +139,7 @@ export function App() {
             </div>
           ) : null}
           <FeedScreen
-            currentProfileId={padelitoMvp.sessionProfile.profileId}
+            currentProfileId={currentSessionProfile.profileId}
             database={padelitoMvp.database}
             onEventInteractionToggle={
               padelitoMvp.handleEventInteractionToggle
@@ -147,15 +157,21 @@ export function App() {
 
       {padelitoMvp.activeMainView === "notifications" ? (
         <NotificationsScreen
-          currentProfileId={padelitoMvp.sessionProfile.profileId}
+          currentProfileId={currentSessionProfile.profileId}
+          database={padelitoMvp.database}
           notifications={padelitoMvp.database.notifications}
+          onDirectInvitationStatusChange={
+            padelitoMvp.handleDirectInvitationStatusChange
+          }
+          onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
+          onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
           onNotificationsRead={padelitoMvp.handleNotificationsRead}
         />
       ) : null}
 
       {padelitoMvp.activeMainView === "profile" ? (
         <ProfileScreen
-          currentProfile={padelitoMvp.sessionProfile}
+          currentProfile={currentSessionProfile}
           database={padelitoMvp.database}
           onDirectInvitationStatusChange={
             padelitoMvp.handleDirectInvitationStatusChange
@@ -177,7 +193,7 @@ export function App() {
 
       {padelitoMvp.isCreatePostOpen ? (
         <CreatePostModal
-          authorProfile={padelitoMvp.sessionProfile}
+          authorProfile={currentSessionProfile}
           onClose={() => padelitoMvp.setIsCreatePostOpen(false)}
           onPostCreate={padelitoMvp.handlePostCreate}
         />
@@ -185,6 +201,7 @@ export function App() {
 
       {invitedProfile ? (
         <DirectInvitationModal
+          availableInvitationPosts={availableInvitationPosts}
           invitedProfile={invitedProfile}
           onClose={() => padelitoMvp.setInvitedProfileId(null)}
           onInvitationCreate={padelitoMvp.handleDirectInvitationCreate}

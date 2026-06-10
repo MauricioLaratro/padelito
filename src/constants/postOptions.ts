@@ -6,6 +6,8 @@ import type {
   RequestStatus,
 } from "../domain/enums/postEnums";
 
+export const maximumMissingPlayersCount = 24;
+
 export const postTypeLabels: Record<PostType, string> = {
   looking_for_player: "Busco jugador",
   available_to_play: "Estoy disponible",

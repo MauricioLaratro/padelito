@@ -5,10 +5,13 @@ import { Button } from "../../components/common/Button";
 import { FormField } from "../../components/forms/FormField";
 import { playStyleOptions } from "../../constants/profileOptions";
 import type { PlayStyle } from "../../domain/enums/profileEnums";
+import type { LookingForPlayerPost } from "../../domain/models/postModels";
 import type { Profile } from "../../domain/models/profileModels";
 import type { CreateInvitationInput } from "../../services/repositories/localPadelitoRepository";
+import { formatScheduledDateTime } from "../../utils/dateFormatters";
 
 interface DirectInvitationModalProps {
+  availableInvitationPosts: LookingForPlayerPost[];
   invitedProfile: Profile;
   onClose: () => void;
   onInvitationCreate: (invitationInput: CreateInvitationInput) => void;
@@ -21,16 +24,58 @@ interface DirectInvitationModalProps {
  * Sirve para crear invitaciones internas con estado pendiente.
  */
 export function DirectInvitationModal({
+  availableInvitationPosts,
   invitedProfile,
   onClose,
   onInvitationCreate,
 }: DirectInvitationModalProps) {
-  const [scheduledDate, setScheduledDate] = useState("2026-06-20");
-  const [scheduledStartTime, setScheduledStartTime] = useState("19:00");
-  const [placeText, setPlaceText] = useState("Club Norte");
+  const defaultInvitationPost = availableInvitationPosts[0];
+  const [selectedInvitationPostId, setSelectedInvitationPostId] = useState(
+    defaultInvitationPost?.postId ?? "manual",
+  );
+  const [scheduledDate, setScheduledDate] = useState(
+    defaultInvitationPost?.scheduledDate ?? "2026-06-20",
+  );
+  const [scheduledStartTime, setScheduledStartTime] = useState(
+    defaultInvitationPost?.scheduledStartTime ?? "19:00",
+  );
+  const [placeText, setPlaceText] = useState(
+    defaultInvitationPost?.placeText ?? "Club Norte",
+  );
   const [desiredPlayStyle, setDesiredPlayStyle] =
-    useState<PlayStyle>("competitive");
+    useState<PlayStyle>(
+      defaultInvitationPost?.desiredPlayStyle ?? "competitive",
+    );
   const [note, setNote] = useState("");
+  const selectedInvitationPost = availableInvitationPosts.find(
+    (availableInvitationPost) =>
+      availableInvitationPost.postId === selectedInvitationPostId,
+  );
+  const isLinkedToExistingPost = Boolean(selectedInvitationPost);
+
+  /**
+   * Cambia el partido asociado a la invitacion.
+   * Se construye para sincronizar fecha, hora, lugar y estilo con el cupo real.
+   * Lo usa el selector de partido del modal.
+   * Sirve para evitar invitaciones ambiguas cuando hay varios partidos abiertos.
+   */
+  function handleInvitationPostChange(nextInvitationPostId: string) {
+    setSelectedInvitationPostId(nextInvitationPostId);
+
+    const nextInvitationPost = availableInvitationPosts.find(
+      (availableInvitationPost) =>
+        availableInvitationPost.postId === nextInvitationPostId,
+    );
+
+    if (!nextInvitationPost) {
+      return;
+    }
+
+    setScheduledDate(nextInvitationPost.scheduledDate);
+    setScheduledStartTime(nextInvitationPost.scheduledStartTime);
+    setPlaceText(nextInvitationPost.placeText);
+    setDesiredPlayStyle(nextInvitationPost.desiredPlayStyle);
+  }
 
   /**
    * Envia invitacion directa.
@@ -45,6 +90,7 @@ export function DirectInvitationModal({
 
     onInvitationCreate({
       invitedProfileId: invitedProfile.profileId,
+      relatedPostId: selectedInvitationPost?.postId,
       scheduledDate,
       scheduledStartTime,
       placeText,
@@ -79,8 +125,35 @@ export function DirectInvitationModal({
         </div>
 
         <div className="mt-5 grid gap-3">
+          {availableInvitationPosts.length > 0 ? (
+            <FormField
+              fieldType="select"
+              label="Partido"
+              onChange={(changeEvent) =>
+                handleInvitationPostChange(changeEvent.target.value)
+              }
+              value={selectedInvitationPostId}
+            >
+              {availableInvitationPosts.map((availableInvitationPost) => (
+                <option
+                  key={availableInvitationPost.postId}
+                  value={availableInvitationPost.postId}
+                >
+                  {formatScheduledDateTime(
+                    availableInvitationPost.scheduledDate,
+                    availableInvitationPost.scheduledStartTime,
+                    availableInvitationPost.scheduledEndTime,
+                  )}{" "}
+                  - {availableInvitationPost.placeText} - faltan{" "}
+                  {availableInvitationPost.missingPlayersCount}
+                </option>
+              ))}
+              <option value="manual">Otro partido</option>
+            </FormField>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             <FormField
+              disabled={isLinkedToExistingPost}
               label="Fecha"
               onChange={(changeEvent) => setScheduledDate(changeEvent.target.value)}
               required
@@ -88,6 +161,7 @@ export function DirectInvitationModal({
               value={scheduledDate}
             />
             <FormField
+              disabled={isLinkedToExistingPost}
               label="Hora"
               onChange={(changeEvent) =>
                 setScheduledStartTime(changeEvent.target.value)
@@ -98,12 +172,14 @@ export function DirectInvitationModal({
             />
           </div>
           <FormField
+            disabled={isLinkedToExistingPost}
             label="Lugar"
             onChange={(changeEvent) => setPlaceText(changeEvent.target.value)}
             required
             value={placeText}
           />
           <FormField
+            disabled={isLinkedToExistingPost}
             fieldType="select"
             label="Tipo de juego"
             onChange={(changeEvent) =>

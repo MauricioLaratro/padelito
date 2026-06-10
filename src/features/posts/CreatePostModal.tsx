@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { FormField } from "../../components/forms/FormField";
 import {
+  maximumMissingPlayersCount,
   postVisibilityOptions,
   postTypeOptions,
 } from "../../constants/postOptions";
@@ -116,6 +117,7 @@ export function CreatePostModal({
     onPostCreate({
       ...basePost,
       postType,
+      isActive: missingPlayersCount > 0,
       desiredLevel: selectedLevel,
       desiredPosition: selectedPosition,
       desiredPlayStyle: selectedPlayStyle,
@@ -318,10 +320,17 @@ export function CreatePostModal({
                 <>
                   <FormField
                     label="Jugadores faltantes"
-                    min={1}
+                    max={maximumMissingPlayersCount}
+                    min={0}
                     onChange={(changeEvent) =>
                       setMissingPlayersCount(
-                        Number.parseInt(changeEvent.target.value, 10),
+                        Math.min(
+                          maximumMissingPlayersCount,
+                          Math.max(
+                            0,
+                            Number.parseInt(changeEvent.target.value, 10) || 0,
+                          ),
+                        ),
                       )
                     }
                     type="number"

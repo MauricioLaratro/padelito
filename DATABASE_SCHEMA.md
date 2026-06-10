@@ -7,6 +7,9 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - Migracion aplicada en Supabase Cloud para el proyecto `zrddjpvtkqebvmazauhu`.
 - Verificacion SQL devolvio `schema_ok`.
 - La funcion `can_read_post` se crea despues de `posts` y `follows` para evitar errores de referencia durante la migracion.
+- Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` creada y pendiente de aplicar en Supabase Cloud.
+- `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
+- Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
 
 ## Enums sugeridos
 
@@ -89,7 +92,7 @@ Campos para `looking_for_player`:
 - desired_level
 - desired_position
 - desired_play_style
-- missing_players_count
+- missing_players_count entre 0 y 24
 - confirmed_players_text nullable
 
 Campos para `available_to_play`:
@@ -142,6 +145,7 @@ Invitacion directa desde perfil.
 - id
 - inviter_profile_id
 - invited_profile_id
+- related_post_id nullable
 - scheduled_date
 - scheduled_start_time
 - place_text
@@ -279,9 +283,9 @@ Reglas generales:
 - cada autor administra sus publicaciones
 - solicitudes visibles para requester y owner
 - requester solo puede cancelar o reabrir sus solicitudes
-- owner solo puede aceptar o rechazar solicitudes pendientes
+- owner responde solicitudes pendientes mediante `answer_match_join_request`
 - invitaciones visibles para inviter e invited
-- invited solo puede aceptar o rechazar invitaciones pendientes
+- invited responde invitaciones pendientes mediante `answer_direct_match_invitation`
 - inviter solo puede cancelar invitaciones pendientes
 - notificaciones visibles solo por recipient
 - partidos visibles segun visibilidad o participacion
@@ -289,3 +293,11 @@ Reglas generales:
 - desafios recurrentes visibles para participantes o segun visibilidad futura
 
 El agente debe escribir migraciones SQL completas y seguras.
+
+## Funciones operativas
+
+- `can_read_post`: permite leer posts activos segun visibilidad y tambien posts completos si el usuario es autor, requester aceptado/relacionado o invitado relacionado.
+- `answer_match_join_request`: valida owner, estado pendiente y descuenta cupo cuando acepta.
+- `answer_direct_match_invitation`: valida invited, estado pendiente y descuenta cupo del `related_post_id` cuando acepta.
+- `register_accepted_player_on_post`: reduce `missing_players_count`, agrega el nombre a `confirmed_players_text` y marca `is_active = false` si el cupo llega a `0`.
+- `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.

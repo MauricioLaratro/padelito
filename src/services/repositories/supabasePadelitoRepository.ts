@@ -378,13 +378,17 @@ export function createSupabasePadelitoRepository(
       return;
     }
 
-    const savedRequest = await updateExistingMatchJoinRequest(requestId, {
-      postId: request.post_id,
-      requesterProfileId: request.requester_profile_id,
-      ownerProfileId: request.owner_profile_id,
-      status,
-      message: request.message ?? undefined,
-    });
+    const { error: answerRequestError } = await supabaseClient.rpc(
+      "answer_match_join_request",
+      {
+        request_id_input: requestId,
+        status_input: status,
+      },
+    );
+
+    if (answerRequestError) {
+      throw createSupabaseError("responder solicitud", answerRequestError);
+    }
 
     await createNotification({
       recipientProfileId: request.requester_profile_id,
@@ -394,7 +398,7 @@ export function createSupabasePadelitoRepository(
           ? "match_join_request_accepted"
           : "match_join_request_rejected",
       relatedPostId: request.post_id,
-      relatedRequestId: savedRequest.id,
+      relatedRequestId: request.id,
       title: status === "accepted" ? "Solicitud aceptada" : "Solicitud rechazada",
       body:
         status === "accepted"
@@ -419,6 +423,7 @@ export function createSupabasePadelitoRepository(
     > = {
       inviterProfileId,
       invitedProfileId: invitationInput.invitedProfileId,
+      relatedPostId: invitationInput.relatedPostId,
       scheduledDate: invitationInput.scheduledDate,
       scheduledStartTime: invitationInput.scheduledStartTime,
       placeText: invitationInput.placeText,
@@ -432,6 +437,7 @@ export function createSupabasePadelitoRepository(
       recipientProfileId: invitationInput.invitedProfileId,
       actorProfileId: inviterProfileId,
       notificationType: "direct_match_invitation_received",
+      relatedPostId: invitationInput.relatedPostId,
       relatedInvitationId: savedInvitation.id,
       title: "Invitacion a partido",
       body: "Recibiste una invitacion directa para jugar.",
@@ -462,10 +468,13 @@ export function createSupabasePadelitoRepository(
       return;
     }
 
-    const { error } = await supabaseClient
-      .from("direct_match_invitations")
-      .update({ status })
-      .eq("id", invitationId);
+    const { error } = await supabaseClient.rpc(
+      "answer_direct_match_invitation",
+      {
+        invitation_id_input: invitationId,
+        status_input: status,
+      },
+    );
 
     if (error) {
       throw createSupabaseError("actualizar invitacion", error);
@@ -478,6 +487,7 @@ export function createSupabasePadelitoRepository(
         status === "accepted"
           ? "direct_match_invitation_accepted"
           : "direct_match_invitation_rejected",
+      relatedPostId: invitation.related_post_id ?? undefined,
       relatedInvitationId: invitation.id,
       title:
         status === "accepted" ? "Invitacion aceptada" : "Invitacion rechazada",

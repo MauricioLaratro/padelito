@@ -14,6 +14,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 - Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
+- Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` creada para vincular invitaciones a partidos, permitir cupos `0-24` y responder por RPC. Pendiente de aplicar en Supabase Cloud.
 
 ## Comprension del producto
 
@@ -36,10 +37,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
+- Invitaciones directas pueden vincularse a un partido propio abierto; si se aceptan, descuentan cupo y el partido queda completo cuando faltantes llega a `0`.
+- Las aceptaciones remotas de solicitudes e invitaciones deben pasar por funciones SQL `answer_match_join_request` y `answer_direct_match_invitation`, evitando updates directos que no descuenten cupo.
 
 ## Riesgos tecnicos
 
 - RLS de Supabase requiere mucho cuidado por publicaciones `public` y `followers_only`.
+- La migracion incremental de cupos e invitaciones debe aplicarse antes de probar invitaciones vinculadas en modo Supabase, porque el cliente ya escribe `related_post_id`.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -101,6 +105,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - magic link queda como alternativa sin cooldown local persistido;
   - `npm run build` pasa con repositorio Supabase y Auth real;
   - `npm run lint` pasa.
+- Bloque invitaciones/notificaciones:
+  - selector de partido agregado al modal de invitacion cuando el usuario tiene partidos propios abiertos;
+  - notificaciones de solicitudes e invitaciones ahora se expanden y muestran acciones contextuales;
+  - perfil muestra invitaciones enviadas y recibidas como cards con contexto;
+  - cupos faltantes permiten `0-24` en UI, dominio y migracion;
+  - `npm run build` pasa;
+  - `npm run lint` pasa.
 
 ## Git
 
@@ -122,6 +133,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
+- Aplicar en Supabase Cloud la migracion `202606100001_link_invitations_to_posts_and_slots.sql`.
+- Probar manualmente solicitud aceptada e invitacion vinculada entre dos cuentas reales.
 - Probar manualmente registro/login por contrasena con una cuenta nueva y una existente.
 - Implementar busqueda de jugadores por nombre y perfil publico.
 - Conectar invitaciones privadas desde perfil publico sin publicacion en feed.
