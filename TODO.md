@@ -73,6 +73,10 @@
 - [x] Invitaciones directas locales.
 - [x] Notificaciones internas locales.
 - [x] Actividad en perfil local.
+- [ ] Buscar jugadores por nombre.
+- [ ] Ver perfil publico de otro jugador.
+- [ ] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.
+- [ ] Crear invitacion privada desde perfil de jugador sin publicarla en el feed.
 
 ## Etapa 8 - PWA, QA y deploy
 - [x] Onboarding de acceso rapido local.

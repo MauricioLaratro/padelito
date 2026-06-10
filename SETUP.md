@@ -104,6 +104,12 @@ Estado de esta instancia:
 - Cierre de sesion: desde Perfil, `Cerrar sesion` elimina la sesion local del navegador pero no borra datos.
 - Reingreso: usando el mismo email/contrasena, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
 
+## Datos de prueba
+
+- En la instancia Supabase `zrddjpvtkqebvmazauhu` existe un usuario Auth de prueba `test@padelito.test`.
+- Ese usuario tiene perfil publico `Jugador Test` para validar solicitudes, invitaciones y perfiles cruzados.
+- La contrasena de prueba se comparte fuera de la documentacion versionada para no publicar credenciales en GitHub.
+
 ## Marca y cache PWA
 
 - Los SVG fuente viven en `assets/`.
