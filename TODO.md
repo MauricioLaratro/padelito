@@ -53,12 +53,14 @@
 - [x] Validar login magic link con email real.
 - [x] Validar creacion de perfil real en Supabase.
 - [x] Cerrar sesion desde perfil sin borrar datos persistidos.
-- [ ] Edicion de perfil.
+- [x] Edicion de perfil.
+- [x] Contacto privado propio sin reexponer `whatsapp_phone` en perfiles publicos.
 
 ## Etapa 5 - Feeds
 - [x] Feed Comunidad local.
 - [x] Feed Siguiendo local.
 - [x] Filtros MVP locales.
+- [x] Filtros por fecha, categoria, posicion y estilo de juego.
 - [x] Pull-to-refresh mobile preparado para refetch futuro.
 - [x] Pull-to-refresh conectado a snapshot Supabase en modo remoto.
 
@@ -86,6 +88,8 @@
 - [x] Ver perfil publico de otro jugador.
 - [x] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.
 - [x] Crear invitacion privada desde perfil de jugador sin publicarla en el feed.
+- [x] Abrir perfil desde notificaciones contextuales.
+- [x] Mostrar contacto WhatsApp solo en solicitudes o invitaciones aceptadas.
 
 ## Etapa 8 - PWA, QA y deploy
 - [x] Onboarding de acceso rapido local.
@@ -96,6 +100,7 @@
 - [x] Invalidar cache PWA para refrescar SVG de marca.
 - [x] Ocultar modo demo cuando Supabase esta configurado.
 - [ ] Pulir UX.
+- [ ] Probar visualmente pantallas privadas con dos sesiones reales.
 - [ ] Deploy Cloudflare Pages.
 
 ## Etapa 9 - MVP+ Partidos e historial

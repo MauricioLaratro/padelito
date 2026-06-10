@@ -6,7 +6,10 @@ import type {
   MatchJoinRequest,
   Post,
 } from "../../domain/models/postModels";
-import type { Profile } from "../../domain/models/profileModels";
+import type {
+  PrivateProfileContact,
+  Profile,
+} from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
 import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
@@ -160,6 +163,42 @@ export function getVisiblePostsForFeed(
     .sort((firstPost, secondPost) =>
       firstPost.scheduledDate.localeCompare(secondPost.scheduledDate),
     );
+}
+
+/**
+ * Devuelve contacto privado si existe un vinculo aceptado.
+ * Se construye para replicar localmente la regla de seguridad de Supabase.
+ * Lo usa usePadelitoMvp antes de abrir WhatsApp.
+ * Sirve para no exponer telefonos desde perfiles publicos.
+ */
+export function getPrivateProfileContact(
+  database: PadelitoLocalDatabase,
+  currentProfileId: string,
+  targetProfileId: string,
+): PrivateProfileContact | null {
+  const targetProfile = database.profiles.find(
+    (profile) => profile.profileId === targetProfileId,
+  );
+
+  if (!targetProfile) {
+    return null;
+  }
+
+  if (
+    currentProfileId !== targetProfileId &&
+    !hasAcceptedPrivateContactConnection(
+      database,
+      currentProfileId,
+      targetProfileId,
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    profileId: targetProfile.profileId,
+    whatsappPhone: targetProfile.whatsappPhone,
+  };
 }
 
 /**
@@ -729,4 +768,38 @@ function appendConfirmedPlayerName(
     : normalizedPlayerName;
 
   return nextConfirmedPlayersText.slice(0, CONFIRMED_PLAYERS_TEXT_LIMIT);
+}
+
+/**
+ * Verifica si dos perfiles tienen una solicitud o invitacion aceptada.
+ * Se construye para habilitar contacto privado solo despues de confirmar partido.
+ * Lo usa getPrivateProfileContact.
+ * Sirve para mantener la privacidad del perfil publico.
+ */
+function hasAcceptedPrivateContactConnection(
+  database: PadelitoLocalDatabase,
+  currentProfileId: string,
+  targetProfileId: string,
+) {
+  const hasAcceptedRequest = database.matchJoinRequests.some(
+    (matchJoinRequest) =>
+      matchJoinRequest.status === "accepted" &&
+      ((matchJoinRequest.requesterProfileId === currentProfileId &&
+        matchJoinRequest.ownerProfileId === targetProfileId) ||
+        (matchJoinRequest.ownerProfileId === currentProfileId &&
+          matchJoinRequest.requesterProfileId === targetProfileId)),
+  );
+
+  if (hasAcceptedRequest) {
+    return true;
+  }
+
+  return database.directMatchInvitations.some(
+    (directMatchInvitation) =>
+      directMatchInvitation.status === "accepted" &&
+      ((directMatchInvitation.inviterProfileId === currentProfileId &&
+        directMatchInvitation.invitedProfileId === targetProfileId) ||
+        (directMatchInvitation.invitedProfileId === currentProfileId &&
+          directMatchInvitation.inviterProfileId === targetProfileId)),
+  );
 }

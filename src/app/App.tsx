@@ -189,6 +189,8 @@ export function App() {
           onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
           onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
           onNotificationsRead={padelitoMvp.handleNotificationsRead}
+          onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
+          onProfileOpen={padelitoMvp.handlePublicProfileOpen}
         />
       ) : null}
 
@@ -202,7 +204,9 @@ export function App() {
           onDirectInvitationCancel={padelitoMvp.handleDirectInvitationCancel}
           onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
           onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
+          onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onPostCancel={padelitoMvp.handlePostCancel}
+          onProfileSave={padelitoMvp.handleProfileSave}
           onQuickAccessReset={padelitoMvp.handleQuickAccessShow}
           onSignOut={padelitoMvp.handleSignOut}
         />

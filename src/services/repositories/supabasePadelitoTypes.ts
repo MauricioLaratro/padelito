@@ -36,6 +36,11 @@ export type SupabaseProfileUpsert = Omit<
   "created_at" | "updated_at"
 >;
 
+export interface SupabasePrivateProfileContactRow {
+  profile_id: string;
+  whatsapp_phone: string | null;
+}
+
 export interface SupabaseFollowRow {
   follower_profile_id: string;
   followed_profile_id: string;

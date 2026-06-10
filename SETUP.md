@@ -80,7 +80,7 @@ zrddjpvtkqebvmazauhu
 Pasos para un entorno nuevo:
 
 1. Crear proyecto en Supabase Cloud.
-2. Ejecutar `supabase/migrations/202606090001_initial_schema.sql`.
+2. Ejecutar las migraciones de `supabase/migrations/` en orden cronologico.
 3. Copiar URL y publishable/anon key al `.env.local`.
 
 La migracion ya crea tablas, enums, politicas RLS y buckets.
@@ -88,9 +88,10 @@ La migracion ya crea tablas, enums, politicas RLS y buckets.
 Estado de esta instancia:
 
 - Proyecto Supabase: `zrddjpvtkqebvmazauhu`.
-- Migracion inicial ejecutada desde SQL Editor.
+- Migraciones ejecutadas desde SQL Editor.
 - Verificacion SQL: `schema_ok`.
 - Buckets creados por migracion: `avatars` y `event-images`.
+- Contacto privado: `get_profile_private_contact(uuid)` instalado y ejecutable por usuarios autenticados.
 
 ## Sesion de usuario
 

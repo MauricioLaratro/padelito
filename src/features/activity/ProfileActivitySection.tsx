@@ -3,6 +3,7 @@ import {
   Check,
   Clock,
   MapPin,
+  MessageCircle,
   Send,
   UserRound,
   UsersRound,
@@ -38,6 +39,7 @@ interface ProfileActivitySectionProps {
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
 }
 
@@ -54,6 +56,7 @@ export function ProfileActivitySection({
   onDirectInvitationCancel,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPrivateContactOpen,
   onPostCancel,
 }: ProfileActivitySectionProps) {
   const ownPosts = database.posts.filter(
@@ -103,6 +106,7 @@ export function ProfileActivitySection({
               mode="sent"
               onJoinRequestCancel={onJoinRequestCancel}
               onJoinRequestStatusChange={onJoinRequestStatusChange}
+              onPrivateContactOpen={onPrivateContactOpen}
               request={matchJoinRequest}
             />
           ))
@@ -120,6 +124,7 @@ export function ProfileActivitySection({
               mode="received"
               onJoinRequestCancel={onJoinRequestCancel}
               onJoinRequestStatusChange={onJoinRequestStatusChange}
+              onPrivateContactOpen={onPrivateContactOpen}
               request={matchJoinRequest}
             />
           ))
@@ -138,6 +143,7 @@ export function ProfileActivitySection({
               mode="sent"
               onDirectInvitationCancel={onDirectInvitationCancel}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+              onPrivateContactOpen={onPrivateContactOpen}
             />
           ))
         ) : (
@@ -155,6 +161,7 @@ export function ProfileActivitySection({
               mode="received"
               onDirectInvitationCancel={onDirectInvitationCancel}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+              onPrivateContactOpen={onPrivateContactOpen}
             />
           ))
         ) : (
@@ -238,6 +245,7 @@ interface InvitationActivityCardProps {
     status: "accepted" | "rejected",
   ) => void;
   onDirectInvitationCancel: (invitationId: string) => void;
+  onPrivateContactOpen: (profileId: string) => void;
 }
 
 /**
@@ -252,6 +260,7 @@ function InvitationActivityCard({
   mode,
   onDirectInvitationCancel,
   onDirectInvitationStatusChange,
+  onPrivateContactOpen,
 }: InvitationActivityCardProps) {
   const relatedPost = invitation.relatedPostId
     ? database.posts.find((post) => post.postId === invitation.relatedPostId)
@@ -304,10 +313,21 @@ function InvitationActivityCard({
         ) : null}
       </div>
 
-      {invitation.status === "accepted" && mode === "sent" ? (
-        <p className="text-sm leading-6 text-feedback-success">
-          Aceptaron tu invitacion para este partido.
-        </p>
+      {invitation.status === "accepted" && relatedProfile ? (
+        <div className="grid gap-2">
+          {mode === "sent" ? (
+            <p className="text-sm leading-6 text-feedback-success">
+              Aceptaron tu invitacion para este partido.
+            </p>
+          ) : null}
+          <Button
+            icon={MessageCircle}
+            onClick={() => onPrivateContactOpen(relatedProfile.profileId)}
+            variant="secondary"
+          >
+            WhatsApp
+          </Button>
+        </div>
       ) : null}
 
       {invitation.status === "pending" ? (
@@ -362,6 +382,7 @@ interface RequestActivityCardProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onPrivateContactOpen: (profileId: string) => void;
   request: MatchJoinRequest;
 }
 
@@ -376,6 +397,7 @@ function RequestActivityCard({
   mode,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPrivateContactOpen,
   request,
 }: RequestActivityCardProps) {
   const requestedPost = database.posts.find(
@@ -433,10 +455,21 @@ function RequestActivityCard({
         ) : null}
       </div>
 
-      {request.status === "accepted" && mode === "sent" ? (
-        <p className="text-sm leading-6 text-feedback-success">
-          Te aceptaron para este partido.
-        </p>
+      {request.status === "accepted" && relatedProfile ? (
+        <div className="grid gap-2">
+          {mode === "sent" ? (
+            <p className="text-sm leading-6 text-feedback-success">
+              Te aceptaron para este partido.
+            </p>
+          ) : null}
+          <Button
+            icon={MessageCircle}
+            onClick={() => onPrivateContactOpen(relatedProfile.profileId)}
+            variant="secondary"
+          >
+            WhatsApp
+          </Button>
+        </div>
       ) : null}
 
       {request.status === "pending" ? (

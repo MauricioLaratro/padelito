@@ -5,6 +5,7 @@ import {
   CheckCheck,
   ChevronRight,
   MapPin,
+  MessageCircle,
   UserRound,
   UsersRound,
   X,
@@ -39,6 +40,8 @@ interface NotificationsScreenProps {
     status: "accepted" | "rejected",
   ) => void;
   onNotificationsRead: () => void;
+  onPrivateContactOpen: (profileId: string) => void;
+  onProfileOpen: (profileId: string) => void;
 }
 
 /**
@@ -55,6 +58,8 @@ export function NotificationsScreen({
   onJoinRequestCancel,
   onJoinRequestStatusChange,
   onNotificationsRead,
+  onPrivateContactOpen,
+  onProfileOpen,
 }: NotificationsScreenProps) {
   const [selectedNotificationId, setSelectedNotificationId] = useState<
     string | null
@@ -134,6 +139,8 @@ export function NotificationsScreen({
                 }
                 onJoinRequestCancel={onJoinRequestCancel}
                 onJoinRequestStatusChange={onJoinRequestStatusChange}
+                onPrivateContactOpen={onPrivateContactOpen}
+                onProfileOpen={onProfileOpen}
               />
             ) : null}
           </article>
@@ -162,6 +169,8 @@ interface NotificationDetailProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onPrivateContactOpen: (profileId: string) => void;
+  onProfileOpen: (profileId: string) => void;
 }
 
 /**
@@ -177,6 +186,8 @@ function NotificationDetail({
   onDirectInvitationStatusChange,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPrivateContactOpen,
+  onProfileOpen,
 }: NotificationDetailProps) {
   if (notification.relatedRequestId) {
     const request = database.matchJoinRequests.find(
@@ -191,6 +202,8 @@ function NotificationDetail({
           database={database}
           onJoinRequestCancel={onJoinRequestCancel}
           onJoinRequestStatusChange={onJoinRequestStatusChange}
+          onPrivateContactOpen={onPrivateContactOpen}
+          onProfileOpen={onProfileOpen}
           request={request}
         />
       );
@@ -210,16 +223,34 @@ function NotificationDetail({
           database={database}
           invitation={invitation}
           onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+          onPrivateContactOpen={onPrivateContactOpen}
+          onProfileOpen={onProfileOpen}
         />
       );
     }
   }
+
+  const actorProfile = notification.actorProfileId
+    ? database.profiles.find(
+        (profile) => profile.profileId === notification.actorProfileId,
+      )
+    : null;
 
   return (
     <div className="mt-3 border-t border-border-subtle pt-3">
       <p className="text-sm leading-6 text-text-secondary">
         No hay acciones pendientes para este aviso.
       </p>
+      {actorProfile ? (
+        <Button
+          className="mt-3"
+          icon={UserRound}
+          onClick={() => onProfileOpen(actorProfile.profileId)}
+          variant="secondary"
+        >
+          Ver perfil
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -232,6 +263,8 @@ interface JoinRequestNotificationDetailProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onPrivateContactOpen: (profileId: string) => void;
+  onProfileOpen: (profileId: string) => void;
   request: MatchJoinRequest;
 }
 
@@ -246,6 +279,8 @@ function JoinRequestNotificationDetail({
   database,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPrivateContactOpen,
+  onProfileOpen,
   request,
 }: JoinRequestNotificationDetailProps) {
   const requestedPost = database.posts.find(
@@ -320,6 +355,27 @@ function JoinRequestNotificationDetail({
           )}
         </div>
       ) : null}
+
+      {relatedProfile ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            icon={UserRound}
+            onClick={() => onProfileOpen(relatedProfile.profileId)}
+            variant="secondary"
+          >
+            Ver perfil
+          </Button>
+          {request.status === "accepted" ? (
+            <Button
+              icon={MessageCircle}
+              onClick={() => onPrivateContactOpen(relatedProfile.profileId)}
+              variant="secondary"
+            >
+              WhatsApp
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -332,6 +388,8 @@ interface InvitationNotificationDetailProps {
     invitationId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onPrivateContactOpen: (profileId: string) => void;
+  onProfileOpen: (profileId: string) => void;
 }
 
 /**
@@ -345,6 +403,8 @@ function InvitationNotificationDetail({
   database,
   invitation,
   onDirectInvitationStatusChange,
+  onPrivateContactOpen,
+  onProfileOpen,
 }: InvitationNotificationDetailProps) {
   const relatedPost = invitation.relatedPostId
     ? database.posts.find((post) => post.postId === invitation.relatedPostId)
@@ -408,6 +468,27 @@ function InvitationNotificationDetail({
           >
             Rechazar
           </Button>
+        </div>
+      ) : null}
+
+      {relatedProfile ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            icon={UserRound}
+            onClick={() => onProfileOpen(relatedProfile.profileId)}
+            variant="secondary"
+          >
+            Ver perfil
+          </Button>
+          {invitation.status === "accepted" ? (
+            <Button
+              icon={MessageCircle}
+              onClick={() => onPrivateContactOpen(relatedProfile.profileId)}
+              variant="secondary"
+            >
+              WhatsApp
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>

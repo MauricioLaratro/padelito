@@ -111,10 +111,14 @@ src/
     onboarding/
       OnboardingProfileScreen.tsx
       QuickAccessOnboardingStep.tsx
+    players/
+      PlayerSearchScreen.tsx
     posts/
       CreatePostModal.tsx
       DirectInvitationModal.tsx
     profiles/
+      ProfileEditModal.tsx
+      ProfileForm.tsx
       ProfileScreen.tsx
   services/
     repositories/
@@ -129,6 +133,7 @@ src/
   styles/
     global.css
   utils/
+    contactFormatters.ts
     dateFormatters.ts
     identifierGenerator.ts
 ```
@@ -141,6 +146,9 @@ supabase/
   migrations/
     202606090001_initial_schema.sql
     202606090002_harden_social_update_policies.sql
+    202606100001_link_invitations_to_posts_and_slots.sql
+    202606100002_restrict_profile_contact_visibility.sql
+    202606100003_private_profile_contact_rpc.sql
 ```
 
 ## Modulo MVP+ previsto: Partidos e Historial
@@ -189,6 +197,19 @@ El MVP mantiene dos modos detras del mismo contrato:
 La UI consume `usePadelitoMvp` y modelos de dominio; no habla directo con Supabase. El hook concentra sesion, login, registro, recuperacion de contrasena y magic link alternativo. Los mappers convierten `snake_case` SQL a modelos TypeScript en ingles.
 
 Esta decision permite probar localmente aunque Supabase Auth o RLS necesiten ajustes, sin romper el MVP demo.
+
+## Privacidad de contacto
+
+`whatsapp_phone` no forma parte de las lecturas publicas de `profiles`.
+
+Regla actual:
+
+- el snapshot general usa columnas publicas explicitas;
+- el perfil propio hidrata su telefono con `get_profile_private_contact(uuid)`;
+- el contacto de otro jugador solo se abre si existe una solicitud o invitacion aceptada entre ambos perfiles;
+- el repositorio local replica la misma regla para mantener paridad de comportamiento.
+
+Esto mantiene los perfiles publicos inspeccionables sin exponer datos privados.
 
 ## Migrabilidad futura
 

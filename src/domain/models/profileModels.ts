@@ -39,3 +39,8 @@ export interface FollowRelation {
   followedProfileId: string;
   createdAt: string;
 }
+
+export interface PrivateProfileContact {
+  profileId: string;
+  whatsappPhone?: string;
+}

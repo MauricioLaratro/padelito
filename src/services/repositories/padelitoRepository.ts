@@ -5,7 +5,11 @@ import type {
   Post,
   PostInteraction,
 } from "../../domain/models/postModels";
-import type { FollowRelation, Profile } from "../../domain/models/profileModels";
+import type {
+  FollowRelation,
+  PrivateProfileContact,
+  Profile,
+} from "../../domain/models/profileModels";
 import type { EventInteractionType } from "../../domain/enums/postEnums";
 import type { PlayStyle } from "../../domain/enums/profileEnums";
 
@@ -71,6 +75,9 @@ export interface PadelitoRepository {
     interactionType: EventInteractionType,
   ) => Promise<void>;
   markNotificationsAsRead: (recipientProfileId: string) => Promise<void>;
+  getPrivateProfileContact: (
+    targetProfileId: string,
+  ) => Promise<PrivateProfileContact | null>;
 }
 
 /**

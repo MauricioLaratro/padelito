@@ -1,4 +1,5 @@
-import { BellRing, LogOut, UserPlus, UsersRound } from "lucide-react";
+import { BellRing, LogOut, Pencil, UserPlus, UsersRound } from "lucide-react";
+import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import {
@@ -10,6 +11,7 @@ import {
 import type { Profile } from "../../domain/models/profileModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { ProfileActivitySection } from "../activity/ProfileActivitySection";
+import { ProfileEditModal } from "./ProfileEditModal";
 
 interface ProfileScreenProps {
   currentProfile: Profile;
@@ -24,7 +26,9 @@ interface ProfileScreenProps {
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
+  onProfileSave: (profile: Profile) => void;
   onQuickAccessReset: () => void;
   onSignOut: () => void;
 }
@@ -42,10 +46,13 @@ export function ProfileScreen({
   onDirectInvitationCancel,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPrivateContactOpen,
   onPostCancel,
+  onProfileSave,
   onQuickAccessReset,
   onSignOut,
 }: ProfileScreenProps) {
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
   const followersCount = database.follows.filter(
     (followRelation) =>
       followRelation.followedProfileId === currentProfile.profileId,
@@ -95,6 +102,13 @@ export function ProfileScreen({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            icon={Pencil}
+            onClick={() => setIsProfileEditOpen(true)}
+            variant="secondary"
+          >
+            Editar perfil
+          </Button>
           <Button icon={BellRing} onClick={onQuickAccessReset} variant="primary">
             Agregar acceso rapido
           </Button>
@@ -111,8 +125,17 @@ export function ProfileScreen({
         onDirectInvitationCancel={onDirectInvitationCancel}
         onJoinRequestCancel={onJoinRequestCancel}
         onJoinRequestStatusChange={onJoinRequestStatusChange}
+        onPrivateContactOpen={onPrivateContactOpen}
         onPostCancel={onPostCancel}
       />
+
+      {isProfileEditOpen ? (
+        <ProfileEditModal
+          currentProfile={currentProfile}
+          onClose={() => setIsProfileEditOpen(false)}
+          onProfileSave={onProfileSave}
+        />
+      ) : null}
     </section>
   );
 }

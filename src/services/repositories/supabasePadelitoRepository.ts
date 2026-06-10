@@ -5,7 +5,10 @@ import type {
   DirectMatchInvitation,
   MatchJoinRequest,
 } from "../../domain/models/postModels";
-import type { Profile } from "../../domain/models/profileModels";
+import type {
+  PrivateProfileContact,
+  Profile,
+} from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import {
   mapDirectMatchInvitationToSupabaseInsert,
@@ -38,6 +41,7 @@ import type {
   SupabaseNotificationRow,
   SupabasePostInteractionRow,
   SupabasePostRow,
+  SupabasePrivateProfileContactRow,
   SupabaseProfileRow,
 } from "./supabasePadelitoTypes";
 
@@ -172,9 +176,20 @@ export function createSupabasePadelitoRepository(
     )
       ? profiles
       : [createDraftProfile(user.id, user.email), ...profiles];
+    const sessionPrivateContact = await getPrivateProfileContact(user.id);
+    const profilesWithSessionPrivateContact = profilesWithSessionDraft.map(
+      (profile) =>
+        profile.profileId === user.id
+          ? {
+              ...profile,
+              whatsappPhone:
+                sessionPrivateContact?.whatsappPhone ?? profile.whatsappPhone,
+            }
+          : profile,
+    );
 
     return {
-      profiles: profilesWithSessionDraft,
+      profiles: profilesWithSessionPrivateContact,
       follows: followRows.map(mapSupabaseFollowRow),
       posts: postRows.map(mapSupabasePostRow),
       postInteractions: postInteractionRows.map(mapSupabasePostInteractionRow),
@@ -655,6 +670,43 @@ export function createSupabasePadelitoRepository(
   }
 
   /**
+   * Lee contacto privado validado por Supabase.
+   * Se construye para no incluir telefonos en el snapshot publico.
+   * Lo usan el perfil propio y el contacto post-aceptacion.
+   * Sirve para abrir WhatsApp solo cuando hay permiso real.
+   */
+  async function getPrivateProfileContact(
+    targetProfileId: string,
+  ): Promise<PrivateProfileContact | null> {
+    const { data, error } = await supabaseClient.rpc(
+      "get_profile_private_contact",
+      {
+        target_profile_id_input: targetProfileId,
+      },
+    );
+
+    if (error) {
+      if (isMissingSchemaFeatureError(error)) {
+        return null;
+      }
+
+      throw createSupabaseError("leer contacto privado", error);
+    }
+
+    const contactRows = data as SupabasePrivateProfileContactRow[] | null;
+    const contactRow = contactRows?.[0];
+
+    if (!contactRow) {
+      return null;
+    }
+
+    return {
+      profileId: contactRow.profile_id,
+      whatsappPhone: contactRow.whatsapp_phone ?? undefined,
+    };
+  }
+
+  /**
    * Inserta solicitud de partido y devuelve la fila persistida.
    * Se construye para reutilizar notificacion con id real.
    * Lo usan acciones de solicitud.
@@ -780,6 +832,7 @@ export function createSupabasePadelitoRepository(
     createMatchJoinRequest,
     createPost,
     loadApplicationSnapshot,
+    getPrivateProfileContact,
     markNotificationsAsRead,
     saveProfile,
     toggleEventInteraction,

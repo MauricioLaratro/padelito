@@ -14,7 +14,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 - Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
-- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas y privacidad de contacto.
+- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas y contacto privado post-aceptacion.
 
 ## Comprension del producto
 
@@ -40,11 +40,14 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Invitaciones directas pueden vincularse a un partido propio abierto; si se aceptan, descuentan cupo y el partido queda completo cuando faltantes llega a `0`.
 - Las aceptaciones remotas de solicitudes e invitaciones deben pasar por funciones SQL `answer_match_join_request` y `answer_direct_match_invitation`, evitando updates directos que no descuenten cupo.
 - Los perfiles publicos se leen sin `whatsapp_phone`; el contacto privado queda fuera del snapshot general.
+- El contacto privado se consulta por RPC solo para el propio usuario o perfiles vinculados por solicitud/invitacion aceptada.
+- El formulario de perfil se reutiliza entre onboarding y edicion para evitar duplicar reglas.
 
 ## Riesgos tecnicos
 
 - RLS de Supabase requiere mucho cuidado por publicaciones `public` y `followers_only`.
 - La lectura de perfiles debe mantener columnas explicitas para no reexponer contacto privado.
+- La RPC de contacto privado debe mantenerse como unico camino para leer `whatsapp_phone` desde cliente.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -99,6 +102,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - usuarios de prueba gestionados desde Supabase Auth y base de datos, sin credenciales versionadas;
   - migracion `202606100001_link_invitations_to_posts_and_slots.sql` aplicada y verificada con `true` en columna, RPCs y constraint;
   - migracion `202606100002_restrict_profile_contact_visibility.sql` aplicada y verificada: `whatsapp_phone` no es legible por `anon` ni `authenticated`;
+  - migracion `202606100003_private_profile_contact_rpc.sql` aplicada y verificada: `get_profile_private_contact(uuid)` existe y `authenticated` puede ejecutarla;
   - login por magic link y perfil real validados por el usuario;
   - cerrar sesion vuelve a AuthScreen sin borrar perfil ni actividad persistida;
   - login/registro por email y contrasena implementados en la app;
@@ -116,6 +120,10 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - invitaciones enviadas pendientes pueden cancelarse desde perfil;
   - busqueda de jugadores y perfil publico implementados con follow e invitacion;
   - modo demo queda oculto cuando Supabase esta configurado;
+  - edicion de perfil implementada desde Perfil con formulario reutilizable;
+  - contacto WhatsApp aparece solo en solicitudes o invitaciones aceptadas;
+  - notificaciones contextuales permiten abrir perfil y contacto aceptado;
+  - feed suma filtros por fecha, categoria, posicion y estilo de juego;
   - `npm run build` pasa;
   - `npm run lint` pasa.
 
@@ -141,7 +149,6 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 - Probar manualmente solicitud aceptada e invitacion vinculada entre dos cuentas reales.
 - Probar manualmente registro/login por contrasena con una cuenta nueva y una existente.
-- Pulir edicion de perfil y contacto privado post-aceptacion.
-- Pulir flujo de edicion de perfil.
+- Probar visualmente edicion de perfil y contacto privado post-aceptacion con dos sesiones reales.
 - Pulir UX con screenshots mobile.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

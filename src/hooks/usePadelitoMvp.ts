@@ -13,6 +13,7 @@ import {
   createMatchJoinRequest,
   createPost,
   dismissQuickAccessPrompt,
+  getPrivateProfileContact as getLocalPrivateProfileContact,
   getSessionProfile,
   getVisiblePostsForFeed,
   markNotificationsAsRead,
@@ -30,6 +31,7 @@ import {
 import { createEmptyRepositorySnapshot } from "../services/repositories/padelitoRepository";
 import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
 import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
+import { createWhatsappContactUrl } from "../utils/contactFormatters";
 
 export type MainViewIdentifier =
   | "feed"
@@ -773,6 +775,54 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Abre WhatsApp privado si la relacion ya fue aceptada.
+   * Se construye para evitar exponer telefonos en perfiles publicos.
+   * Lo usan cards aceptadas de actividad.
+   * Sirve para pasar del acuerdo dentro de Padelito a la coordinacion final.
+   */
+  async function handlePrivateContactOpen(targetProfileId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    setRemoteErrorMessage(null);
+
+    try {
+      const privateContact =
+        isSupabaseMode && supabaseRepository
+          ? await supabaseRepository.getPrivateProfileContact(targetProfileId)
+          : getLocalPrivateProfileContact(
+              database,
+              sessionProfile.profileId,
+              targetProfileId,
+            );
+
+      if (!privateContact) {
+        setRemoteErrorMessage(
+          "El contacto privado queda disponible cuando hay una solicitud o invitacion aceptada.",
+        );
+        return;
+      }
+
+      if (!privateContact.whatsappPhone) {
+        setRemoteErrorMessage("Ese perfil todavia no tiene WhatsApp cargado.");
+        return;
+      }
+
+      const whatsappUrl = createWhatsappContactUrl(privateContact.whatsappPhone);
+
+      if (!whatsappUrl) {
+        setRemoteErrorMessage("Ese WhatsApp no parece tener un formato valido.");
+        return;
+      }
+
+      window.open(whatsappUrl, "_blank", "noopener");
+    } catch (error) {
+      setRemoteErrorMessage(getReadableErrorMessage(error));
+    }
+  }
+
+  /**
    * Alterna interaccion de evento.
    * Se construye para manejar interesados y asistentes.
    * Lo usan EventPostCard.
@@ -934,6 +984,7 @@ export function usePadelitoMvp() {
     handleNotificationsRead,
     handlePostCreate,
     handlePostCancel,
+    handlePrivateContactOpen,
     handleProfileSave,
     handleQuickAccessDismiss,
     handleQuickAccessShow,
