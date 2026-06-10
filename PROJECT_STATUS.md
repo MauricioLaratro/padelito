@@ -14,7 +14,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 - Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
-- Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` creada para vincular invitaciones a partidos, permitir cupos `0-24` y responder por RPC. Pendiente de aplicar en Supabase Cloud.
+- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas y privacidad de contacto.
 
 ## Comprension del producto
 
@@ -39,11 +39,12 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
 - Invitaciones directas pueden vincularse a un partido propio abierto; si se aceptan, descuentan cupo y el partido queda completo cuando faltantes llega a `0`.
 - Las aceptaciones remotas de solicitudes e invitaciones deben pasar por funciones SQL `answer_match_join_request` y `answer_direct_match_invitation`, evitando updates directos que no descuenten cupo.
+- Los perfiles publicos se leen sin `whatsapp_phone`; el contacto privado queda fuera del snapshot general.
 
 ## Riesgos tecnicos
 
 - RLS de Supabase requiere mucho cuidado por publicaciones `public` y `followers_only`.
-- La migracion incremental de cupos e invitaciones debe aplicarse antes de probar invitaciones vinculadas en modo Supabase, porque el cliente ya escribe `related_post_id`.
+- La lectura de perfiles debe mantener columnas explicitas para no reexponer contacto privado.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -95,8 +96,9 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - SQL Editor ejecuto `supabase/migrations/202606090001_initial_schema.sql` corregida;
   - verificacion compacta devolvio `schema_ok`;
   - tablas, funcion `can_read_post` y buckets `avatars` / `event-images` quedaron creados;
-  - usuario Auth de prueba `test@padelito.test` creado y autocofirmado desde dashboard;
-  - perfil publico `Jugador Test` creado para pruebas manuales de solicitudes e invitaciones;
+  - usuarios de prueba gestionados desde Supabase Auth y base de datos, sin credenciales versionadas;
+  - migracion `202606100001_link_invitations_to_posts_and_slots.sql` aplicada y verificada con `true` en columna, RPCs y constraint;
+  - migracion `202606100002_restrict_profile_contact_visibility.sql` aplicada y verificada: `whatsapp_phone` no es legible por `anon` ni `authenticated`;
   - login por magic link y perfil real validados por el usuario;
   - cerrar sesion vuelve a AuthScreen sin borrar perfil ni actividad persistida;
   - login/registro por email y contrasena implementados en la app;
@@ -110,6 +112,10 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - notificaciones de solicitudes e invitaciones ahora se expanden y muestran acciones contextuales;
   - perfil muestra invitaciones enviadas y recibidas como cards con contexto;
   - cupos faltantes permiten `0-24` en UI, dominio y migracion;
+  - publicaciones propias activas pueden cancelarse desde feed y perfil;
+  - invitaciones enviadas pendientes pueden cancelarse desde perfil;
+  - busqueda de jugadores y perfil publico implementados con follow e invitacion;
+  - modo demo queda oculto cuando Supabase esta configurado;
   - `npm run build` pasa;
   - `npm run lint` pasa.
 
@@ -133,11 +139,9 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
-- Aplicar en Supabase Cloud la migracion `202606100001_link_invitations_to_posts_and_slots.sql`.
 - Probar manualmente solicitud aceptada e invitacion vinculada entre dos cuentas reales.
 - Probar manualmente registro/login por contrasena con una cuenta nueva y una existente.
-- Implementar busqueda de jugadores por nombre y perfil publico.
-- Conectar invitaciones privadas desde perfil publico sin publicacion en feed.
+- Pulir edicion de perfil y contacto privado post-aceptacion.
 - Pulir flujo de edicion de perfil.
 - Pulir UX con screenshots mobile.
 - Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.

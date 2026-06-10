@@ -55,6 +55,22 @@ interface SupabaseRepositoryError {
   message: string;
 }
 
+const publicProfileSelectColumns = `
+  id,
+  profile_type,
+  display_name,
+  avatar_url,
+  bio,
+  usual_place,
+  player_level,
+  preferred_position,
+  preferred_play_style,
+  organization_kind,
+  organization_link,
+  created_at,
+  updated_at
+`;
+
 /**
  * Crea un repositorio conectado a Supabase.
  * Se construye para reemplazar el repositorio local sin cambiar componentes.
@@ -96,7 +112,7 @@ export function createSupabasePadelitoRepository(
       readRows<SupabaseProfileRow>(
         supabaseClient
           .from("profiles")
-          .select("*")
+          .select(publicProfileSelectColumns)
           .order("display_name")
           .returns<SupabaseProfileRow[]>(),
         "leer perfiles",
@@ -203,6 +219,27 @@ export function createSupabasePadelitoRepository(
 
     if (error) {
       throw createSupabaseError("crear publicacion", error);
+    }
+  }
+
+  /**
+   * Cancela una publicacion propia en Supabase.
+   * Se construye para retirar contenido del feed sin borrar relaciones historicas.
+   * Lo usan cards propias y actividad del perfil.
+   * Sirve para manejar partidos, disponibilidades y eventos que dejaron de estar vigentes.
+   */
+  async function cancelPost(
+    postId: string,
+    authorProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("posts")
+      .update({ is_active: false })
+      .eq("id", postId)
+      .eq("author_profile_id", authorProfileId);
+
+    if (error) {
+      throw createSupabaseError("cancelar publicacion", error);
     }
   }
 
@@ -386,7 +423,23 @@ export function createSupabasePadelitoRepository(
       },
     );
 
-    if (answerRequestError) {
+    if (answerRequestError && isMissingSchemaFeatureError(answerRequestError)) {
+      await updateExistingMatchJoinRequest(requestId, {
+        postId: request.post_id,
+        requesterProfileId: request.requester_profile_id,
+        ownerProfileId: request.owner_profile_id,
+        status,
+        message: request.message ?? undefined,
+      });
+
+      if (status === "accepted") {
+        await registerAcceptedPlayerOnPostFromClient(
+          supabaseClient,
+          request.post_id,
+          request.requester_profile_id,
+        );
+      }
+    } else if (answerRequestError) {
       throw createSupabaseError("responder solicitud", answerRequestError);
     }
 
@@ -476,7 +529,16 @@ export function createSupabasePadelitoRepository(
       },
     );
 
-    if (error) {
+    if (error && isMissingSchemaFeatureError(error)) {
+      const { error: legacyUpdateError } = await supabaseClient
+        .from("direct_match_invitations")
+        .update({ status })
+        .eq("id", invitationId);
+
+      if (legacyUpdateError) {
+        throw createSupabaseError("actualizar invitacion", legacyUpdateError);
+      }
+    } else if (error) {
       throw createSupabaseError("actualizar invitacion", error);
     }
 
@@ -496,6 +558,28 @@ export function createSupabasePadelitoRepository(
           ? "Aceptaron tu invitacion para jugar."
           : "Rechazaron tu invitacion para este partido.",
     });
+  }
+
+  /**
+   * Cancela una invitacion directa pendiente enviada.
+   * Se construye para que el invitador pueda retirar una propuesta.
+   * Lo usa la actividad del perfil.
+   * Sirve para mantener control sobre invitaciones propias.
+   */
+  async function cancelDirectMatchInvitation(
+    invitationId: string,
+    inviterProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("direct_match_invitations")
+      .update({ status: "cancelled" })
+      .eq("id", invitationId)
+      .eq("inviter_profile_id", inviterProfileId)
+      .eq("status", "pending");
+
+    if (error) {
+      throw createSupabaseError("cancelar invitacion", error);
+    }
   }
 
   /**
@@ -636,14 +720,37 @@ export function createSupabasePadelitoRepository(
     const insertInput: SupabaseDirectMatchInvitationInsert =
       mapDirectMatchInvitationToSupabaseInsert(directMatchInvitation);
 
+    const { data, error } = await supabaseClient
+      .from("direct_match_invitations")
+      .insert(insertInput)
+      .select("*")
+      .returns<SupabaseDirectMatchInvitationRow[]>()
+      .single();
+
+    if (!error && data) {
+      return data;
+    }
+
+    if (!error) {
+      throw new Error("Supabase no devolvio datos al insertar invitacion directa.");
+    }
+
+    if (!isMissingSchemaFeatureError(error)) {
+      throw createSupabaseError("insertar invitacion directa", error);
+    }
+
+    const { related_post_id: ignoredRelatedPostId, ...legacyInsertInput } =
+      insertInput;
+    void ignoredRelatedPostId;
+
     return writeSingleRow<SupabaseDirectMatchInvitationRow>(
       supabaseClient
         .from("direct_match_invitations")
-        .insert(insertInput)
+        .insert(legacyInsertInput)
         .select("*")
         .returns<SupabaseDirectMatchInvitationRow[]>()
         .single(),
-      "insertar invitacion directa",
+      "insertar invitacion directa sin partido vinculado",
     );
   }
 
@@ -667,6 +774,8 @@ export function createSupabasePadelitoRepository(
 
   return {
     cancelMatchJoinRequest,
+    cancelDirectMatchInvitation,
+    cancelPost,
     createDirectMatchInvitation,
     createMatchJoinRequest,
     createPost,
@@ -776,6 +885,129 @@ async function writeSingleRow<RowType>(
   }
 
   return data;
+}
+
+/**
+ * Actualiza cupo desde cliente cuando la RPC nueva aun no existe.
+ * Se construye como compatibilidad temporal con Supabase sin migracion incremental.
+ * Lo usa updateMatchJoinRequestStatus ante errores de schema cache.
+ * Sirve para evitar que aceptar solicitudes quede bloqueado antes de aplicar SQL.
+ */
+async function registerAcceptedPlayerOnPostFromClient(
+  supabaseClient: SupabaseClient,
+  postId: string,
+  acceptedProfileId: string,
+): Promise<void> {
+  const [postRow, acceptedProfileRow] = await Promise.all([
+    readOptionalRow<SupabasePostRow>(
+      supabaseClient
+        .from("posts")
+        .select("*")
+        .eq("id", postId)
+        .returns<SupabasePostRow[]>()
+        .maybeSingle(),
+      "buscar publicacion para descontar cupo",
+    ),
+    readOptionalRow<SupabaseProfileRow>(
+      supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", acceptedProfileId)
+        .returns<SupabaseProfileRow[]>()
+        .maybeSingle(),
+      "buscar perfil aceptado",
+    ),
+  ]);
+
+  if (!postRow || postRow.post_type !== "looking_for_player") {
+    return;
+  }
+
+  const nextMissingPlayersCount = Math.max(
+    (postRow.missing_players_count ?? 0) - 1,
+    0,
+  );
+  const updateInput = {
+    confirmed_players_text: appendConfirmedPlayerName(
+      postRow.confirmed_players_text,
+      acceptedProfileRow?.display_name,
+    ),
+    is_active: nextMissingPlayersCount > 0,
+    missing_players_count: nextMissingPlayersCount,
+  };
+  const { error } = await supabaseClient
+    .from("posts")
+    .update(updateInput)
+    .eq("id", postId);
+
+  if (!error) {
+    return;
+  }
+
+  if (nextMissingPlayersCount === 0) {
+    const { error: legacyCompletionError } = await supabaseClient
+      .from("posts")
+      .update({
+        confirmed_players_text: updateInput.confirmed_players_text,
+        is_active: false,
+      })
+      .eq("id", postId);
+
+    if (!legacyCompletionError) {
+      return;
+    }
+  }
+
+  throw createSupabaseError("actualizar cupo del partido", error);
+}
+
+/**
+ * Agrega un nombre al texto compacto de confirmados.
+ * Se construye para compartir la compatibilidad temporal con la regla SQL.
+ * Lo usa registerAcceptedPlayerOnPostFromClient.
+ * Sirve para reflejar visualmente el jugador aceptado.
+ */
+function appendConfirmedPlayerName(
+  confirmedPlayersText: string | null,
+  acceptedPlayerName: string | null | undefined,
+) {
+  const normalizedPlayerName = acceptedPlayerName?.trim();
+
+  if (!normalizedPlayerName) {
+    return confirmedPlayersText;
+  }
+
+  if (
+    confirmedPlayersText
+      ?.toLowerCase()
+      .includes(normalizedPlayerName.toLowerCase())
+  ) {
+    return confirmedPlayersText;
+  }
+
+  const nextConfirmedPlayersText = confirmedPlayersText?.trim()
+    ? `${confirmedPlayersText}, ${normalizedPlayerName}`
+    : normalizedPlayerName;
+
+  return nextConfirmedPlayersText.slice(0, 180);
+}
+
+/**
+ * Detecta errores provocados por una base todavia sin la ultima migracion.
+ * Se construye para degradar flujos nuevos en vez de mostrar errores tecnicos.
+ * Lo usa el repositorio Supabase en RPC e inserts nuevos.
+ * Sirve como puente hasta aplicar la migracion incremental.
+ */
+function isMissingSchemaFeatureError(error: SupabaseRepositoryError) {
+  const normalizedMessage = error.message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("schema cache") ||
+    normalizedMessage.includes("could not find the function") ||
+    normalizedMessage.includes("related_post_id") ||
+    normalizedMessage.includes("answer_match_join_request") ||
+    normalizedMessage.includes("answer_direct_match_invitation")
+  );
 }
 
 /**

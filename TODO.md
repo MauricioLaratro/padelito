@@ -37,7 +37,8 @@
 - [x] Verificar esquema aplicado con `schema_ok`.
 - [x] Crear repositorios Supabase para reemplazar repositorio local.
 - [x] Crear migracion incremental para invitaciones vinculadas a partidos y cupos `0-24`.
-- [ ] Aplicar `supabase/migrations/202606100001_link_invitations_to_posts_and_slots.sql` en Supabase Cloud.
+- [x] Aplicar `supabase/migrations/202606100001_link_invitations_to_posts_and_slots.sql` en Supabase Cloud.
+- [x] Restringir lectura publica de `whatsapp_phone` desde Supabase REST.
 
 ## Etapa 4 - Auth y perfiles
 - [x] Auth simple con Supabase por magic link.
@@ -66,6 +67,7 @@
 - [x] Crear Estoy disponible local.
 - [x] Crear Evento local.
 - [x] Cards React por tipo.
+- [x] Cancelar publicaciones propias activas para retirarlas del feed.
 
 ## Etapa 7 - Coordinacion social
 - [x] Solicitudes para unirse locales.
@@ -79,10 +81,11 @@
 - [x] Notificaciones accionables para abrir solicitudes e invitaciones.
 - [x] Actividad en perfil local.
 - [x] Cards contextuales de invitaciones enviadas y recibidas en perfil.
-- [ ] Buscar jugadores por nombre.
-- [ ] Ver perfil publico de otro jugador.
-- [ ] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.
-- [ ] Crear invitacion privada desde perfil de jugador sin publicarla en el feed.
+- [x] Cancelar invitaciones enviadas pendientes.
+- [x] Buscar jugadores por nombre.
+- [x] Ver perfil publico de otro jugador.
+- [x] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.
+- [x] Crear invitacion privada desde perfil de jugador sin publicarla en el feed.
 
 ## Etapa 8 - PWA, QA y deploy
 - [x] Onboarding de acceso rapido local.
@@ -91,6 +94,7 @@
 - [x] Evitar service worker en desarrollo para no romper HMR.
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
 - [x] Invalidar cache PWA para refrescar SVG de marca.
+- [x] Ocultar modo demo cuando Supabase esta configurado.
 - [ ] Pulir UX.
 - [ ] Deploy Cloudflare Pages.
 

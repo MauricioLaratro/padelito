@@ -106,9 +106,9 @@ Estado de esta instancia:
 
 ## Datos de prueba
 
-- En la instancia Supabase `zrddjpvtkqebvmazauhu` existe un usuario Auth de prueba `test@padelito.test`.
-- Ese usuario tiene perfil publico `Jugador Test` para validar solicitudes, invitaciones y perfiles cruzados.
-- La contrasena de prueba se comparte fuera de la documentacion versionada para no publicar credenciales en GitHub.
+- Los usuarios de prueba se gestionan exclusivamente desde Supabase Auth y la base de datos.
+- No versionar emails, contrasenas ni credenciales de cuentas de prueba.
+- Para validar solicitudes, invitaciones y perfiles cruzados, crear usuarios temporales desde el dashboard de Supabase o desde el flujo real de registro.
 
 ## Marca y cache PWA
 

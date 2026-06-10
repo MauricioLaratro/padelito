@@ -7,6 +7,7 @@ interface PostAuthorRowProps {
   isFollowed: boolean;
   isOwnAuthor: boolean;
   onFollowToggle: (profileId: string) => void;
+  onProfileOpen?: (profileId: string) => void;
 }
 
 /**
@@ -20,13 +21,18 @@ export function PostAuthorRow({
   isFollowed,
   isOwnAuthor,
   onFollowToggle,
+  onProfileOpen,
 }: PostAuthorRowProps) {
   const AuthorIcon =
     authorProfile.profileType === "organization" ? Building2 : UserRound;
 
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
+      <button
+        className="flex min-w-0 items-center gap-2 text-left"
+        onClick={() => onProfileOpen?.(authorProfile.profileId)}
+        type="button"
+      >
         <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border-subtle bg-surface-secondary text-accent-lime">
           <AuthorIcon aria-hidden="true" size={17} />
         </span>
@@ -40,7 +46,7 @@ export function PostAuthorRow({
               : "Jugador"}
           </p>
         </div>
-      </div>
+      </button>
 
       {!isOwnAuthor ? (
         <Button

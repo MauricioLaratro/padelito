@@ -35,6 +35,7 @@ export interface PadelitoRepository {
   loadApplicationSnapshot: () => Promise<PadelitoRepositorySnapshot>;
   saveProfile: (updatedProfile: Profile) => Promise<void>;
   createPost: (post: Post) => Promise<void>;
+  cancelPost: (postId: string, authorProfileId: string) => Promise<void>;
   toggleFollowProfile: (
     followerProfileId: string,
     followedProfileId: string,
@@ -55,6 +56,10 @@ export interface PadelitoRepository {
   createDirectMatchInvitation: (
     inviterProfileId: string,
     invitationInput: CreateInvitationInput,
+  ) => Promise<void>;
+  cancelDirectMatchInvitation: (
+    invitationId: string,
+    inviterProfileId: string,
   ) => Promise<void>;
   updateDirectMatchInvitationStatus: (
     invitationId: string,

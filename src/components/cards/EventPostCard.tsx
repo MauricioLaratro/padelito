@@ -5,6 +5,7 @@ import {
   MapPin,
   MessageCircle,
   UsersRound,
+  XCircle,
 } from "lucide-react";
 import type { EventPost, PostInteraction } from "../../domain/models/postModels";
 import type { FollowRelation, Profile } from "../../domain/models/profileModels";
@@ -23,6 +24,8 @@ interface EventPostCardProps {
     interactionType: "interested" | "attending",
   ) => void;
   onFollowToggle: (profileId: string) => void;
+  onPostCancel: (postId: string) => void;
+  onProfileOpen: (profileId: string) => void;
   post: EventPost;
 }
 
@@ -39,6 +42,8 @@ export function EventPostCard({
   interactions,
   onEventInteractionToggle,
   onFollowToggle,
+  onPostCancel,
+  onProfileOpen,
   post,
 }: EventPostCardProps) {
   const isOwnPost = post.authorProfileId === currentProfileId;
@@ -88,6 +93,7 @@ export function EventPostCard({
           isFollowed={isFollowed}
           isOwnAuthor={isOwnPost}
           onFollowToggle={onFollowToggle}
+          onProfileOpen={onProfileOpen}
         />
 
         <div className="mt-4 grid gap-3">
@@ -120,21 +126,35 @@ export function EventPostCard({
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            icon={Heart}
-            onClick={() =>
-              onEventInteractionToggle(post.postId, "interested")
-            }
-            variant={isInterested ? "secondary" : "primary"}
-          >
-            Me interesa
-          </Button>
-          <Button
-            onClick={() => onEventInteractionToggle(post.postId, "attending")}
-            variant={isAttending ? "secondary" : "primary"}
-          >
-            Asistire
-          </Button>
+          {isOwnPost ? (
+            <Button
+              icon={XCircle}
+              onClick={() => onPostCancel(post.postId)}
+              variant="danger"
+            >
+              Cancelar evento
+            </Button>
+          ) : (
+            <>
+              <Button
+                icon={Heart}
+                onClick={() =>
+                  onEventInteractionToggle(post.postId, "interested")
+                }
+                variant={isInterested ? "secondary" : "primary"}
+              >
+                Me interesa
+              </Button>
+              <Button
+                onClick={() =>
+                  onEventInteractionToggle(post.postId, "attending")
+                }
+                variant={isAttending ? "secondary" : "primary"}
+              >
+                Asistire
+              </Button>
+            </>
+          )}
           {post.whatsappUrl ? (
             <Button
               icon={MessageCircle}
@@ -153,6 +173,17 @@ export function EventPostCard({
               variant="secondary"
             >
               Inscripcion
+            </Button>
+          ) : null}
+          {post.googleMapsUrl ? (
+            <Button
+              icon={MapPin}
+              onClick={() =>
+                window.open(post.googleMapsUrl, "_blank", "noopener")
+              }
+              variant="secondary"
+            >
+              Mapa
             </Button>
           ) : null}
         </div>

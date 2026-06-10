@@ -7,9 +7,11 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - Migracion aplicada en Supabase Cloud para el proyecto `zrddjpvtkqebvmazauhu`.
 - Verificacion SQL devolvio `schema_ok`.
 - La funcion `can_read_post` se crea despues de `posts` y `follows` para evitar errores de referencia durante la migracion.
-- Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` creada y pendiente de aplicar en Supabase Cloud.
+- Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606100002_restrict_profile_contact_visibility.sql` aplicada en Supabase Cloud.
 - `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
 - Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
+- `whatsapp_phone` queda fuera de la lectura publica REST; el cliente carga perfiles publicos sin telefono.
 
 ## Enums sugeridos
 
@@ -46,7 +48,7 @@ Campos:
 - display_name
 - avatar_url
 - bio
-- whatsapp_phone
+- whatsapp_phone privado para lectura publica
 - usual_place
 - player_level nullable
 - preferred_position nullable
@@ -288,6 +290,7 @@ Reglas generales:
 - invited responde invitaciones pendientes mediante `answer_direct_match_invitation`
 - inviter solo puede cancelar invitaciones pendientes
 - notificaciones visibles solo por recipient
+- contacto telefonico no debe exponerse en snapshots publicos
 - partidos visibles segun visibilidad o participacion
 - resultados visibles para participantes y perfiles autorizados por visibilidad
 - desafios recurrentes visibles para participantes o segun visibilidad futura
@@ -301,3 +304,7 @@ El agente debe escribir migraciones SQL completas y seguras.
 - `answer_direct_match_invitation`: valida invited, estado pendiente y descuenta cupo del `related_post_id` cuando acepta.
 - `register_accepted_player_on_post`: reduce `missing_players_count`, agrega el nombre a `confirmed_players_text` y marca `is_active = false` si el cupo llega a `0`.
 - `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.
+
+## Privacidad de contacto
+
+La tabla `profiles` conserva `whatsapp_phone` para uso futuro de contacto privado, pero los roles `anon` y `authenticated` no tienen permiso de lectura sobre esa columna. El cliente debe pedir columnas publicas explicitas y no usar `select("*")` para perfiles.

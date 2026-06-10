@@ -253,11 +253,13 @@ export function AuthScreen({
           </p>
         ) : null}
 
-        <div className="mt-5 grid gap-3">
-          <Button icon={LogIn} onClick={onDemoSignIn} variant="secondary">
-            Modo demo
-          </Button>
-        </div>
+        {!isEmailAuthEnabled ? (
+          <div className="mt-5 grid gap-3">
+            <Button icon={LogIn} onClick={onDemoSignIn} variant="secondary">
+              Modo demo
+            </Button>
+          </div>
+        ) : null}
       </section>
     </ScreenShell>
   );

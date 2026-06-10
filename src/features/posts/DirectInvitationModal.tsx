@@ -34,13 +34,13 @@ export function DirectInvitationModal({
     defaultInvitationPost?.postId ?? "manual",
   );
   const [scheduledDate, setScheduledDate] = useState(
-    defaultInvitationPost?.scheduledDate ?? "2026-06-20",
+    defaultInvitationPost?.scheduledDate ?? createDateInputValue(1),
   );
   const [scheduledStartTime, setScheduledStartTime] = useState(
-    defaultInvitationPost?.scheduledStartTime ?? "19:00",
+    defaultInvitationPost?.scheduledStartTime ?? "",
   );
   const [placeText, setPlaceText] = useState(
-    defaultInvitationPost?.placeText ?? "Club Norte",
+    defaultInvitationPost?.placeText ?? "",
   );
   const [desiredPlayStyle, setDesiredPlayStyle] =
     useState<PlayStyle>(
@@ -207,4 +207,17 @@ export function DirectInvitationModal({
       </form>
     </div>
   );
+}
+
+/**
+ * Crea fecha por defecto para invitaciones manuales.
+ * Se construye para evitar valores demo en produccion.
+ * Lo usa DirectInvitationModal cuando no hay partido vinculado.
+ * Sirve para mantener el formulario usable sin inventar lugar u hora.
+ */
+function createDateInputValue(daysAhead: number) {
+  const dateInputValue = new Date();
+  dateInputValue.setDate(dateInputValue.getDate() + daysAhead);
+
+  return dateInputValue.toISOString().slice(0, 10);
 }

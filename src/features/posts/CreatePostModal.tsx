@@ -43,10 +43,12 @@ export function CreatePostModal({
 }: CreatePostModalProps) {
   const [postType, setPostType] = useState<PostType>("looking_for_player");
   const [visibility, setVisibility] = useState<PostVisibility>("public");
-  const [scheduledDate, setScheduledDate] = useState("2026-06-18");
+  const [scheduledDate, setScheduledDate] = useState(() =>
+    createDateInputValue(1),
+  );
   const [scheduledStartTime, setScheduledStartTime] = useState("20:00");
   const [scheduledEndTime, setScheduledEndTime] = useState("");
-  const [placeText, setPlaceText] = useState("Club Norte");
+  const [placeText, setPlaceText] = useState(authorProfile.usualPlace ?? "");
   const [shortNote, setShortNote] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<PlayerLevel>("sixth");
   const [selectedPosition, setSelectedPosition] =
@@ -55,10 +57,8 @@ export function CreatePostModal({
     useState<PlayStyle>("competitive");
   const [missingPlayersCount, setMissingPlayersCount] = useState(1);
   const [confirmedPlayersText, setConfirmedPlayersText] = useState("");
-  const [eventTitle, setEventTitle] = useState("Americano nocturno");
-  const [eventDescription, setEventDescription] = useState(
-    "Formato social por categoria, musica y tercer tiempo al finalizar.",
-  );
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
   const [eventImageUrl, setEventImageUrl] = useState("");
   const [eventWhatsappUrl, setEventWhatsappUrl] = useState("");
   const [eventRegistrationUrl, setEventRegistrationUrl] = useState("");
@@ -361,4 +361,17 @@ export function CreatePostModal({
       </form>
     </div>
   );
+}
+
+/**
+ * Crea fecha por defecto para inputs date.
+ * Se construye para evitar datos demo hardcodeados en formularios reales.
+ * Lo usa CreatePostModal al iniciar una publicacion.
+ * Sirve para proponer una fecha cercana sin inventar contenido del usuario.
+ */
+function createDateInputValue(daysAhead: number) {
+  const dateInputValue = new Date();
+  dateInputValue.setDate(dateInputValue.getDate() + daysAhead);
+
+  return dateInputValue.toISOString().slice(0, 10);
 }

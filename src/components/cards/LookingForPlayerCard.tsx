@@ -31,6 +31,8 @@ interface LookingForPlayerCardProps {
   onFollowToggle: (profileId: string) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
+  onPostCancel: (postId: string) => void;
+  onProfileOpen: (profileId: string) => void;
   post: LookingForPlayerPost;
 }
 
@@ -48,6 +50,8 @@ export function LookingForPlayerCard({
   onFollowToggle,
   onJoinRequestCancel,
   onJoinRequestCreate,
+  onPostCancel,
+  onProfileOpen,
   post,
 }: LookingForPlayerCardProps) {
   const isOwnPost = post.authorProfileId === currentProfileId;
@@ -83,6 +87,7 @@ export function LookingForPlayerCard({
         isFollowed={isFollowed}
         isOwnAuthor={isOwnPost}
         onFollowToggle={onFollowToggle}
+        onProfileOpen={onProfileOpen}
       />
 
       <div className="mt-4 grid gap-3">
@@ -143,8 +148,14 @@ export function LookingForPlayerCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
-          disabled={isOwnPost || isAcceptedRequest || isRejectedRequest}
+          disabled={!isOwnPost && (isAcceptedRequest || isRejectedRequest)}
+          icon={isOwnPost ? XCircle : undefined}
           onClick={() => {
+            if (isOwnPost) {
+              onPostCancel(post.postId);
+              return;
+            }
+
             if (isPendingRequest && existingRequest) {
               onJoinRequestCancel(existingRequest.requestId);
               return;
@@ -152,10 +163,10 @@ export function LookingForPlayerCard({
 
             onJoinRequestCreate(post.postId);
           }}
-          variant={isPendingRequest ? "danger" : "primary"}
+          variant={isOwnPost || isPendingRequest ? "danger" : "primary"}
         >
           {isOwnPost
-            ? "Tu partido"
+            ? "Cancelar publicacion"
             : isPendingRequest
               ? "Cancelar solicitud"
               : existingRequest && existingRequest.status !== "cancelled"

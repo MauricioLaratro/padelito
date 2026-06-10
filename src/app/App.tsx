@@ -1,4 +1,4 @@
-import { Bell, Home, Plus, UserRound } from "lucide-react";
+import { Bell, Home, Plus, Search, UserRound } from "lucide-react";
 import { useEffect } from "react";
 import { IconButton } from "../components/common/IconButton";
 import { ScreenShell } from "../components/layout/ScreenShell";
@@ -12,6 +12,7 @@ import { QuickAccessOnboardingStep } from "../features/onboarding/QuickAccessOnb
 import { CreatePostModal } from "../features/posts/CreatePostModal";
 import { DirectInvitationModal } from "../features/posts/DirectInvitationModal";
 import { ProfileScreen } from "../features/profiles/ProfileScreen";
+import { PlayerSearchScreen } from "../features/players/PlayerSearchScreen";
 import { usePadelitoMvp } from "../hooks/usePadelitoMvp";
 import type { LookingForPlayerPost } from "../domain/models/postModels";
 
@@ -99,6 +100,15 @@ export function App() {
             label="Feed"
             onClick={() => padelitoMvp.setActiveMainView("feed")}
           />
+          <IconButton
+            icon={Search}
+            isActive={padelitoMvp.activeMainView === "players"}
+            label="Jugadores"
+            onClick={() => {
+              padelitoMvp.setSelectedPublicProfileId(null);
+              padelitoMvp.setActiveMainView("players");
+            }}
+          />
           <div className="relative">
             <IconButton
               icon={Bell}
@@ -149,10 +159,23 @@ export function App() {
             onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
             onJoinRequestCreate={padelitoMvp.handleJoinRequestCreate}
             onFeedRefresh={padelitoMvp.handleFeedRefresh}
+            onPostCancel={padelitoMvp.handlePostCancel}
             onPostCreateStart={() => padelitoMvp.setIsCreatePostOpen(true)}
+            onProfileOpen={padelitoMvp.handlePublicProfileOpen}
             visiblePosts={padelitoMvp.visiblePosts}
           />
         </div>
+      ) : null}
+
+      {padelitoMvp.activeMainView === "players" ? (
+        <PlayerSearchScreen
+          currentProfileId={currentSessionProfile.profileId}
+          database={padelitoMvp.database}
+          onFollowToggle={padelitoMvp.handleFollowToggle}
+          onInvitationStart={padelitoMvp.setInvitedProfileId}
+          onProfileSelect={padelitoMvp.setSelectedPublicProfileId}
+          selectedProfileId={padelitoMvp.selectedPublicProfileId}
+        />
       ) : null}
 
       {padelitoMvp.activeMainView === "notifications" ? (
@@ -176,8 +199,10 @@ export function App() {
           onDirectInvitationStatusChange={
             padelitoMvp.handleDirectInvitationStatusChange
           }
+          onDirectInvitationCancel={padelitoMvp.handleDirectInvitationCancel}
           onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
           onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
+          onPostCancel={padelitoMvp.handlePostCancel}
           onQuickAccessReset={padelitoMvp.handleQuickAccessShow}
           onSignOut={padelitoMvp.handleSignOut}
         />

@@ -1,4 +1,11 @@
-import { CalendarDays, MapPin, Swords, Trophy, UserPlus } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  Swords,
+  Trophy,
+  UserPlus,
+  XCircle,
+} from "lucide-react";
 import {
   playerLevelLabels,
   playerPositionLabels,
@@ -17,6 +24,8 @@ interface AvailableToPlayCardProps {
   followRelations: FollowRelation[];
   onFollowToggle: (profileId: string) => void;
   onInvitationStart: (profileId: string) => void;
+  onPostCancel: (postId: string) => void;
+  onProfileOpen: (profileId: string) => void;
   post: AvailableToPlayPost;
 }
 
@@ -32,6 +41,8 @@ export function AvailableToPlayCard({
   followRelations,
   onFollowToggle,
   onInvitationStart,
+  onPostCancel,
+  onProfileOpen,
   post,
 }: AvailableToPlayCardProps) {
   const isOwnPost = post.authorProfileId === currentProfileId;
@@ -48,6 +59,7 @@ export function AvailableToPlayCard({
         isFollowed={isFollowed}
         isOwnAuthor={isOwnPost}
         onFollowToggle={onFollowToggle}
+        onProfileOpen={onProfileOpen}
       />
 
       <div className="mt-4 grid gap-3">
@@ -85,12 +97,18 @@ export function AvailableToPlayCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
-          disabled={isOwnPost}
-          icon={UserPlus}
-          onClick={() => onInvitationStart(authorProfile.profileId)}
-          variant="primary"
+          icon={isOwnPost ? XCircle : UserPlus}
+          onClick={() => {
+            if (isOwnPost) {
+              onPostCancel(post.postId);
+              return;
+            }
+
+            onInvitationStart(authorProfile.profileId);
+          }}
+          variant={isOwnPost ? "danger" : "primary"}
         >
-          {isOwnPost ? "Tu publicacion" : "Invitar a jugar"}
+          {isOwnPost ? "Cancelar publicacion" : "Invitar a jugar"}
         </Button>
       </div>
     </article>

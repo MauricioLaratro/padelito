@@ -176,6 +176,33 @@ export function createPost(database: PadelitoLocalDatabase, post: Post) {
 }
 
 /**
+ * Cancela una publicacion propia sin borrar su historial.
+ * Se construye para que el autor pueda retirar oportunidades del feed.
+ * Lo usan cards propias y actividad del perfil.
+ * Sirve para ocultar partidos, disponibilidad o eventos que ya no aplican.
+ */
+export function cancelPost(
+  database: PadelitoLocalDatabase,
+  postId: string,
+  authorProfileId: string,
+) {
+  const currentTimestamp = createCurrentIsoDate();
+
+  return {
+    ...database,
+    posts: database.posts.map((post) =>
+      post.postId === postId && post.authorProfileId === authorProfileId
+        ? {
+            ...post,
+            isActive: false,
+            updatedAt: currentTimestamp,
+          }
+        : post,
+    ),
+  };
+}
+
+/**
  * Crea solicitud para unirse a un partido.
  * Se construye para cubrir el flujo central de Busco jugador.
  * Lo usan cards looking_for_player.
@@ -477,6 +504,34 @@ export function updateDirectMatchInvitationStatus(
           : directMatchInvitation,
     ),
     notifications: [...database.notifications, notification],
+  };
+}
+
+/**
+ * Cancela una invitacion directa pendiente propia.
+ * Se construye para permitir arrepentimiento del invitador.
+ * Lo usa la actividad del perfil.
+ * Sirve para retirar invitaciones antes de que el destinatario responda.
+ */
+export function cancelDirectMatchInvitation(
+  database: PadelitoLocalDatabase,
+  invitationId: string,
+  inviterProfileId: string,
+) {
+  return {
+    ...database,
+    directMatchInvitations: database.directMatchInvitations.map(
+      (directMatchInvitation) =>
+        directMatchInvitation.invitationId === invitationId &&
+        directMatchInvitation.inviterProfileId === inviterProfileId &&
+        directMatchInvitation.status === "pending"
+          ? {
+              ...directMatchInvitation,
+              status: "cancelled" as const,
+              updatedAt: createCurrentIsoDate(),
+            }
+          : directMatchInvitation,
+    ),
   };
 }
 

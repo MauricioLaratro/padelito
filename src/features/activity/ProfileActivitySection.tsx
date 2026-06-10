@@ -32,11 +32,13 @@ interface ProfileActivitySectionProps {
     invitationId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onDirectInvitationCancel: (invitationId: string) => void;
   onJoinRequestStatusChange: (
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onPostCancel: (postId: string) => void;
 }
 
 /**
@@ -49,8 +51,10 @@ export function ProfileActivitySection({
   currentProfileId,
   database,
   onDirectInvitationStatusChange,
+  onDirectInvitationCancel,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onPostCancel,
 }: ProfileActivitySectionProps) {
   const ownPosts = database.posts.filter(
     (post) => post.authorProfileId === currentProfileId,
@@ -79,14 +83,10 @@ export function ProfileActivitySection({
       <ActivityCard title="Publicaciones propias">
         {ownPosts.length > 0 ? (
           ownPosts.map((post) => (
-            <ActivityRow
+            <OwnPostActivityCard
               key={post.postId}
-              meta={formatScheduledDateTime(
-                post.scheduledDate,
-                post.scheduledStartTime,
-                post.scheduledEndTime,
-              )}
-              title={postTypeLabels[post.postType]}
+              onPostCancel={onPostCancel}
+              post={post}
             />
           ))
         ) : (
@@ -136,6 +136,7 @@ export function ProfileActivitySection({
               key={directMatchInvitation.invitationId}
               invitation={directMatchInvitation}
               mode="sent"
+              onDirectInvitationCancel={onDirectInvitationCancel}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
             />
           ))
@@ -152,6 +153,7 @@ export function ProfileActivitySection({
               key={directMatchInvitation.invitationId}
               invitation={directMatchInvitation}
               mode="received"
+              onDirectInvitationCancel={onDirectInvitationCancel}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
             />
           ))
@@ -177,6 +179,56 @@ export function ProfileActivitySection({
   );
 }
 
+interface OwnPostActivityCardProps {
+  onPostCancel: (postId: string) => void;
+  post: PadelitoLocalDatabase["posts"][number];
+}
+
+/**
+ * Card compacta de publicacion propia.
+ * Se construye para que el autor administre contenido desde su perfil.
+ * La usa ProfileActivitySection.
+ * Sirve para cancelar publicaciones activas y conservar historial visual.
+ */
+function OwnPostActivityCard({ onPostCancel, post }: OwnPostActivityCardProps) {
+  return (
+    <div className="grid gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-black">{postTypeLabels[post.postType]}</p>
+          <p className="mt-1 text-xs text-text-secondary">
+            {formatScheduledDateTime(
+              post.scheduledDate,
+              post.scheduledStartTime,
+              post.scheduledEndTime,
+            )}
+          </p>
+        </div>
+        <Chip tone={post.isActive ? "lime" : "danger"}>
+          {post.isActive ? "Activa" : "Cancelada"}
+        </Chip>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Chip icon={MapPin}>{post.placeText}</Chip>
+        {post.postType === "looking_for_player" ? (
+          <Chip icon={UsersRound}>Faltan {post.missingPlayersCount}</Chip>
+        ) : null}
+      </div>
+
+      {post.isActive ? (
+        <Button
+          icon={X}
+          onClick={() => onPostCancel(post.postId)}
+          variant="danger"
+        >
+          Cancelar publicacion
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 interface InvitationActivityCardProps {
   database: PadelitoLocalDatabase;
   invitation: DirectMatchInvitation;
@@ -185,6 +237,7 @@ interface InvitationActivityCardProps {
     invitationId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onDirectInvitationCancel: (invitationId: string) => void;
 }
 
 /**
@@ -197,6 +250,7 @@ function InvitationActivityCard({
   database,
   invitation,
   mode,
+  onDirectInvitationCancel,
   onDirectInvitationStatusChange,
 }: InvitationActivityCardProps) {
   const relatedPost = invitation.relatedPostId
@@ -256,32 +310,44 @@ function InvitationActivityCard({
         </p>
       ) : null}
 
-      {invitation.status === "pending" && mode === "received" ? (
+      {invitation.status === "pending" ? (
         <div className="flex flex-wrap gap-2">
-          <Button
-            icon={Check}
-            onClick={() =>
-              onDirectInvitationStatusChange(
-                invitation.invitationId,
-                "accepted",
-              )
-            }
-            variant="primary"
-          >
-            Aceptar
-          </Button>
-          <Button
-            icon={X}
-            onClick={() =>
-              onDirectInvitationStatusChange(
-                invitation.invitationId,
-                "rejected",
-              )
-            }
-            variant="danger"
-          >
-            Rechazar
-          </Button>
+          {mode === "received" ? (
+            <>
+              <Button
+                icon={Check}
+                onClick={() =>
+                  onDirectInvitationStatusChange(
+                    invitation.invitationId,
+                    "accepted",
+                  )
+                }
+                variant="primary"
+              >
+                Aceptar
+              </Button>
+              <Button
+                icon={X}
+                onClick={() =>
+                  onDirectInvitationStatusChange(
+                    invitation.invitationId,
+                    "rejected",
+                  )
+                }
+                variant="danger"
+              >
+                Rechazar
+              </Button>
+            </>
+          ) : (
+            <Button
+              icon={X}
+              onClick={() => onDirectInvitationCancel(invitation.invitationId)}
+              variant="danger"
+            >
+              Cancelar invitacion
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

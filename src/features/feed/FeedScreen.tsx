@@ -22,7 +22,9 @@ interface FeedScreenProps {
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
   onFeedRefresh: () => void;
+  onPostCancel: (postId: string) => void;
   onPostCreateStart: () => void;
+  onProfileOpen: (profileId: string) => void;
   visiblePosts: Post[];
 }
 
@@ -41,7 +43,9 @@ export function FeedScreen({
   onJoinRequestCancel,
   onJoinRequestCreate,
   onFeedRefresh,
+  onPostCancel,
   onPostCreateStart,
+  onProfileOpen,
   visiblePosts,
 }: FeedScreenProps) {
   const [selectedPostType, setSelectedPostType] = useState<PostType | "all">(
@@ -188,8 +192,10 @@ export function FeedScreen({
             onInvitationStart={onInvitationStart}
             onJoinRequestCancel={onJoinRequestCancel}
             onJoinRequestCreate={onJoinRequestCreate}
+            onPostCancel={onPostCancel}
             post={post}
             postInteractions={database.postInteractions}
+            onProfileOpen={onProfileOpen}
             profiles={database.profiles}
           />
         ))

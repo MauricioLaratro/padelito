@@ -6,6 +6,8 @@ import { createCurrentIsoDate } from "../utils/dateFormatters";
 import { useLocalStorageState } from "./useLocalStorageState";
 import {
   cancelMatchJoinRequest,
+  cancelDirectMatchInvitation,
+  cancelPost,
   type CreateInvitationInput,
   createDirectMatchInvitation,
   createMatchJoinRequest,
@@ -29,7 +31,11 @@ import { createEmptyRepositorySnapshot } from "../services/repositories/padelito
 import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
 import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
 
-export type MainViewIdentifier = "feed" | "profile" | "notifications";
+export type MainViewIdentifier =
+  | "feed"
+  | "players"
+  | "profile"
+  | "notifications";
 export type BackendModeIdentifier = "local" | "supabase";
 export type AuthLoadingActionIdentifier =
   | "magicLink"
@@ -67,6 +73,9 @@ export function usePadelitoMvp() {
     useState<MainViewIdentifier>("feed");
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [invitedProfileId, setInvitedProfileId] = useState<string | null>(null);
+  const [selectedPublicProfileId, setSelectedPublicProfileId] = useState<
+    string | null
+  >(null);
   const [lastFeedRefreshAt, setLastFeedRefreshAt] = useState(
     createCurrentIsoDate(),
   );
@@ -525,6 +534,29 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Cancela una publicacion propia.
+   * Se construye para que el autor pueda retirar contenido activo del feed.
+   * Lo usan cards de publicaciones propias.
+   * Sirve para manejar partidos, disponibilidad o eventos que ya no siguen vigentes.
+   */
+  function handlePostCancel(postId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.cancelPost(postId, sessionProfile.profileId),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      cancelPost(currentDatabase, postId, sessionProfile.profileId),
+    );
+  }
+
+  /**
    * Alterna seguimiento.
    * Se construye para alimentar feed Siguiendo.
    * Lo usan cards y perfil.
@@ -552,6 +584,22 @@ export function usePadelitoMvp() {
         followedProfileId,
       ),
     );
+  }
+
+  /**
+   * Abre un perfil publico desde feed o busqueda.
+   * Se construye para conectar publicaciones con relaciones sociales.
+   * Lo usan cards de autor y busqueda de jugadores.
+   * Sirve para revisar perfil, seguir e invitar sin depender solo del feed.
+   */
+  function handlePublicProfileOpen(profileId: string) {
+    if (sessionProfile?.profileId === profileId) {
+      setActiveMainView("profile");
+      return;
+    }
+
+    setSelectedPublicProfileId(profileId);
+    setActiveMainView("players");
   }
 
   /**
@@ -695,6 +743,36 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Cancela una invitacion directa enviada.
+   * Se construye para permitir arrepentimiento antes de una respuesta.
+   * Lo usa ProfileActivitySection.
+   * Sirve para retirar propuestas pendientes sin borrar historial.
+   */
+  function handleDirectInvitationCancel(invitationId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.cancelDirectMatchInvitation(
+          invitationId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      cancelDirectMatchInvitation(
+        currentDatabase,
+        invitationId,
+        sessionProfile.profileId,
+      ),
+    );
+  }
+
+  /**
    * Alterna interaccion de evento.
    * Se construye para manejar interesados y asistentes.
    * Lo usan EventPostCard.
@@ -827,6 +905,7 @@ export function usePadelitoMvp() {
     isRemoteSnapshotLoading,
     lastFeedRefreshAt,
     remoteErrorMessage,
+    selectedPublicProfileId,
     sessionProfile,
     unreadNotificationsCount,
     visiblePosts,
@@ -834,6 +913,7 @@ export function usePadelitoMvp() {
     setActiveMainView,
     setInvitedProfileId,
     setIsCreatePostOpen,
+    setSelectedPublicProfileId,
     handleDemoSignIn,
     handleSignOut,
     handleEmailSignInRequest,
@@ -842,15 +922,18 @@ export function usePadelitoMvp() {
     handlePasswordSignUpRequest,
     handlePasswordUpdateRequest,
     handleDirectInvitationCreate,
+    handleDirectInvitationCancel,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
     handleFeedRefresh,
     handleFollowToggle,
+    handlePublicProfileOpen,
     handleJoinRequestCreate,
     handleJoinRequestCancel,
     handleJoinRequestStatusChange,
     handleNotificationsRead,
     handlePostCreate,
+    handlePostCancel,
     handleProfileSave,
     handleQuickAccessDismiss,
     handleQuickAccessShow,
