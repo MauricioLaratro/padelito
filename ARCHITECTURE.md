@@ -85,14 +85,17 @@ src/
       FloatingCreatePostButton.tsx
       FloatingFeedTabs.tsx
   constants/
+    matchOptions.ts
     postOptions.ts
     profileOptions.ts
   domain/
     enums/
+      matchEnums.ts
       notificationEnums.ts
       postEnums.ts
       profileEnums.ts
     models/
+      matchModels.ts
       notificationModels.ts
       postModels.ts
       profileModels.ts
@@ -106,6 +109,10 @@ src/
       AuthScreen.tsx
     feed/
       FeedScreen.tsx
+    matches/
+      CreateMatchModal.tsx
+      MatchHistorySection.tsx
+      MatchResultModal.tsx
     notifications/
       NotificationsScreen.tsx
     onboarding/
@@ -149,43 +156,40 @@ supabase/
     202606100001_link_invitations_to_posts_and_slots.sql
     202606100002_restrict_profile_contact_visibility.sql
     202606100003_private_profile_contact_rpc.sql
+    202606100004_match_history.sql
+    202606100005_fix_match_history_rls.sql
 ```
 
-## Modulo MVP+ previsto: Partidos e Historial
+## Modulo Partidos e Historial implementado
 
-Este modulo debe implementarse separado de publicaciones.
+Este modulo se implemento separado de publicaciones.
 
-Separacion propuesta:
+Separacion actual:
 
 ```txt
 src/
   features/
     matches/
-    recurringChallenges/
-    statistics/
   domain/
     models/
       matchModels.ts
-      recurringChallengeModels.ts
-      statisticsModels.ts
-  services/
-    repositories/
-      matchRepository.ts
-      recurringChallengeRepository.ts
-      statisticsRepository.ts
 ```
 
 Principios:
 
 - `posts` sigue resolviendo descubrimiento y feed.
 - `matches` representa partidos concretos, completos o incompletos.
-- una publicacion `looking_for_player` puede originar o estar vinculada a un partido;
-- participantes aceptados deben vivir en `match_participants`;
-- resultados deben vivir en `match_results`;
+- participantes manuales viven en `match_participants`;
+- resultados viven en `match_results`;
 - estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
-- desafios recurrentes deben tener entidad propia y asociar multiples partidos.
+- desafios recurrentes deben tener entidad propia y asociar multiples partidos en una etapa posterior.
 
 La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento social/local del MVP.
+
+Pendiente arquitectonico:
+
+- vincular publicaciones `looking_for_player` con `match_records` cuando se quiera convertir cupos aceptados en participantes estructurados;
+- crear `recurring_challenges` y relaciones con partidos sin contaminar el feed.
 
 ## Decision reversible actual
 

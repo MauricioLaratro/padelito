@@ -1,5 +1,10 @@
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
+  MatchParticipant,
+  MatchRecord,
+  MatchResult,
+} from "../../domain/models/matchModels";
+import type {
   DirectMatchInvitation,
   MatchJoinRequest,
   Post,
@@ -13,6 +18,12 @@ import type {
   SupabaseFollowRow,
   SupabaseMatchJoinRequestInsert,
   SupabaseMatchJoinRequestRow,
+  SupabaseMatchParticipantInsert,
+  SupabaseMatchParticipantRow,
+  SupabaseMatchRecordInsert,
+  SupabaseMatchRecordRow,
+  SupabaseMatchResultInsert,
+  SupabaseMatchResultRow,
   SupabaseNotificationInsert,
   SupabaseNotificationRow,
   SupabasePostInsert,
@@ -442,6 +453,123 @@ export function mapDirectMatchInvitationToSupabaseInsert(
     desired_play_style: directMatchInvitation.desiredPlayStyle,
     note: optionalTextToNull(directMatchInvitation.note),
     status: directMatchInvitation.status,
+  };
+}
+
+/**
+ * Convierte una fila Supabase de partido a dominio.
+ * Se construye para aislar el contrato SQL del historial.
+ * Lo usa el repositorio Supabase.
+ * Sirve para renderizar partidos programados y finalizados.
+ */
+export function mapSupabaseMatchRecordRow(
+  row: SupabaseMatchRecordRow,
+): MatchRecord {
+  return {
+    matchId: row.id,
+    ownerProfileId: row.owner_profile_id,
+    recurringChallengeId: nullToUndefined(row.recurring_challenge_id),
+    scheduledDate: row.scheduled_date,
+    scheduledStartTime: normalizeTimeValue(row.scheduled_start_time),
+    placeText: row.place_text,
+    playStyle: row.play_style,
+    status: row.status,
+    shortNote: nullToUndefined(row.short_note),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Convierte un partido de dominio a insert Supabase.
+ * Se construye para persistir partidos con id generado por cliente.
+ * Lo usa createMatch.
+ * Sirve para enlazar participantes y resultados de inmediato.
+ */
+export function mapMatchRecordToSupabaseInsert(
+  matchRecord: MatchRecord,
+): SupabaseMatchRecordInsert {
+  return {
+    id: matchRecord.matchId,
+    owner_profile_id: matchRecord.ownerProfileId,
+    recurring_challenge_id: matchRecord.recurringChallengeId ?? null,
+    scheduled_date: matchRecord.scheduledDate,
+    scheduled_start_time: matchRecord.scheduledStartTime,
+    place_text: matchRecord.placeText,
+    play_style: matchRecord.playStyle,
+    status: matchRecord.status,
+    short_note: optionalTextToNull(matchRecord.shortNote),
+  };
+}
+
+/**
+ * Convierte una fila de participante a dominio.
+ * Se construye para soportar partidos sin limite fijo de jugadores.
+ * Lo usa el repositorio Supabase.
+ * Sirve para calcular historial y estadisticas por perfil.
+ */
+export function mapSupabaseMatchParticipantRow(
+  row: SupabaseMatchParticipantRow,
+): MatchParticipant {
+  return {
+    matchId: row.match_id,
+    profileId: row.profile_id,
+    side: row.side,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Convierte participante de dominio a insert Supabase.
+ * Se construye para registrar participantes normalizados.
+ * Lo usa createMatch.
+ * Sirve para evitar listas de texto en el historial.
+ */
+export function mapMatchParticipantToSupabaseInsert(
+  matchParticipant: MatchParticipant,
+): SupabaseMatchParticipantInsert {
+  return {
+    match_id: matchParticipant.matchId,
+    profile_id: matchParticipant.profileId,
+    side: matchParticipant.side,
+  };
+}
+
+/**
+ * Convierte fila de resultado a dominio.
+ * Se construye para separar marcador de los datos base del partido.
+ * Lo usa el repositorio Supabase.
+ * Sirve para calcular victorias y derrotas.
+ */
+export function mapSupabaseMatchResultRow(
+  row: SupabaseMatchResultRow,
+): MatchResult {
+  return {
+    matchId: row.match_id,
+    teamAScore: row.team_a_score,
+    teamBScore: row.team_b_score,
+    winnerSide: row.winner_side,
+    summary: nullToUndefined(row.summary),
+    recordedAt: row.recorded_at,
+  };
+}
+
+/**
+ * Convierte resultado de dominio a insert Supabase.
+ * Se construye para upserts de marcador.
+ * Lo usa recordMatchResult.
+ * Sirve para mantener una sola fila de resultado por partido.
+ */
+export function mapMatchResultToSupabaseInsert(
+  matchResult: MatchResult,
+): SupabaseMatchResultInsert {
+  return {
+    match_id: matchResult.matchId,
+    team_a_score: matchResult.teamAScore,
+    team_b_score: matchResult.teamBScore,
+    winner_side: matchResult.winnerSide,
+    summary: optionalTextToNull(matchResult.summary),
+    recorded_at: matchResult.recordedAt,
   };
 }
 

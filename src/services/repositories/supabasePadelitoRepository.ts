@@ -13,6 +13,9 @@ import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import {
   mapDirectMatchInvitationToSupabaseInsert,
   mapFollowToSupabaseInsert,
+  mapMatchParticipantToSupabaseInsert,
+  mapMatchRecordToSupabaseInsert,
+  mapMatchResultToSupabaseInsert,
   mapMatchJoinRequestToSupabaseInsert,
   mapNotificationToSupabaseInsert,
   mapPostInteractionToSupabaseInsert,
@@ -21,6 +24,9 @@ import {
   mapSupabaseDirectMatchInvitationRow,
   mapSupabaseFollowRow,
   mapSupabaseMatchJoinRequestRow,
+  mapSupabaseMatchParticipantRow,
+  mapSupabaseMatchRecordRow,
+  mapSupabaseMatchResultRow,
   mapSupabaseNotificationRow,
   mapSupabasePostInteractionRow,
   mapSupabasePostRow,
@@ -38,6 +44,9 @@ import type {
   SupabaseFollowRow,
   SupabaseMatchJoinRequestInsert,
   SupabaseMatchJoinRequestRow,
+  SupabaseMatchParticipantRow,
+  SupabaseMatchRecordRow,
+  SupabaseMatchResultRow,
   SupabaseNotificationRow,
   SupabasePostInteractionRow,
   SupabasePostRow,
@@ -111,6 +120,9 @@ export function createSupabasePadelitoRepository(
       postInteractionRows,
       matchJoinRequestRows,
       directMatchInvitationRows,
+      matchRecordRows,
+      matchParticipantRows,
+      matchResultRows,
       notificationRows,
     ] = await Promise.all([
       readRows<SupabaseProfileRow>(
@@ -160,6 +172,29 @@ export function createSupabasePadelitoRepository(
           .returns<SupabaseDirectMatchInvitationRow[]>(),
         "leer invitaciones",
       ),
+      readRows<SupabaseMatchRecordRow>(
+        supabaseClient
+          .from("match_records")
+          .select("*")
+          .order("scheduled_date", { ascending: false })
+          .order("scheduled_start_time", { ascending: false })
+          .returns<SupabaseMatchRecordRow[]>(),
+        "leer partidos",
+      ),
+      readRows<SupabaseMatchParticipantRow>(
+        supabaseClient
+          .from("match_participants")
+          .select("*")
+          .returns<SupabaseMatchParticipantRow[]>(),
+        "leer participantes de partidos",
+      ),
+      readRows<SupabaseMatchResultRow>(
+        supabaseClient
+          .from("match_results")
+          .select("*")
+          .returns<SupabaseMatchResultRow[]>(),
+        "leer resultados",
+      ),
       readRows<SupabaseNotificationRow>(
         supabaseClient
           .from("notifications")
@@ -199,6 +234,11 @@ export function createSupabasePadelitoRepository(
       directMatchInvitations: directMatchInvitationRows.map(
         mapSupabaseDirectMatchInvitationRow,
       ),
+      matchRecords: matchRecordRows.map(mapSupabaseMatchRecordRow),
+      matchParticipants: matchParticipantRows.map(
+        mapSupabaseMatchParticipantRow,
+      ),
+      matchResults: matchResultRows.map(mapSupabaseMatchResultRow),
       notifications: notificationRows.map(mapSupabaseNotificationRow),
       sessionProfileId: user.id,
       quickAccessPromptDismissed: false,
@@ -255,6 +295,100 @@ export function createSupabasePadelitoRepository(
 
     if (error) {
       throw createSupabaseError("cancelar publicacion", error);
+    }
+  }
+
+  /**
+   * Crea un partido con participantes y resultado opcional en Supabase.
+   * Se construye para persistir historial real separado del feed.
+   * Lo usa el modulo de partidos.
+   * Sirve para soportar partidos con cantidad variable de jugadores.
+   */
+  async function createMatch(
+    matchInput: Parameters<PadelitoRepository["createMatch"]>[0],
+  ): Promise<void> {
+    const { error: matchError } = await supabaseClient
+      .from("match_records")
+      .insert(
+        mapMatchRecordToSupabaseInsert({
+          ...matchInput.matchRecord,
+          status: matchInput.result ? "completed" : matchInput.matchRecord.status,
+        }),
+      );
+
+    if (matchError) {
+      throw createSupabaseError("crear partido", matchError);
+    }
+
+    const { error: participantsError } = await supabaseClient
+      .from("match_participants")
+      .insert(matchInput.participants.map(mapMatchParticipantToSupabaseInsert));
+
+    if (participantsError) {
+      throw createSupabaseError("agregar participantes", participantsError);
+    }
+
+    if (!matchInput.result) {
+      return;
+    }
+
+    const { error: resultError } = await supabaseClient
+      .from("match_results")
+      .insert(mapMatchResultToSupabaseInsert(matchInput.result));
+
+    if (resultError) {
+      throw createSupabaseError("registrar resultado", resultError);
+    }
+  }
+
+  /**
+   * Cancela un partido propio en Supabase.
+   * Se construye para retirar partidos programados sin borrar historial.
+   * Lo usa el perfil del creador.
+   * Sirve para mantener consistencia con publicaciones cancelables.
+   */
+  async function cancelMatch(
+    matchId: string,
+    ownerProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("match_records")
+      .update({ status: "cancelled" })
+      .eq("id", matchId)
+      .eq("owner_profile_id", ownerProfileId)
+      .eq("status", "scheduled");
+
+    if (error) {
+      throw createSupabaseError("cancelar partido", error);
+    }
+  }
+
+  /**
+   * Guarda resultado de un partido en Supabase.
+   * Se construye como upsert para permitir correcciones del marcador.
+   * Lo usa el historial de partidos.
+   * Sirve para alimentar estadisticas del perfil.
+   */
+  async function recordMatchResult(
+    matchResult: Parameters<PadelitoRepository["recordMatchResult"]>[0],
+  ): Promise<void> {
+    const { error: resultError } = await supabaseClient
+      .from("match_results")
+      .upsert(mapMatchResultToSupabaseInsert(matchResult), {
+        onConflict: "match_id",
+      });
+
+    if (resultError) {
+      throw createSupabaseError("registrar resultado", resultError);
+    }
+
+    const { error: matchError } = await supabaseClient
+      .from("match_records")
+      .update({ status: "completed" })
+      .eq("id", matchResult.matchId);
+
+    if (matchError) {
+      throw createSupabaseError("finalizar partido", matchError);
     }
   }
 
@@ -825,15 +959,18 @@ export function createSupabasePadelitoRepository(
   }
 
   return {
+    cancelMatch,
     cancelMatchJoinRequest,
     cancelDirectMatchInvitation,
     cancelPost,
     createDirectMatchInvitation,
+    createMatch,
     createMatchJoinRequest,
     createPost,
     loadApplicationSnapshot,
     getPrivateProfileContact,
     markNotificationsAsRead,
+    recordMatchResult,
     saveProfile,
     toggleEventInteraction,
     toggleFollowProfile,

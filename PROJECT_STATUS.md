@@ -14,7 +14,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 - Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
-- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas y contacto privado post-aceptacion.
+- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion e historial estructurado de partidos.
 
 ## Comprension del producto
 
@@ -36,7 +36,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Recuperacion de contrasena usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
-- Partidos completos, resultados, estadisticas y desafios recurrentes quedan refinados como MVP+ para no desplazar el nucleo actual.
+- Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
+- Desafios recurrentes quedan como pendiente MVP+ posterior, sin bloquear el MVP testeable.
 - Invitaciones directas pueden vincularse a un partido propio abierto; si se aceptan, descuentan cupo y el partido queda completo cuando faltantes llega a `0`.
 - Las aceptaciones remotas de solicitudes e invitaciones deben pasar por funciones SQL `answer_match_join_request` y `answer_direct_match_invitation`, evitando updates directos que no descuenten cupo.
 - Los perfiles publicos se leen sin `whatsapp_phone`; el contacto privado queda fuera del snapshot general.
@@ -48,6 +49,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - RLS de Supabase requiere mucho cuidado por publicaciones `public` y `followers_only`.
 - La lectura de perfiles debe mantener columnas explicitas para no reexponer contacto privado.
 - La RPC de contacto privado debe mantenerse como unico camino para leer `whatsapp_phone` desde cliente.
+- Los partidos estructurados usan ids UUID puros porque `match_records`, `match_participants` y `match_results` enlazan columnas `uuid`.
+- La RLS de partidos requiere evitar recursividad entre `match_records` y `match_participants`; se centraliza lectura en `can_read_match(uuid, uuid)`.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -111,6 +114,17 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - magic link queda como alternativa sin cooldown local persistido;
   - `npm run build` pasa con repositorio Supabase y Auth real;
   - `npm run lint` pasa.
+- Partidos e historial:
+  - migracion `202606100004_match_history.sql` aplicada en Supabase Cloud;
+  - migracion `202606100005_fix_match_history_rls.sql` aplicada en Supabase Cloud;
+  - tablas `match_records`, `match_participants` y `match_results` creadas con RLS;
+  - perfil muestra historial, jugados, ganados, perdidos y efectividad;
+  - creacion de partido con participante seguido validada en navegador integrado;
+  - registro de resultado al crear partido validado contra Supabase;
+  - edicion de resultado validada contra Supabase;
+  - cancelacion de partido programado validada contra Supabase;
+  - `npm run build` pasa;
+  - `npm run lint` pasa.
 - Bloque invitaciones/notificaciones:
   - selector de partido agregado al modal de invitacion cuando el usuario tiene partidos propios abiertos;
   - notificaciones de solicitudes e invitaciones ahora se expanden y muestran acciones contextuales;
@@ -139,6 +153,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit GitHub: `2b7b811 Documentar publicacion en GitHub`.
 - Commit Supabase/Auth: `acf5a94 Conectar Supabase y auth real`.
 - Commit logout/UI: `72fc11a Agregar cierre de sesion y limpiar UI`.
+- Commit perfil/contacto: `3c0cefe Completar perfil y contacto privado`.
 
 ## Regla de idioma
 
@@ -147,8 +162,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
-- Probar manualmente solicitud aceptada e invitacion vinculada entre dos cuentas reales.
-- Probar manualmente registro/login por contrasena con una cuenta nueva y una existente.
-- Probar visualmente edicion de perfil y contacto privado post-aceptacion con dos sesiones reales.
-- Pulir UX con screenshots mobile.
-- Mantener Partidos e Historial como Etapa 9, despues de consolidar backend y auth real.
+- Probar visualmente pantallas privadas con dos sesiones reales.
+- Convertir postulantes aceptados e invitaciones aceptadas en participantes de `match_records` cuando exista partido estructurado vinculado.
+- Disenar e implementar desafios recurrentes entre parejas o grupos.
+- Pulir UX con screenshots mobile despues de cerrar flujos principales.
+- Preparar deploy Cloudflare Pages.

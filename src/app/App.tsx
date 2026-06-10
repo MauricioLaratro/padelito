@@ -204,6 +204,9 @@ export function App() {
           onDirectInvitationCancel={padelitoMvp.handleDirectInvitationCancel}
           onJoinRequestCancel={padelitoMvp.handleJoinRequestCancel}
           onJoinRequestStatusChange={padelitoMvp.handleJoinRequestStatusChange}
+          onMatchCancel={padelitoMvp.handleMatchCancel}
+          onMatchCreate={padelitoMvp.handleMatchCreate}
+          onMatchResultRecord={padelitoMvp.handleMatchResultRecord}
           onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onPostCancel={padelitoMvp.handlePostCancel}
           onProfileSave={padelitoMvp.handleProfileSave}

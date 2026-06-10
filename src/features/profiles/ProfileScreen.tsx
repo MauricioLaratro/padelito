@@ -9,8 +9,11 @@ import {
   playStyleLabels,
 } from "../../constants/profileOptions";
 import type { Profile } from "../../domain/models/profileModels";
+import type { MatchResult } from "../../domain/models/matchModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
+import type { CreateMatchInput } from "../../services/repositories/padelitoRepository";
 import { ProfileActivitySection } from "../activity/ProfileActivitySection";
+import { MatchHistorySection } from "../matches/MatchHistorySection";
 import { ProfileEditModal } from "./ProfileEditModal";
 
 interface ProfileScreenProps {
@@ -26,6 +29,9 @@ interface ProfileScreenProps {
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onMatchCancel: (matchId: string) => void;
+  onMatchCreate: (matchInput: CreateMatchInput) => void;
+  onMatchResultRecord: (matchResult: MatchResult) => void;
   onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
   onProfileSave: (profile: Profile) => void;
@@ -46,6 +52,9 @@ export function ProfileScreen({
   onDirectInvitationCancel,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onMatchCancel,
+  onMatchCreate,
+  onMatchResultRecord,
   onPrivateContactOpen,
   onPostCancel,
   onProfileSave,
@@ -117,6 +126,14 @@ export function ProfileScreen({
           </Button>
         </div>
       </article>
+
+      <MatchHistorySection
+        currentProfile={currentProfile}
+        database={database}
+        onMatchCancel={onMatchCancel}
+        onMatchCreate={onMatchCreate}
+        onMatchResultRecord={onMatchResultRecord}
+      />
 
       <ProfileActivitySection
         currentProfileId={currentProfile.profileId}

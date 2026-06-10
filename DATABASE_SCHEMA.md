@@ -9,9 +9,12 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - La funcion `can_read_post` se crea despues de `posts` y `follows` para evitar errores de referencia durante la migracion.
 - Migracion incremental `202606100001_link_invitations_to_posts_and_slots.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606100002_restrict_profile_contact_visibility.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606100004_match_history.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606100005_fix_match_history_rls.sql` aplicada en Supabase Cloud.
 - `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
 - Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
 - `whatsapp_phone` queda fuera de la lectura publica REST; el cliente carga perfiles publicos sin telefono.
+- `match_records`, `match_participants` y `match_results` ya estan creadas para historial y estadisticas simples.
 
 ## Enums sugeridos
 
@@ -24,6 +27,9 @@ create type post_type as enum ('looking_for_player', 'available_to_play', 'event
 create type post_visibility as enum ('public', 'followers_only');
 create type request_status as enum ('pending', 'accepted', 'rejected', 'cancelled');
 create type invitation_status as enum ('pending', 'accepted', 'rejected', 'cancelled');
+create type match_status as enum ('scheduled', 'completed', 'cancelled');
+create type match_participant_side as enum ('team_a', 'team_b', 'rotating');
+create type match_winner_side as enum ('team_a', 'team_b', 'draw');
 create type notification_type as enum (
   'new_follower',
   'match_join_request_received',
@@ -180,54 +186,47 @@ Buckets:
 - avatars
 - event-images
 
-## MVP+ sugerido: matches
+## match_records
 
-Partidos ya armados o derivados de publicaciones.
+Partidos estructurados ya armados.
 
 - id
-- creator_profile_id
-- source_post_id nullable
-- visibility
+- owner_profile_id
+- recurring_challenge_id nullable
 - status: scheduled / completed / cancelled
 - scheduled_date
 - scheduled_start_time
 - place_text
 - play_style
-- note nullable
+- short_note nullable
 - created_at
 - updated_at
 
-## MVP+ sugerido: match_participants
+## match_participants
 
 Participantes del partido.
 
-- id
 - match_id
 - profile_id
-- team_label nullable
-- partner_group nullable
-- participation_status: invited / confirmed / declined / removed
+- side: team_a / team_b / rotating
 - created_at
 
 Notas:
 
 - no limitar cantidad de participantes;
 - permitir rotativos y multiples parejas;
-- usar `team_label` o `partner_group` para agrupar jugadores cuando haya parejas/equipos.
+- mantener `side = rotating` para triangulares o rotacion sin ganador individual directo.
 
-## MVP+ sugerido: match_results
+## match_results
 
 Resultado final.
 
-- id
 - match_id
-- reported_by_profile_id
-- winner_team_label nullable
-- score_text
-- completed_at
-- note nullable
-- created_at
-- updated_at
+- team_a_score
+- team_b_score
+- winner_side: team_a / team_b / draw
+- summary nullable
+- recorded_at
 
 ## MVP+ sugerido: recurring_challenges
 
@@ -291,8 +290,8 @@ Reglas generales:
 - inviter solo puede cancelar invitaciones pendientes
 - notificaciones visibles solo por recipient
 - contacto telefonico no debe exponerse en snapshots publicos
-- partidos visibles segun visibilidad o participacion
-- resultados visibles para participantes y perfiles autorizados por visibilidad
+- partidos visibles para owner y participantes
+- resultados visibles para owner y participantes
 - desafios recurrentes visibles para participantes o segun visibilidad futura
 
 El agente debe escribir migraciones SQL completas y seguras.
@@ -304,6 +303,7 @@ El agente debe escribir migraciones SQL completas y seguras.
 - `answer_direct_match_invitation`: valida invited, estado pendiente y descuenta cupo del `related_post_id` cuando acepta.
 - `register_accepted_player_on_post`: reduce `missing_players_count`, agrega el nombre a `confirmed_players_text` y marca `is_active = false` si el cupo llega a `0`.
 - `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.
+- `can_read_match`: permite leer partidos, participantes y resultados al owner o participantes sin generar recursion RLS.
 
 ## Privacidad de contacto
 

@@ -140,6 +140,9 @@ export function createInitialLocalDatabase(): PadelitoLocalDatabase {
     ],
     matchJoinRequests: [],
     directMatchInvitations: [],
+    matchRecords: [],
+    matchParticipants: [],
+    matchResults: [],
     notifications: [
       {
         notificationId: "notification_welcome",

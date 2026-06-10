@@ -1,5 +1,10 @@
 import type { NotificationType } from "../../domain/enums/notificationEnums";
 import type {
+  MatchParticipantSide,
+  MatchStatus,
+  MatchWinnerSide,
+} from "../../domain/enums/matchEnums";
+import type {
   EventInteractionType,
   InvitationStatus,
   PostType,
@@ -132,6 +137,48 @@ export type SupabaseDirectMatchInvitationInsert = Omit<
   SupabaseDirectMatchInvitationRow,
   "id" | "created_at" | "updated_at"
 >;
+
+export interface SupabaseMatchRecordRow {
+  id: string;
+  owner_profile_id: string;
+  recurring_challenge_id: string | null;
+  scheduled_date: string;
+  scheduled_start_time: string;
+  place_text: string;
+  play_style: PlayStyle;
+  status: MatchStatus;
+  short_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SupabaseMatchRecordInsert = Omit<
+  SupabaseMatchRecordRow,
+  "created_at" | "updated_at"
+>;
+
+export interface SupabaseMatchParticipantRow {
+  match_id: string;
+  profile_id: string;
+  side: MatchParticipantSide;
+  created_at: string;
+}
+
+export type SupabaseMatchParticipantInsert = Omit<
+  SupabaseMatchParticipantRow,
+  "created_at"
+>;
+
+export interface SupabaseMatchResultRow {
+  match_id: string;
+  team_a_score: number;
+  team_b_score: number;
+  winner_side: MatchWinnerSide;
+  summary: string | null;
+  recorded_at: string;
+}
+
+export type SupabaseMatchResultInsert = SupabaseMatchResultRow;
 
 export interface SupabaseNotificationRow {
   id: string;

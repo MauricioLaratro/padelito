@@ -1,4 +1,5 @@
 import type { EventInteractionType } from "../../domain/enums/postEnums";
+import type { MatchResult } from "../../domain/models/matchModels";
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
   DirectMatchInvitation,
@@ -13,7 +14,7 @@ import type {
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
 import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
-import type { CreateInvitationInput } from "./padelitoRepository";
+import type { CreateInvitationInput, CreateMatchInput } from "./padelitoRepository";
 
 export type { CreateInvitationInput } from "./padelitoRepository";
 
@@ -238,6 +239,106 @@ export function cancelPost(
           }
         : post,
     ),
+  };
+}
+
+/**
+ * Crea un partido con participantes normalizados.
+ * Se construye para separar historial real de publicaciones del feed.
+ * Lo usan formularios de partido.
+ * Sirve para registrar partidos completos, rotativos o pendientes de resultado.
+ */
+export function createMatch(
+  database: PadelitoLocalDatabase,
+  matchInput: CreateMatchInput,
+) {
+  const normalizedParticipants = normalizeMatchParticipants(matchInput);
+
+  return {
+    ...database,
+    matchRecords: [
+      {
+        ...matchInput.matchRecord,
+        status: matchInput.result ? "completed" : matchInput.matchRecord.status,
+      },
+      ...database.matchRecords,
+    ],
+    matchParticipants: [
+      ...normalizedParticipants,
+      ...database.matchParticipants.filter(
+        (matchParticipant) =>
+          matchParticipant.matchId !== matchInput.matchRecord.matchId,
+      ),
+    ],
+    matchResults: matchInput.result
+      ? [
+          matchInput.result,
+          ...database.matchResults.filter(
+            (matchResult) =>
+              matchResult.matchId !== matchInput.matchRecord.matchId,
+          ),
+        ]
+      : database.matchResults,
+  };
+}
+
+/**
+ * Cancela un partido propio sin borrar historial.
+ * Se construye para dar control al creador sobre partidos programados.
+ * Lo usa el historial de partidos.
+ * Sirve para retirar partidos que ya no se jugaran.
+ */
+export function cancelMatch(
+  database: PadelitoLocalDatabase,
+  matchId: string,
+  ownerProfileId: string,
+) {
+  return {
+    ...database,
+    matchRecords: database.matchRecords.map((matchRecord) =>
+      matchRecord.matchId === matchId &&
+      matchRecord.ownerProfileId === ownerProfileId &&
+      matchRecord.status === "scheduled"
+        ? {
+            ...matchRecord,
+            status: "cancelled" as const,
+            updatedAt: createCurrentIsoDate(),
+          }
+        : matchRecord,
+    ),
+  };
+}
+
+/**
+ * Registra o actualiza resultado de un partido propio.
+ * Se construye para cerrar partidos y alimentar estadisticas.
+ * Lo usa el modal de resultado.
+ * Sirve para crear historial de victorias y derrotas.
+ */
+export function recordMatchResult(
+  database: PadelitoLocalDatabase,
+  matchResult: MatchResult,
+  ownerProfileId: string,
+) {
+  return {
+    ...database,
+    matchRecords: database.matchRecords.map((matchRecord) =>
+      matchRecord.matchId === matchResult.matchId &&
+      matchRecord.ownerProfileId === ownerProfileId
+        ? {
+            ...matchRecord,
+            status: "completed" as const,
+            updatedAt: createCurrentIsoDate(),
+          }
+        : matchRecord,
+    ),
+    matchResults: [
+      matchResult,
+      ...database.matchResults.filter(
+        (currentMatchResult) =>
+          currentMatchResult.matchId !== matchResult.matchId,
+      ),
+    ],
   };
 }
 
@@ -802,4 +903,21 @@ function hasAcceptedPrivateContactConnection(
         (directMatchInvitation.invitedProfileId === currentProfileId &&
           directMatchInvitation.inviterProfileId === targetProfileId)),
   );
+}
+
+/**
+ * Deduplica participantes de un partido.
+ * Se construye para aceptar listas variables sin duplicar perfiles.
+ * Lo usa createMatch.
+ * Sirve para soportar partidos rotativos con muchos jugadores.
+ */
+function normalizeMatchParticipants(matchInput: CreateMatchInput) {
+  const uniqueParticipantsByProfileId = new Map(
+    matchInput.participants.map((matchParticipant) => [
+      matchParticipant.profileId,
+      matchParticipant,
+    ]),
+  );
+
+  return [...uniqueParticipantsByProfileId.values()];
 }

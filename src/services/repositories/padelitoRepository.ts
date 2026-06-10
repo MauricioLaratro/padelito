@@ -1,5 +1,10 @@
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
+  MatchParticipant,
+  MatchRecord,
+  MatchResult,
+} from "../../domain/models/matchModels";
+import type {
   DirectMatchInvitation,
   MatchJoinRequest,
   Post,
@@ -23,6 +28,12 @@ export interface CreateInvitationInput {
   note?: string;
 }
 
+export interface CreateMatchInput {
+  matchRecord: MatchRecord;
+  participants: MatchParticipant[];
+  result?: MatchResult;
+}
+
 export interface PadelitoRepositorySnapshot {
   profiles: Profile[];
   follows: FollowRelation[];
@@ -30,6 +41,9 @@ export interface PadelitoRepositorySnapshot {
   postInteractions: PostInteraction[];
   matchJoinRequests: MatchJoinRequest[];
   directMatchInvitations: DirectMatchInvitation[];
+  matchRecords: MatchRecord[];
+  matchParticipants: MatchParticipant[];
+  matchResults: MatchResult[];
   notifications: InternalNotification[];
   sessionProfileId?: string;
   quickAccessPromptDismissed: boolean;
@@ -40,6 +54,9 @@ export interface PadelitoRepository {
   saveProfile: (updatedProfile: Profile) => Promise<void>;
   createPost: (post: Post) => Promise<void>;
   cancelPost: (postId: string, authorProfileId: string) => Promise<void>;
+  createMatch: (matchInput: CreateMatchInput) => Promise<void>;
+  cancelMatch: (matchId: string, ownerProfileId: string) => Promise<void>;
+  recordMatchResult: (matchResult: MatchResult) => Promise<void>;
   toggleFollowProfile: (
     followerProfileId: string,
     followedProfileId: string,
@@ -90,6 +107,9 @@ export function createEmptyRepositorySnapshot(): PadelitoRepositorySnapshot {
   return {
     directMatchInvitations: [],
     follows: [],
+    matchParticipants: [],
+    matchRecords: [],
+    matchResults: [],
     matchJoinRequests: [],
     notifications: [],
     postInteractions: [],

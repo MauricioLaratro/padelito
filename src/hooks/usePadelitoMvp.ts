@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FeedTabIdentifier } from "../domain/enums/postEnums";
+import type { MatchResult } from "../domain/models/matchModels";
 import type { Post } from "../domain/models/postModels";
 import type { Profile } from "../domain/models/profileModels";
 import { createCurrentIsoDate } from "../utils/dateFormatters";
@@ -7,9 +8,11 @@ import { useLocalStorageState } from "./useLocalStorageState";
 import {
   cancelMatchJoinRequest,
   cancelDirectMatchInvitation,
+  cancelMatch,
   cancelPost,
   type CreateInvitationInput,
   createDirectMatchInvitation,
+  createMatch,
   createMatchJoinRequest,
   createPost,
   dismissQuickAccessPrompt,
@@ -17,6 +20,7 @@ import {
   getSessionProfile,
   getVisiblePostsForFeed,
   markNotificationsAsRead,
+  recordMatchResult,
   signInWithDemoProfile,
   toggleEventInteraction,
   toggleFollowProfile,
@@ -28,7 +32,10 @@ import {
   createInitialLocalDatabase,
   type PadelitoLocalDatabase,
 } from "../services/repositories/localPadelitoDatabase";
-import { createEmptyRepositorySnapshot } from "../services/repositories/padelitoRepository";
+import {
+  createEmptyRepositorySnapshot,
+  type CreateMatchInput,
+} from "../services/repositories/padelitoRepository";
 import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
 import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
 import { createWhatsappContactUrl } from "../utils/contactFormatters";
@@ -106,7 +113,9 @@ export function usePadelitoMvp() {
 
   const isSupabaseMode =
     backendMode === "supabase" && Boolean(supabaseRepository);
-  const database = isSupabaseMode ? remoteDatabase : localDatabase;
+  const database = normalizeDatabaseSnapshot(
+    isSupabaseMode ? remoteDatabase : localDatabase,
+  );
 
   const sessionProfile = getSessionProfile(database);
 
@@ -559,6 +568,69 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Crea un partido estructurado.
+   * Se construye para separar historial real del feed de descubrimiento.
+   * Lo usan modales de partido.
+   * Sirve para registrar participantes variables y resultado opcional.
+   */
+  function handleMatchCreate(matchInput: CreateMatchInput) {
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() => supabaseRepository.createMatch(matchInput));
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      createMatch(currentDatabase, matchInput),
+    );
+  }
+
+  /**
+   * Cancela un partido propio.
+   * Se construye para mantener control del creador sin borrar historial.
+   * Lo usa el historial de partidos.
+   * Sirve para retirar partidos que ya no se jugaran.
+   */
+  function handleMatchCancel(matchId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.cancelMatch(matchId, sessionProfile.profileId),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      cancelMatch(currentDatabase, matchId, sessionProfile.profileId),
+    );
+  }
+
+  /**
+   * Registra resultado de partido.
+   * Se construye para alimentar historial y estadisticas.
+   * Lo usa el modal de resultado.
+   * Sirve para marcar partidos como finalizados.
+   */
+  function handleMatchResultRecord(matchResult: MatchResult) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.recordMatchResult(matchResult),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      recordMatchResult(currentDatabase, matchResult, sessionProfile.profileId),
+    );
+  }
+
+  /**
    * Alterna seguimiento.
    * Se construye para alimentar feed Siguiendo.
    * Lo usan cards y perfil.
@@ -984,6 +1056,9 @@ export function usePadelitoMvp() {
     handleNotificationsRead,
     handlePostCreate,
     handlePostCancel,
+    handleMatchCancel,
+    handleMatchCreate,
+    handleMatchResultRecord,
     handlePrivateContactOpen,
     handleProfileSave,
     handleQuickAccessDismiss,
@@ -1033,4 +1108,28 @@ function getReadableAuthErrorMessage(error: unknown) {
   }
 
   return readableMessage;
+}
+
+/**
+ * Completa campos nuevos en snapshots antiguos.
+ * Se construye para que localStorage viejo no rompa al agregar modulos.
+ * Lo usa usePadelitoMvp antes de entregar database a la UI.
+ * Sirve para migraciones cliente simples y reversibles.
+ */
+function normalizeDatabaseSnapshot(database: PadelitoLocalDatabase) {
+  const partialDatabase = database as Partial<PadelitoLocalDatabase>;
+
+  return {
+    ...database,
+    directMatchInvitations: partialDatabase.directMatchInvitations ?? [],
+    follows: partialDatabase.follows ?? [],
+    matchJoinRequests: partialDatabase.matchJoinRequests ?? [],
+    matchParticipants: partialDatabase.matchParticipants ?? [],
+    matchRecords: partialDatabase.matchRecords ?? [],
+    matchResults: partialDatabase.matchResults ?? [],
+    notifications: partialDatabase.notifications ?? [],
+    postInteractions: partialDatabase.postInteractions ?? [],
+    posts: partialDatabase.posts ?? [],
+    profiles: partialDatabase.profiles ?? [],
+  };
 }
