@@ -106,8 +106,8 @@
 ## Etapa 9 - MVP+ Partidos e historial
 - [x] Crear modelo de partido completo con participantes sin limite fijo.
 - [x] Permitir crear partido completo seleccionando usuarios seguidos.
-- [ ] Permitir marcar partido como incompleto para buscar jugadores.
-- [ ] Convertir postulantes aceptados en participantes del partido.
+- [x] Permitir marcar partido como incompleto para buscar jugadores.
+- [x] Convertir postulantes aceptados en participantes del partido.
 - [x] Registrar resultado al finalizar partido.
 - [x] Mostrar historial de partidos en perfil de cada participante.
 - [x] Crear dashboard simple de estadisticas: jugados, victorias, derrotas y porcentaje.

@@ -93,6 +93,7 @@ Estado de esta instancia:
 - Buckets creados por migracion: `avatars` y `event-images`.
 - Contacto privado: `get_profile_private_contact(uuid)` instalado y ejecutable por usuarios autenticados.
 - Historial de partidos: `match_records`, `match_participants`, `match_results` y `can_read_match(uuid, uuid)` instalados.
+- Enlace social-partidos: `source_post_id`, `related_match_id`, `register_accepted_player_on_match` y `register_accepted_player_on_linked_match` instalados.
 
 ## Sesion de usuario
 
@@ -111,7 +112,7 @@ Estado de esta instancia:
 - Los usuarios de prueba se gestionan exclusivamente desde Supabase Auth y la base de datos.
 - No versionar emails, contrasenas ni credenciales de cuentas de prueba.
 - Para validar solicitudes, invitaciones y perfiles cruzados, crear usuarios temporales desde el dashboard de Supabase o desde el flujo real de registro.
-- En esta sesion se validaron desde la app real: crear partido, agregar participante seguido, registrar resultado, editar resultado y cancelar partido programado.
+- En esta sesion se validaron desde la app real: crear partido, agregar participante seguido, registrar resultado, editar resultado, cancelar partido programado, publicar partido incompleto e invitar a un jugador a un partido estructurado.
 
 ## Marca y cache PWA
 

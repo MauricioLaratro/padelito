@@ -307,11 +307,29 @@ export function createSupabasePadelitoRepository(
   async function createMatch(
     matchInput: Parameters<PadelitoRepository["createMatch"]>[0],
   ): Promise<void> {
+    if (matchInput.sourcePost) {
+      const { error: sourcePostError } = await supabaseClient
+        .from("posts")
+        .insert({
+          id: matchInput.sourcePost.postId,
+          ...mapPostToSupabaseInsert(matchInput.sourcePost),
+        });
+
+      if (sourcePostError) {
+        throw createSupabaseError(
+          "crear publicacion vinculada al partido",
+          sourcePostError,
+        );
+      }
+    }
+
     const { error: matchError } = await supabaseClient
       .from("match_records")
       .insert(
         mapMatchRecordToSupabaseInsert({
           ...matchInput.matchRecord,
+          sourcePostId:
+            matchInput.sourcePost?.postId ?? matchInput.matchRecord.sourcePostId,
           status: matchInput.result ? "completed" : matchInput.matchRecord.status,
         }),
       );
@@ -626,6 +644,7 @@ export function createSupabasePadelitoRepository(
       inviterProfileId,
       invitedProfileId: invitationInput.invitedProfileId,
       relatedPostId: invitationInput.relatedPostId,
+      relatedMatchId: invitationInput.relatedMatchId,
       scheduledDate: invitationInput.scheduledDate,
       scheduledStartTime: invitationInput.scheduledStartTime,
       placeText: invitationInput.placeText,
@@ -925,8 +944,12 @@ export function createSupabasePadelitoRepository(
       throw createSupabaseError("insertar invitacion directa", error);
     }
 
-    const { related_post_id: ignoredRelatedPostId, ...legacyInsertInput } =
-      insertInput;
+    const {
+      related_match_id: ignoredRelatedMatchId,
+      related_post_id: ignoredRelatedPostId,
+      ...legacyInsertInput
+    } = insertInput;
+    void ignoredRelatedMatchId;
     void ignoredRelatedPostId;
 
     return writeSingleRow<SupabaseDirectMatchInvitationRow>(
@@ -1195,6 +1218,8 @@ function isMissingSchemaFeatureError(error: SupabaseRepositoryError) {
     normalizedMessage.includes("schema cache") ||
     normalizedMessage.includes("could not find the function") ||
     normalizedMessage.includes("related_post_id") ||
+    normalizedMessage.includes("related_match_id") ||
+    normalizedMessage.includes("source_post_id") ||
     normalizedMessage.includes("answer_match_join_request") ||
     normalizedMessage.includes("answer_direct_match_invitation")
   );

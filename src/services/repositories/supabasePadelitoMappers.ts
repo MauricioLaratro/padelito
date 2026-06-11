@@ -420,6 +420,7 @@ export function mapSupabaseDirectMatchInvitationRow(
     inviterProfileId: row.inviter_profile_id,
     invitedProfileId: row.invited_profile_id,
     relatedPostId: nullToUndefined(row.related_post_id),
+    relatedMatchId: nullToUndefined(row.related_match_id),
     scheduledDate: row.scheduled_date,
     scheduledStartTime: normalizeTimeValue(row.scheduled_start_time),
     placeText: row.place_text,
@@ -447,6 +448,7 @@ export function mapDirectMatchInvitationToSupabaseInsert(
     inviter_profile_id: directMatchInvitation.inviterProfileId,
     invited_profile_id: directMatchInvitation.invitedProfileId,
     related_post_id: directMatchInvitation.relatedPostId ?? null,
+    related_match_id: directMatchInvitation.relatedMatchId ?? null,
     scheduled_date: directMatchInvitation.scheduledDate,
     scheduled_start_time: directMatchInvitation.scheduledStartTime,
     place_text: directMatchInvitation.placeText,
@@ -468,6 +470,7 @@ export function mapSupabaseMatchRecordRow(
   return {
     matchId: row.id,
     ownerProfileId: row.owner_profile_id,
+    sourcePostId: nullToUndefined(row.source_post_id),
     recurringChallengeId: nullToUndefined(row.recurring_challenge_id),
     scheduledDate: row.scheduled_date,
     scheduledStartTime: normalizeTimeValue(row.scheduled_start_time),
@@ -492,6 +495,7 @@ export function mapMatchRecordToSupabaseInsert(
   return {
     id: matchRecord.matchId,
     owner_profile_id: matchRecord.ownerProfileId,
+    source_post_id: matchRecord.sourcePostId ?? null,
     recurring_challenge_id: matchRecord.recurringChallengeId ?? null,
     scheduled_date: matchRecord.scheduledDate,
     scheduled_start_time: matchRecord.scheduledStartTime,

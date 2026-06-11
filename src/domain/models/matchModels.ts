@@ -8,6 +8,7 @@ import type { PlayStyle } from "../enums/profileEnums";
 export interface MatchRecord {
   matchId: string;
   ownerProfileId: string;
+  sourcePostId?: string;
   recurringChallengeId?: string;
   scheduledDate: string;
   scheduledStartTime: string;

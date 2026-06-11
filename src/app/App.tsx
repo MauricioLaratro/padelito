@@ -77,6 +77,11 @@ export function App() {
       post.isActive &&
       post.missingPlayersCount > 0,
   );
+  const availableInvitationMatches = padelitoMvp.database.matchRecords.filter(
+    (matchRecord) =>
+      matchRecord.ownerProfileId === currentSessionProfile.profileId &&
+      matchRecord.status === "scheduled",
+  );
 
   return (
     <ScreenShell>
@@ -233,6 +238,7 @@ export function App() {
 
       {invitedProfile ? (
         <DirectInvitationModal
+          availableInvitationMatches={availableInvitationMatches}
           availableInvitationPosts={availableInvitationPosts}
           invitedProfile={invitedProfile}
           onClose={() => padelitoMvp.setInvitedProfileId(null)}

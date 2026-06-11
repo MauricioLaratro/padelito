@@ -11,10 +11,13 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - Migracion incremental `202606100002_restrict_profile_contact_visibility.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606100004_match_history.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606100005_fix_match_history_rls.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606110001_link_matches_to_social_flows.sql` aplicada en Supabase Cloud.
 - `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
 - Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
 - `whatsapp_phone` queda fuera de la lectura publica REST; el cliente carga perfiles publicos sin telefono.
 - `match_records`, `match_participants` y `match_results` ya estan creadas para historial y estadisticas simples.
+- `match_records.source_post_id` vincula partidos estructurados con publicaciones `Busco jugador`.
+- `direct_match_invitations.related_match_id` vincula invitaciones directas con partidos estructurados.
 
 ## Enums sugeridos
 
@@ -154,6 +157,7 @@ Invitacion directa desde perfil.
 - inviter_profile_id
 - invited_profile_id
 - related_post_id nullable
+- related_match_id nullable
 - scheduled_date
 - scheduled_start_time
 - place_text
@@ -192,6 +196,7 @@ Partidos estructurados ya armados.
 
 - id
 - owner_profile_id
+- source_post_id nullable
 - recurring_challenge_id nullable
 - status: scheduled / completed / cancelled
 - scheduled_date
@@ -299,9 +304,11 @@ El agente debe escribir migraciones SQL completas y seguras.
 ## Funciones operativas
 
 - `can_read_post`: permite leer posts activos segun visibilidad y tambien posts completos si el usuario es autor, requester aceptado/relacionado o invitado relacionado.
-- `answer_match_join_request`: valida owner, estado pendiente y descuenta cupo cuando acepta.
-- `answer_direct_match_invitation`: valida invited, estado pendiente y descuenta cupo del `related_post_id` cuando acepta.
+- `answer_match_join_request`: valida owner, estado pendiente, descuenta cupo y agrega participante al match vinculado por `source_post_id` si existe.
+- `answer_direct_match_invitation`: valida invited, estado pendiente, descuenta cupo del `related_post_id` y agrega participante al `related_match_id` o match vinculado cuando acepta.
 - `register_accepted_player_on_post`: reduce `missing_players_count`, agrega el nombre a `confirmed_players_text` y marca `is_active = false` si el cupo llega a `0`.
+- `register_accepted_player_on_match`: agrega un perfil a `match_participants` como `rotating` sin duplicar.
+- `register_accepted_player_on_linked_match`: busca match por `source_post_id` y agrega participante si existe.
 - `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.
 - `can_read_match`: permite leer partidos, participantes y resultados al owner o participantes sin generar recursion RLS.
 

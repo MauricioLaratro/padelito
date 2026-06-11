@@ -5,12 +5,14 @@ import { Button } from "../../components/common/Button";
 import { FormField } from "../../components/forms/FormField";
 import { playStyleOptions } from "../../constants/profileOptions";
 import type { PlayStyle } from "../../domain/enums/profileEnums";
+import type { MatchRecord } from "../../domain/models/matchModels";
 import type { LookingForPlayerPost } from "../../domain/models/postModels";
 import type { Profile } from "../../domain/models/profileModels";
 import type { CreateInvitationInput } from "../../services/repositories/localPadelitoRepository";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 
 interface DirectInvitationModalProps {
+  availableInvitationMatches: MatchRecord[];
   availableInvitationPosts: LookingForPlayerPost[];
   invitedProfile: Profile;
   onClose: () => void;
@@ -24,34 +26,65 @@ interface DirectInvitationModalProps {
  * Sirve para crear invitaciones internas con estado pendiente.
  */
 export function DirectInvitationModal({
+  availableInvitationMatches,
   availableInvitationPosts,
   invitedProfile,
   onClose,
   onInvitationCreate,
 }: DirectInvitationModalProps) {
-  const defaultInvitationPost = availableInvitationPosts[0];
-  const [selectedInvitationPostId, setSelectedInvitationPostId] = useState(
-    defaultInvitationPost?.postId ?? "manual",
+  const linkedMatchPostIds = new Set(
+    availableInvitationMatches
+      .map((availableInvitationMatch) => availableInvitationMatch.sourcePostId)
+      .filter((sourcePostId): sourcePostId is string => Boolean(sourcePostId)),
+  );
+  const standaloneInvitationPosts = availableInvitationPosts.filter(
+    (availableInvitationPost) =>
+      !linkedMatchPostIds.has(availableInvitationPost.postId),
+  );
+  const defaultInvitationMatch = availableInvitationMatches[0];
+  const defaultInvitationPost = standaloneInvitationPosts[0];
+  const [selectedInvitationTargetId, setSelectedInvitationTargetId] = useState(
+    defaultInvitationMatch
+      ? createMatchTargetId(defaultInvitationMatch.matchId)
+      : defaultInvitationPost
+        ? createPostTargetId(defaultInvitationPost.postId)
+        : "manual",
   );
   const [scheduledDate, setScheduledDate] = useState(
-    defaultInvitationPost?.scheduledDate ?? createDateInputValue(1),
+    defaultInvitationMatch?.scheduledDate ??
+      defaultInvitationPost?.scheduledDate ??
+      createDateInputValue(1),
   );
   const [scheduledStartTime, setScheduledStartTime] = useState(
-    defaultInvitationPost?.scheduledStartTime ?? "",
+    defaultInvitationMatch?.scheduledStartTime ??
+      defaultInvitationPost?.scheduledStartTime ??
+      "",
   );
   const [placeText, setPlaceText] = useState(
-    defaultInvitationPost?.placeText ?? "",
+    defaultInvitationMatch?.placeText ?? defaultInvitationPost?.placeText ?? "",
   );
   const [desiredPlayStyle, setDesiredPlayStyle] =
     useState<PlayStyle>(
-      defaultInvitationPost?.desiredPlayStyle ?? "competitive",
+      defaultInvitationMatch?.playStyle ??
+        defaultInvitationPost?.desiredPlayStyle ??
+        "competitive",
     );
   const [note, setNote] = useState("");
-  const selectedInvitationPost = availableInvitationPosts.find(
-    (availableInvitationPost) =>
-      availableInvitationPost.postId === selectedInvitationPostId,
+  const selectedInvitationMatch = availableInvitationMatches.find(
+    (availableInvitationMatch) =>
+      createMatchTargetId(availableInvitationMatch.matchId) ===
+      selectedInvitationTargetId,
   );
-  const isLinkedToExistingPost = Boolean(selectedInvitationPost);
+  const selectedInvitationPost = standaloneInvitationPosts.find(
+    (availableInvitationPost) =>
+      createPostTargetId(availableInvitationPost.postId) ===
+      selectedInvitationTargetId,
+  );
+  const isLinkedToExistingTarget = Boolean(
+    selectedInvitationMatch || selectedInvitationPost,
+  );
+  const hasInvitationTargets =
+    availableInvitationMatches.length > 0 || standaloneInvitationPosts.length > 0;
 
   /**
    * Cambia el partido asociado a la invitacion.
@@ -59,12 +92,27 @@ export function DirectInvitationModal({
    * Lo usa el selector de partido del modal.
    * Sirve para evitar invitaciones ambiguas cuando hay varios partidos abiertos.
    */
-  function handleInvitationPostChange(nextInvitationPostId: string) {
-    setSelectedInvitationPostId(nextInvitationPostId);
+  function handleInvitationTargetChange(nextInvitationTargetId: string) {
+    setSelectedInvitationTargetId(nextInvitationTargetId);
 
-    const nextInvitationPost = availableInvitationPosts.find(
+    const nextInvitationMatch = availableInvitationMatches.find(
+      (availableInvitationMatch) =>
+        createMatchTargetId(availableInvitationMatch.matchId) ===
+        nextInvitationTargetId,
+    );
+
+    if (nextInvitationMatch) {
+      setScheduledDate(nextInvitationMatch.scheduledDate);
+      setScheduledStartTime(nextInvitationMatch.scheduledStartTime);
+      setPlaceText(nextInvitationMatch.placeText);
+      setDesiredPlayStyle(nextInvitationMatch.playStyle);
+      return;
+    }
+
+    const nextInvitationPost = standaloneInvitationPosts.find(
       (availableInvitationPost) =>
-        availableInvitationPost.postId === nextInvitationPostId,
+        createPostTargetId(availableInvitationPost.postId) ===
+        nextInvitationTargetId,
     );
 
     if (!nextInvitationPost) {
@@ -90,7 +138,9 @@ export function DirectInvitationModal({
 
     onInvitationCreate({
       invitedProfileId: invitedProfile.profileId,
-      relatedPostId: selectedInvitationPost?.postId,
+      relatedPostId:
+        selectedInvitationPost?.postId ?? selectedInvitationMatch?.sourcePostId,
+      relatedMatchId: selectedInvitationMatch?.matchId,
       scheduledDate,
       scheduledStartTime,
       placeText,
@@ -125,19 +175,31 @@ export function DirectInvitationModal({
         </div>
 
         <div className="mt-5 grid gap-3">
-          {availableInvitationPosts.length > 0 ? (
+          {hasInvitationTargets ? (
             <FormField
               fieldType="select"
               label="Partido"
               onChange={(changeEvent) =>
-                handleInvitationPostChange(changeEvent.target.value)
+                handleInvitationTargetChange(changeEvent.target.value)
               }
-              value={selectedInvitationPostId}
+              value={selectedInvitationTargetId}
             >
-              {availableInvitationPosts.map((availableInvitationPost) => (
+              {availableInvitationMatches.map((availableInvitationMatch) => (
+                <option
+                  key={availableInvitationMatch.matchId}
+                  value={createMatchTargetId(availableInvitationMatch.matchId)}
+                >
+                  {formatScheduledDateTime(
+                    availableInvitationMatch.scheduledDate,
+                    availableInvitationMatch.scheduledStartTime,
+                  )}{" "}
+                  - {availableInvitationMatch.placeText}
+                </option>
+              ))}
+              {standaloneInvitationPosts.map((availableInvitationPost) => (
                 <option
                   key={availableInvitationPost.postId}
-                  value={availableInvitationPost.postId}
+                  value={createPostTargetId(availableInvitationPost.postId)}
                 >
                   {formatScheduledDateTime(
                     availableInvitationPost.scheduledDate,
@@ -153,7 +215,7 @@ export function DirectInvitationModal({
           ) : null}
           <div className="grid grid-cols-2 gap-3">
             <FormField
-              disabled={isLinkedToExistingPost}
+              disabled={isLinkedToExistingTarget}
               label="Fecha"
               onChange={(changeEvent) => setScheduledDate(changeEvent.target.value)}
               required
@@ -161,7 +223,7 @@ export function DirectInvitationModal({
               value={scheduledDate}
             />
             <FormField
-              disabled={isLinkedToExistingPost}
+              disabled={isLinkedToExistingTarget}
               label="Hora"
               onChange={(changeEvent) =>
                 setScheduledStartTime(changeEvent.target.value)
@@ -172,14 +234,14 @@ export function DirectInvitationModal({
             />
           </div>
           <FormField
-            disabled={isLinkedToExistingPost}
+            disabled={isLinkedToExistingTarget}
             label="Lugar"
             onChange={(changeEvent) => setPlaceText(changeEvent.target.value)}
             required
             value={placeText}
           />
           <FormField
-            disabled={isLinkedToExistingPost}
+            disabled={isLinkedToExistingTarget}
             fieldType="select"
             label="Tipo de juego"
             onChange={(changeEvent) =>
@@ -220,4 +282,24 @@ function createDateInputValue(daysAhead: number) {
   dateInputValue.setDate(dateInputValue.getDate() + daysAhead);
 
   return dateInputValue.toISOString().slice(0, 10);
+}
+
+/**
+ * Crea value estable para opciones de partido estructurado.
+ * Se construye para distinguir matches y publicaciones en un mismo select.
+ * Lo usa DirectInvitationModal.
+ * Sirve para no depender de ids con formatos diferentes.
+ */
+function createMatchTargetId(matchId: string) {
+  return `match:${matchId}`;
+}
+
+/**
+ * Crea value estable para opciones de publicacion.
+ * Se construye para conservar compatibilidad con invitaciones antiguas.
+ * Lo usa DirectInvitationModal.
+ * Sirve para distinguir publicaciones dentro del selector de partido.
+ */
+function createPostTargetId(postId: string) {
+  return `post:${postId}`;
 }

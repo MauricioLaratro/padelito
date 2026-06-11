@@ -79,6 +79,7 @@ export interface DirectMatchInvitation {
   inviterProfileId: string;
   invitedProfileId: string;
   relatedPostId?: string;
+  relatedMatchId?: string;
   scheduledDate: string;
   scheduledStartTime: string;
   placeText: string;

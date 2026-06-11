@@ -6,6 +6,7 @@ import type {
 } from "../../domain/models/matchModels";
 import type {
   DirectMatchInvitation,
+  LookingForPlayerPost,
   MatchJoinRequest,
   Post,
   PostInteraction,
@@ -21,6 +22,7 @@ import type { PlayStyle } from "../../domain/enums/profileEnums";
 export interface CreateInvitationInput {
   invitedProfileId: string;
   relatedPostId?: string;
+  relatedMatchId?: string;
   scheduledDate: string;
   scheduledStartTime: string;
   placeText: string;
@@ -31,6 +33,7 @@ export interface CreateInvitationInput {
 export interface CreateMatchInput {
   matchRecord: MatchRecord;
   participants: MatchParticipant[];
+  sourcePost?: LookingForPlayerPost;
   result?: MatchResult;
 }
 

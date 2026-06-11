@@ -6,9 +6,18 @@ import { FormField } from "../../components/forms/FormField";
 import {
   matchParticipantSideOptions,
 } from "../../constants/matchOptions";
-import { playStyleOptions } from "../../constants/profileOptions";
+import { maximumMissingPlayersCount } from "../../constants/postOptions";
+import {
+  playerLevelOptions,
+  playerPositionOptions,
+  playStyleOptions,
+} from "../../constants/profileOptions";
 import type { MatchParticipantSide } from "../../domain/enums/matchEnums";
-import type { PlayStyle } from "../../domain/enums/profileEnums";
+import type {
+  PlayerLevel,
+  PlayerPosition,
+  PlayStyle,
+} from "../../domain/enums/profileEnums";
 import type { Profile } from "../../domain/models/profileModels";
 import type { CreateMatchInput } from "../../services/repositories/padelitoRepository";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
@@ -46,6 +55,18 @@ export function CreateMatchModal({
   const [selectedParticipantSides, setSelectedParticipantSides] = useState<
     Record<string, MatchParticipantSide>
   >({});
+  const [shouldSearchPlayers, setShouldSearchPlayers] = useState(false);
+  const [missingPlayersCount, setMissingPlayersCount] = useState(1);
+  const [selectedLevel, setSelectedLevel] = useState<PlayerLevel>(
+    currentProfile.profileType === "player"
+      ? currentProfile.playerLevel
+      : "sixth",
+  );
+  const [selectedPosition, setSelectedPosition] = useState<PlayerPosition>(
+    currentProfile.profileType === "player"
+      ? currentProfile.preferredPosition
+      : "drive",
+  );
   const [shouldRecordResult, setShouldRecordResult] = useState(false);
   const [teamAScore, setTeamAScore] = useState(6);
   const [teamBScore, setTeamBScore] = useState(4);
@@ -98,10 +119,36 @@ export function CreateMatchModal({
 
     const currentTimestamp = createCurrentIsoDate();
     const matchId = createUuidIdentifier();
+    const sourcePostId = shouldSearchPlayers ? createUuidIdentifier() : undefined;
+    const sourcePost = sourcePostId
+      ? {
+          postId: sourcePostId,
+          authorProfileId: currentProfile.profileId,
+          postType: "looking_for_player" as const,
+          visibility: "public" as const,
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+          scheduledDate,
+          scheduledStartTime,
+          placeText,
+          shortNote,
+          isActive: missingPlayersCount > 0,
+          desiredLevel: selectedLevel,
+          desiredPosition: selectedPosition,
+          desiredPlayStyle: playStyle,
+          missingPlayersCount,
+          confirmedPlayersText: createConfirmedPlayersText(
+            currentProfile,
+            database,
+            selectedParticipantSides,
+          ),
+        }
+      : undefined;
     const matchInput: CreateMatchInput = {
       matchRecord: {
         matchId,
         ownerProfileId: currentProfile.profileId,
+        sourcePostId,
         scheduledDate,
         scheduledStartTime,
         placeText,
@@ -127,6 +174,7 @@ export function CreateMatchModal({
           }),
         ),
       ],
+      sourcePost,
       result: shouldRecordResult
         ? {
             matchId,
@@ -278,6 +326,76 @@ export function CreateMatchModal({
 
           <label className="flex items-center gap-3 rounded-lg bg-surface-primary p-3 text-sm font-black">
             <input
+              checked={shouldSearchPlayers}
+              onChange={(changeEvent) =>
+                setShouldSearchPlayers(changeEvent.target.checked)
+              }
+              type="checkbox"
+            />
+            <span>Buscar jugadores</span>
+          </label>
+
+          {shouldSearchPlayers ? (
+            <div className="grid gap-3 rounded-lg border border-border-subtle bg-surface-primary p-3">
+              <FormField
+                label="Faltan"
+                max={maximumMissingPlayersCount}
+                min={0}
+                onChange={(changeEvent) =>
+                  setMissingPlayersCount(
+                    Math.min(
+                      maximumMissingPlayersCount,
+                      Math.max(
+                        0,
+                        Number.parseInt(changeEvent.target.value, 10) || 0,
+                      ),
+                    ),
+                  )
+                }
+                type="number"
+                value={missingPlayersCount}
+              />
+              <FormField
+                fieldType="select"
+                label="Categoria"
+                onChange={(changeEvent) =>
+                  setSelectedLevel(changeEvent.target.value as PlayerLevel)
+                }
+                value={selectedLevel}
+              >
+                {playerLevelOptions.map((playerLevelOption) => (
+                  <option
+                    key={playerLevelOption.value}
+                    value={playerLevelOption.value}
+                  >
+                    {playerLevelOption.label}
+                  </option>
+                ))}
+              </FormField>
+              <FormField
+                fieldType="select"
+                label="Posicion"
+                onChange={(changeEvent) =>
+                  setSelectedPosition(
+                    changeEvent.target.value as PlayerPosition,
+                  )
+                }
+                value={selectedPosition}
+              >
+                {playerPositionOptions.map((playerPositionOption) => (
+                  <option
+                    key={playerPositionOption.value}
+                    value={playerPositionOption.value}
+                  >
+                    {playerPositionOption.label}
+                  </option>
+                ))}
+              </FormField>
+            </div>
+          ) : null}
+
+          <label className="flex items-center gap-3 rounded-lg bg-surface-primary p-3 text-sm font-black">
+            <input
               checked={shouldRecordResult}
               onChange={(changeEvent) =>
                 setShouldRecordResult(changeEvent.target.checked)
@@ -348,4 +466,28 @@ function getWinnerSide(teamAScore: number, teamBScore: number) {
   }
 
   return "draw";
+}
+
+/**
+ * Genera texto compacto de confirmados para la publicacion vinculada.
+ * Se construye para que el feed refleje quienes ya estan dentro del partido.
+ * Lo usa CreateMatchModal al publicar un partido incompleto.
+ * Sirve como puente hasta que el feed lea participantes estructurados.
+ */
+function createConfirmedPlayersText(
+  currentProfile: Profile,
+  database: PadelitoLocalDatabase,
+  selectedParticipantSides: Record<string, MatchParticipantSide>,
+) {
+  const selectedProfiles = Object.keys(selectedParticipantSides)
+    .map((profileId) =>
+      database.profiles.find((profile) => profile.profileId === profileId),
+    )
+    .filter((profile): profile is Profile => Boolean(profile));
+  const confirmedNames = [
+    currentProfile.displayName,
+    ...selectedProfiles.map((profile) => profile.displayName),
+  ];
+
+  return confirmedNames.join(", ").slice(0, 180);
 }

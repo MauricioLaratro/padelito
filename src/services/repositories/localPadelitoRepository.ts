@@ -256,9 +256,14 @@ export function createMatch(
 
   return {
     ...database,
+    posts: matchInput.sourcePost
+      ? [matchInput.sourcePost, ...database.posts]
+      : database.posts,
     matchRecords: [
       {
         ...matchInput.matchRecord,
+        sourcePostId:
+          matchInput.sourcePost?.postId ?? matchInput.matchRecord.sourcePostId,
         status: matchInput.result ? "completed" : matchInput.matchRecord.status,
       },
       ...database.matchRecords,
@@ -492,6 +497,16 @@ export function updateMatchJoinRequestStatus(
             currentTimestamp,
           )
         : database.posts,
+    matchParticipants:
+      status === "accepted"
+        ? addAcceptedProfileToLinkedMatch(
+            database,
+            request.postId,
+            undefined,
+            request.requesterProfileId,
+            currentTimestamp,
+          )
+        : database.matchParticipants,
     matchJoinRequests: database.matchJoinRequests.map((matchJoinRequest) =>
       matchJoinRequest.requestId === requestId
         ? {
@@ -526,8 +541,20 @@ export function createDirectMatchInvitation(
           post.missingPlayersCount > 0,
       )
     : undefined;
+  const relatedMatch = invitationInput.relatedMatchId
+    ? database.matchRecords.find(
+        (matchRecord) =>
+          matchRecord.matchId === invitationInput.relatedMatchId &&
+          matchRecord.ownerProfileId === inviterProfileId &&
+          matchRecord.status === "scheduled",
+      )
+    : undefined;
 
   if (invitationInput.relatedPostId && !relatedPost) {
+    return database;
+  }
+
+  if (invitationInput.relatedMatchId && !relatedMatch) {
     return database;
   }
 
@@ -536,13 +563,22 @@ export function createDirectMatchInvitation(
     invitationId: createEntityIdentifier("invitation"),
     inviterProfileId,
     invitedProfileId: invitationInput.invitedProfileId,
-    relatedPostId: relatedPost?.postId,
-    scheduledDate: relatedPost?.scheduledDate ?? invitationInput.scheduledDate,
+    relatedPostId: relatedPost?.postId ?? relatedMatch?.sourcePostId,
+    relatedMatchId: relatedMatch?.matchId,
+    scheduledDate:
+      relatedMatch?.scheduledDate ??
+      relatedPost?.scheduledDate ??
+      invitationInput.scheduledDate,
     scheduledStartTime:
-      relatedPost?.scheduledStartTime ?? invitationInput.scheduledStartTime,
-    placeText: relatedPost?.placeText ?? invitationInput.placeText,
+      relatedMatch?.scheduledStartTime ??
+      relatedPost?.scheduledStartTime ??
+      invitationInput.scheduledStartTime,
+    placeText:
+      relatedMatch?.placeText ?? relatedPost?.placeText ?? invitationInput.placeText,
     desiredPlayStyle:
-      relatedPost?.desiredPlayStyle ?? invitationInput.desiredPlayStyle,
+      relatedMatch?.playStyle ??
+      relatedPost?.desiredPlayStyle ??
+      invitationInput.desiredPlayStyle,
     note: invitationInput.note,
     status: "pending",
     createdAt: currentTimestamp,
@@ -633,6 +669,16 @@ export function updateDirectMatchInvitationStatus(
             currentTimestamp,
           )
         : database.posts,
+    matchParticipants:
+      status === "accepted"
+        ? addAcceptedProfileToLinkedMatch(
+            database,
+            invitation.relatedPostId,
+            invitation.relatedMatchId,
+            invitation.invitedProfileId,
+            currentTimestamp,
+          )
+        : database.matchParticipants,
     directMatchInvitations: database.directMatchInvitations.map(
       (directMatchInvitation) =>
         directMatchInvitation.invitationId === invitationId
@@ -813,6 +859,51 @@ function updateAcceptedPlayerOnPost(
       updatedTimestamp,
     );
   });
+}
+
+/**
+ * Agrega un perfil aceptado al partido estructurado vinculado.
+ * Se construye para que solicitudes e invitaciones alimenten historial real.
+ * Lo usan respuestas aceptadas del repositorio local.
+ * Sirve para conectar feed, invitaciones y estadisticas sin duplicar jugadores.
+ */
+function addAcceptedProfileToLinkedMatch(
+  database: PadelitoLocalDatabase,
+  relatedPostId: string | undefined,
+  relatedMatchId: string | undefined,
+  acceptedProfileId: string,
+  createdAt: string,
+) {
+  const linkedMatch = database.matchRecords.find(
+    (matchRecord) =>
+      matchRecord.status === "scheduled" &&
+      (matchRecord.matchId === relatedMatchId ||
+        (relatedPostId && matchRecord.sourcePostId === relatedPostId)),
+  );
+
+  if (!linkedMatch) {
+    return database.matchParticipants;
+  }
+
+  const alreadyJoined = database.matchParticipants.some(
+    (matchParticipant) =>
+      matchParticipant.matchId === linkedMatch.matchId &&
+      matchParticipant.profileId === acceptedProfileId,
+  );
+
+  if (alreadyJoined) {
+    return database.matchParticipants;
+  }
+
+  return [
+    ...database.matchParticipants,
+    {
+      matchId: linkedMatch.matchId,
+      profileId: acceptedProfileId,
+      side: "rotating" as const,
+      createdAt,
+    },
+  ];
 }
 
 /**

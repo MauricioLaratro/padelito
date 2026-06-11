@@ -179,7 +179,10 @@ Principios:
 
 - `posts` sigue resolviendo descubrimiento y feed.
 - `matches` representa partidos concretos, completos o incompletos.
+- `match_records.sourcePostId` vincula historial con publicaciones `Busco jugador`.
+- `directMatchInvitations.relatedMatchId` vincula invitaciones con partidos estructurados.
 - participantes manuales viven en `match_participants`;
+- participantes aceptados por solicitud o invitacion vinculada tambien entran en `match_participants`;
 - resultados viven en `match_results`;
 - estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
 - desafios recurrentes deben tener entidad propia y asociar multiples partidos en una etapa posterior.
@@ -188,7 +191,6 @@ La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento socia
 
 Pendiente arquitectonico:
 
-- vincular publicaciones `looking_for_player` con `match_records` cuando se quiera convertir cupos aceptados en participantes estructurados;
 - crear `recurring_challenges` y relaciones con partidos sin contaminar el feed.
 
 ## Decision reversible actual

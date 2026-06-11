@@ -123,6 +123,7 @@ export interface SupabaseDirectMatchInvitationRow {
   inviter_profile_id: string;
   invited_profile_id: string;
   related_post_id: string | null;
+  related_match_id: string | null;
   scheduled_date: string;
   scheduled_start_time: string;
   place_text: string;
@@ -141,6 +142,7 @@ export type SupabaseDirectMatchInvitationInsert = Omit<
 export interface SupabaseMatchRecordRow {
   id: string;
   owner_profile_id: string;
+  source_post_id: string | null;
   recurring_challenge_id: string | null;
   scheduled_date: string;
   scheduled_start_time: string;
