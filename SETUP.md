@@ -60,6 +60,22 @@ npm run build
 npm run lint
 ```
 
+Smoke test Supabase local:
+
+```powershell
+$env:PADELITO_QA_EMAIL="usuario-test"
+$env:PADELITO_QA_PASSWORD="password-test"
+npm run qa:supabase
+```
+
+Opcional para validar dos sesiones sin crear usuarios nuevos:
+
+```powershell
+$env:PADELITO_QA_SECOND_EMAIL="otro-usuario-test"
+$env:PADELITO_QA_SECOND_PASSWORD="otro-password-test"
+npm run qa:supabase
+```
+
 ## Variables esperadas
 
 ```env
@@ -95,6 +111,24 @@ Estado de esta instancia:
 - Historial de partidos: `match_records`, `match_participants`, `match_results` y `can_read_match(uuid, uuid)` instalados.
 - Enlace social-partidos: `source_post_id`, `related_match_id`, `register_accepted_player_on_match` y `register_accepted_player_on_linked_match` instalados.
 - Desafios recurrentes: `recurring_challenges`, `recurring_challenge_participants`, `match_records.recurring_challenge_id` y `can_read_recurring_challenge(uuid, uuid)` instalados.
+
+## Emails de Auth para produccion
+
+La documentacion oficial de Supabase indica que el SMTP default es solo para exploracion/demos, con restricciones fuertes y sin garantia de entrega. Para produccion hay que configurar SMTP propio desde Supabase Auth.
+
+Checklist antes del lanzamiento publico:
+
+- Elegir proveedor SMTP: Resend, AWS SES, Postmark, SendGrid, Brevo u otro compatible.
+- Definir remitente de Auth, idealmente `no-reply@auth.tudominio.com`.
+- Configurar SPF, DKIM y DMARC del dominio de envio.
+- Configurar Custom SMTP en Supabase Dashboard > Authentication.
+- Revisar Authentication > Rate Limits despues de activar SMTP propio.
+- Mantener magic link como alternativa secundaria y priorizar email/contrasena para reducir envios.
+
+Referencias:
+
+- https://supabase.com/docs/guides/auth/auth-smtp
+- https://supabase.com/docs/guides/auth/rate-limits
 
 ## Sesion de usuario
 

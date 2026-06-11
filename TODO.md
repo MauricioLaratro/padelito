@@ -119,5 +119,9 @@
 - [ ] Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales.
 - [ ] Pulir UX mobile de feed, perfil y notificaciones con pruebas manuales completas.
 - [x] Permitir archivar/reactivar desafios recurrentes propios.
+- [x] Agregar confirmaciones UI para acciones sensibles.
+- [x] Agregar smoke test Supabase para auth, RLS y privacidad.
+- [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
+- [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [ ] Preparar deploy Cloudflare Pages.

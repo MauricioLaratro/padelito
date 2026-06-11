@@ -159,6 +159,15 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - feed suma filtros por fecha, categoria, posicion y estilo de juego;
   - `npm run build` pasa;
   - `npm run lint` pasa.
+- Cierre MVP automatizado:
+  - confirmaciones UI agregadas para cancelar publicaciones, solicitudes, invitaciones, partidos, rechazos y archivo de desafios;
+  - confirmacion visual validada en navegador integrado sin ejecutar la accion destructiva;
+  - script `npm run qa:supabase` agregado para smoke test de Auth/RLS/privacidad sin mutar datos;
+  - smoke test Supabase ejecutado con usuario de prueba: `status: ok`;
+  - el smoke test valido bloqueo de `whatsapp_phone`, lectura publica de perfiles sin telefono, notificaciones propias, solicitudes/invitaciones relacionadas, partidos visibles, desafios visibles y RPC de contacto privado;
+  - auditoria estatica no encontro `select("*")` en `src`/`scripts` ni lecturas directas de `whatsapp_phone` desde UI publica;
+  - segunda sesion queda soportada por `PADELITO_QA_SECOND_EMAIL` y `PADELITO_QA_SECOND_PASSWORD`, pendiente de credencial real secundaria;
+  - email Auth revisado contra documentacion oficial de Supabase: SMTP default no es produccion y requiere SMTP propio antes de lanzamiento publico.
 
 ## Git
 
@@ -185,4 +194,5 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Revisar acciones destructivas restantes en publicaciones, partidos, invitaciones y desafios.
+- Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
 - Preparar deploy Cloudflare Pages.

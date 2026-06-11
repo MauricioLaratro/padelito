@@ -30,3 +30,31 @@ Reglas principales:
 - solicitudes visibles para requester y owner;
 - invitaciones visibles para inviter e invited;
 - notificaciones visibles solo para recipient.
+
+## QA automatizado
+
+Ejecutar desde la raiz:
+
+```bash
+npm run qa:supabase
+```
+
+Requiere variables locales de usuario de prueba:
+
+```txt
+PADELITO_QA_EMAIL
+PADELITO_QA_PASSWORD
+```
+
+Opcionalmente se puede sumar una segunda cuenta:
+
+```txt
+PADELITO_QA_SECOND_EMAIL
+PADELITO_QA_SECOND_PASSWORD
+```
+
+El script no muta datos. Verifica login, bloqueo de `whatsapp_phone`, lecturas RLS de tablas sensibles y RPC de contacto privado.
+
+## Email Auth
+
+No usar SMTP default de Supabase para produccion. Antes de lanzar publicamente, configurar Custom SMTP y rate limits desde Supabase Auth.
