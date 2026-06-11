@@ -1,4 +1,5 @@
 import type { EventInteractionType } from "../../domain/enums/postEnums";
+import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { MatchResult } from "../../domain/models/matchModels";
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
@@ -382,6 +383,33 @@ export function createRecurringChallenge(
           challengeInput.challenge.challengeId,
       ),
     ],
+  };
+}
+
+/**
+ * Actualiza estado de desafio recurrente local.
+ * Se construye para archivar o reactivar series sin borrar historial.
+ * Lo usa la seccion de desafios del perfil.
+ * Sirve para que el creador controle desafios creados.
+ */
+export function updateRecurringChallengeStatus(
+  database: PadelitoLocalDatabase,
+  challengeId: string,
+  status: RecurringChallengeStatus,
+  ownerProfileId: string,
+) {
+  return {
+    ...database,
+    recurringChallenges: database.recurringChallenges.map((challenge) =>
+      challenge.challengeId === challengeId &&
+      challenge.ownerProfileId === ownerProfileId
+        ? {
+            ...challenge,
+            status,
+            updatedAt: createCurrentIsoDate(),
+          }
+        : challenge,
+    ),
   };
 }
 

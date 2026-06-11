@@ -21,6 +21,7 @@ import type {
   Profile,
 } from "../../domain/models/profileModels";
 import type { EventInteractionType } from "../../domain/enums/postEnums";
+import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { PlayStyle } from "../../domain/enums/profileEnums";
 
 export interface CreateInvitationInput {
@@ -73,6 +74,11 @@ export interface PadelitoRepository {
   recordMatchResult: (matchResult: MatchResult) => Promise<void>;
   createRecurringChallenge: (
     challengeInput: CreateRecurringChallengeInput,
+  ) => Promise<void>;
+  updateRecurringChallengeStatus: (
+    challengeId: string,
+    status: RecurringChallengeStatus,
+    ownerProfileId: string,
   ) => Promise<void>;
   toggleFollowProfile: (
     followerProfileId: string,

@@ -1,4 +1,11 @@
-import { CalendarClock, Plus, Trophy, UsersRound } from "lucide-react";
+import {
+  Archive,
+  CalendarClock,
+  Plus,
+  RotateCcw,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
@@ -7,6 +14,7 @@ import {
   recurringChallengeSideLabels,
   recurringChallengeStatusLabels,
 } from "../../constants/recurringChallengeOptions";
+import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { RecurringChallenge } from "../../domain/models/recurringChallengeModels";
 import type { Profile } from "../../domain/models/profileModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
@@ -18,6 +26,10 @@ interface RecurringChallengesSectionProps {
   database: PadelitoLocalDatabase;
   onRecurringChallengeCreate: (
     challengeInput: CreateRecurringChallengeInput,
+  ) => void;
+  onRecurringChallengeStatusUpdate: (
+    challengeId: string,
+    status: RecurringChallengeStatus,
   ) => void;
 }
 
@@ -31,6 +43,7 @@ export function RecurringChallengesSection({
   currentProfile,
   database,
   onRecurringChallengeCreate,
+  onRecurringChallengeStatusUpdate,
 }: RecurringChallengesSectionProps) {
   const [isCreateChallengeOpen, setIsCreateChallengeOpen] = useState(false);
   const visibleChallenges = database.recurringChallenges.filter(
@@ -67,8 +80,10 @@ export function RecurringChallengesSection({
           visibleChallenges.map((challenge) => (
             <RecurringChallengeCard
               challenge={challenge}
+              currentProfileId={currentProfile.profileId}
               database={database}
               key={challenge.challengeId}
+              onStatusUpdate={onRecurringChallengeStatusUpdate}
             />
           ))
         ) : (
@@ -92,7 +107,12 @@ export function RecurringChallengesSection({
 
 interface RecurringChallengeCardProps {
   challenge: RecurringChallenge;
+  currentProfileId: string;
   database: PadelitoLocalDatabase;
+  onStatusUpdate: (
+    challengeId: string,
+    status: RecurringChallengeStatus,
+  ) => void;
 }
 
 /**
@@ -103,7 +123,9 @@ interface RecurringChallengeCardProps {
  */
 function RecurringChallengeCard({
   challenge,
+  currentProfileId,
   database,
+  onStatusUpdate,
 }: RecurringChallengeCardProps) {
   const challengeParticipants = database.recurringChallengeParticipants.filter(
     (challengeParticipant) =>
@@ -129,6 +151,13 @@ function RecurringChallengeCard({
   const teamBWins = challengeResults.filter(
     (matchResult) => matchResult.winnerSide === "team_b",
   ).length;
+  const isOwner = challenge.ownerProfileId === currentProfileId;
+  const nextStatus: RecurringChallengeStatus =
+    challenge.status === "active" ? "archived" : "active";
+  const statusButtonLabel =
+    challenge.status === "active" ? "Archivar" : "Reactivar";
+  const StatusButtonIcon =
+    challenge.status === "active" ? Archive : RotateCcw;
 
   return (
     <article className="grid gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3">
@@ -182,6 +211,17 @@ function RecurringChallengeCard({
           );
         })}
       </div>
+
+      {isOwner ? (
+        <Button
+          className="min-h-9 justify-self-start px-3"
+          icon={StatusButtonIcon}
+          onClick={() => onStatusUpdate(challenge.challengeId, nextStatus)}
+          variant={challenge.status === "active" ? "secondary" : "primary"}
+        >
+          {statusButtonLabel}
+        </Button>
+      ) : null}
     </article>
   );
 }

@@ -141,6 +141,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - creacion de desafio con participante seguido validada en navegador integrado contra Supabase;
   - creacion de partido vinculado a desafio validada contra Supabase;
   - marcador acumulado 1-0 calculado desde resultado vinculado validado en perfil;
+  - archivar y reactivar desafio propio validado contra Supabase;
   - `npm run build` pasa;
   - `npm run lint` pasa.
 - Bloque invitaciones/notificaciones:
@@ -183,4 +184,5 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
+- Revisar acciones destructivas restantes en publicaciones, partidos, invitaciones y desafios.
 - Preparar deploy Cloudflare Pages.

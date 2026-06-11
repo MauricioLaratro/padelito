@@ -113,7 +113,7 @@ Estado de esta instancia:
 - Los usuarios de prueba se gestionan exclusivamente desde Supabase Auth y la base de datos.
 - No versionar emails, contrasenas ni credenciales de cuentas de prueba.
 - Para validar solicitudes, invitaciones y perfiles cruzados, crear usuarios temporales desde el dashboard de Supabase o desde el flujo real de registro.
-- En esta sesion se validaron desde la app real: crear partido, agregar participante seguido, registrar resultado, editar resultado, cancelar partido programado, publicar partido incompleto, invitar a un jugador a un partido estructurado, crear desafio recurrente y registrar partido con marcador acumulado dentro del desafio.
+- En esta sesion se validaron desde la app real: crear partido, agregar participante seguido, registrar resultado, editar resultado, cancelar partido programado, publicar partido incompleto, invitar a un jugador a un partido estructurado, crear desafio recurrente, registrar partido con marcador acumulado dentro del desafio, archivar desafio y reactivar desafio.
 
 ## Marca y cache PWA
 

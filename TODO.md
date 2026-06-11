@@ -118,5 +118,6 @@
 ## Etapa 10 - Cierre MVP y salida local
 - [ ] Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales.
 - [ ] Pulir UX mobile de feed, perfil y notificaciones con pruebas manuales completas.
-- [ ] Revisar estados vacios, errores y acciones destructivas del flujo completo.
+- [x] Permitir archivar/reactivar desafios recurrentes propios.
+- [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [ ] Preparar deploy Cloudflare Pages.

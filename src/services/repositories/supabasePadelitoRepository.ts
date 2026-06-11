@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EventInteractionType } from "../../domain/enums/postEnums";
+import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { InternalNotification } from "../../domain/models/notificationModels";
 import type {
   DirectMatchInvitation,
@@ -471,6 +472,31 @@ export function createSupabasePadelitoRepository(
         "agregar participantes del desafio",
         participantsError,
       );
+    }
+  }
+
+  /**
+   * Actualiza estado de desafio recurrente en Supabase.
+   * Se construye para archivar o reactivar sin borrar historial.
+   * Lo usa la seccion de desafios del perfil.
+   * Sirve para retirar desafios de seleccion futura o reactivarlos.
+   */
+  async function updateRecurringChallengeStatus(
+    challengeId: string,
+    status: RecurringChallengeStatus,
+    ownerProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("recurring_challenges")
+      .update({
+        status,
+        updated_at: createCurrentIsoDate(),
+      })
+      .eq("id", challengeId)
+      .eq("owner_profile_id", ownerProfileId);
+
+    if (error) {
+      throw createSupabaseError("actualizar desafio recurrente", error);
     }
   }
 
@@ -1055,6 +1081,7 @@ export function createSupabasePadelitoRepository(
     createMatchJoinRequest,
     createPost,
     createRecurringChallenge,
+    updateRecurringChallengeStatus,
     loadApplicationSnapshot,
     getPrivateProfileContact,
     markNotificationsAsRead,

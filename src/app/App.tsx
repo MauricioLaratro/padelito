@@ -215,6 +215,9 @@ export function App() {
           onRecurringChallengeCreate={
             padelitoMvp.handleRecurringChallengeCreate
           }
+          onRecurringChallengeStatusUpdate={
+            padelitoMvp.handleRecurringChallengeStatusUpdate
+          }
           onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onPostCancel={padelitoMvp.handlePostCancel}
           onProfileSave={padelitoMvp.handleProfileSave}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FeedTabIdentifier } from "../domain/enums/postEnums";
+import type { RecurringChallengeStatus } from "../domain/enums/recurringChallengeEnums";
 import type { MatchResult } from "../domain/models/matchModels";
 import type { Post } from "../domain/models/postModels";
 import type { Profile } from "../domain/models/profileModels";
@@ -28,6 +29,7 @@ import {
   updateDirectMatchInvitationStatus,
   updateMatchJoinRequestStatus,
   updateOwnProfile,
+  updateRecurringChallengeStatus,
 } from "../services/repositories/localPadelitoRepository";
 import {
   createInitialLocalDatabase,
@@ -654,6 +656,41 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Actualiza estado de desafio recurrente.
+   * Se construye para archivar o reactivar series creadas.
+   * Lo usa ProfileScreen.
+   * Sirve para mantener control del creador sin borrar historial.
+   */
+  function handleRecurringChallengeStatusUpdate(
+    challengeId: string,
+    status: RecurringChallengeStatus,
+  ) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.updateRecurringChallengeStatus(
+          challengeId,
+          status,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      updateRecurringChallengeStatus(
+        currentDatabase,
+        challengeId,
+        status,
+        sessionProfile.profileId,
+      ),
+    );
+  }
+
+  /**
    * Alterna seguimiento.
    * Se construye para alimentar feed Siguiendo.
    * Lo usan cards y perfil.
@@ -1083,6 +1120,7 @@ export function usePadelitoMvp() {
     handleMatchCreate,
     handleMatchResultRecord,
     handleRecurringChallengeCreate,
+    handleRecurringChallengeStatusUpdate,
     handlePrivateContactOpen,
     handleProfileSave,
     handleQuickAccessDismiss,

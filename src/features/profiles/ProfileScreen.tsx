@@ -8,6 +8,7 @@ import {
   playerPositionLabels,
   playStyleLabels,
 } from "../../constants/profileOptions";
+import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { Profile } from "../../domain/models/profileModels";
 import type { MatchResult } from "../../domain/models/matchModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
@@ -39,6 +40,10 @@ interface ProfileScreenProps {
   onRecurringChallengeCreate: (
     challengeInput: CreateRecurringChallengeInput,
   ) => void;
+  onRecurringChallengeStatusUpdate: (
+    challengeId: string,
+    status: RecurringChallengeStatus,
+  ) => void;
   onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
   onProfileSave: (profile: Profile) => void;
@@ -63,6 +68,7 @@ export function ProfileScreen({
   onMatchCreate,
   onMatchResultRecord,
   onRecurringChallengeCreate,
+  onRecurringChallengeStatusUpdate,
   onPrivateContactOpen,
   onPostCancel,
   onProfileSave,
@@ -147,6 +153,7 @@ export function ProfileScreen({
         currentProfile={currentProfile}
         database={database}
         onRecurringChallengeCreate={onRecurringChallengeCreate}
+        onRecurringChallengeStatusUpdate={onRecurringChallengeStatusUpdate}
       />
 
       <ProfileActivitySection
