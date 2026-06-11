@@ -4,7 +4,7 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contrasena, registro, recuperacion de contrasena, sesion persistente y magic link como alternativa.
+MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contrasena, registro, recuperacion de contrasena, sesion persistente y magic link como alternativa. El modulo de partidos ya cubre historial, resultados, estadisticas, busqueda de jugadores y desafios recurrentes.
 
 - App React/Vite levantada en `http://localhost:5173` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
@@ -14,7 +14,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Dominio, repositorio local, repositorio Supabase, remoto GitHub, pantallas MVP y migracion Supabase inicial creados.
 - Proyecto Supabase conectado: `zrddjpvtkqebvmazauhu`.
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
-- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos y enlace entre feed social y partidos.
+- Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos, enlace entre feed social y partidos, y desafios recurrentes.
 
 ## Comprension del producto
 
@@ -39,7 +39,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
 - Un partido estructurado puede publicarse como `Busco jugador` y conservar enlace `source_post_id`.
 - Invitaciones directas pueden vincularse a `related_match_id`; al aceptarse agregan participante al partido.
-- Desafios recurrentes quedan como pendiente MVP+ posterior, sin bloquear el MVP testeable.
+- Desafios recurrentes se modelan como entidad propia y los marcadores se calculan desde partidos/resultados vinculados, sin agregados materializados.
 - Invitaciones directas pueden vincularse a un partido propio abierto; si se aceptan, descuentan cupo y el partido queda completo cuando faltantes llega a `0`.
 - Las aceptaciones remotas de solicitudes e invitaciones deben pasar por funciones SQL `answer_match_join_request` y `answer_direct_match_invitation`, evitando updates directos que no descuenten cupo.
 - Los perfiles publicos se leen sin `whatsapp_phone`; el contacto privado queda fuera del snapshot general.
@@ -53,6 +53,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - La RPC de contacto privado debe mantenerse como unico camino para leer `whatsapp_phone` desde cliente.
 - Los partidos estructurados usan ids UUID puros porque `match_records`, `match_participants` y `match_results` enlazan columnas `uuid`.
 - La RLS de partidos requiere evitar recursividad entre `match_records` y `match_participants`; se centraliza lectura en `can_read_match(uuid, uuid)`.
+- La RLS de desafios recurrentes tambien evita recursion directa; se centraliza lectura en `can_read_recurring_challenge(uuid, uuid)`.
 - Las aceptaciones sociales ahora modifican cupos y participantes desde RPC security definer para evitar writes directos inseguros desde cliente.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
@@ -132,6 +133,16 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - invitacion directa vinculada a `direct_match_invitations.related_match_id` validada contra Supabase;
   - `npm run build` pasa;
   - `npm run lint` pasa.
+- Desafios recurrentes:
+  - migracion `202606110002_recurring_challenges.sql` aplicada en Supabase Cloud;
+  - tablas `recurring_challenges` y `recurring_challenge_participants` creadas con RLS;
+  - `match_records.recurring_challenge_id` instalado para asociar partidos al desafio;
+  - perfil muestra seccion `Desafios / Recurrentes`;
+  - creacion de desafio con participante seguido validada en navegador integrado contra Supabase;
+  - creacion de partido vinculado a desafio validada contra Supabase;
+  - marcador acumulado 1-0 calculado desde resultado vinculado validado en perfil;
+  - `npm run build` pasa;
+  - `npm run lint` pasa.
 - Bloque invitaciones/notificaciones:
   - selector de partido agregado al modal de invitacion cuando el usuario tiene partidos propios abiertos;
   - notificaciones de solicitudes e invitaciones ahora se expanden y muestran acciones contextuales;
@@ -161,6 +172,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit Supabase/Auth: `acf5a94 Conectar Supabase y auth real`.
 - Commit logout/UI: `72fc11a Agregar cierre de sesion y limpiar UI`.
 - Commit perfil/contacto: `3c0cefe Completar perfil y contacto privado`.
+- Commit enlace partidos/social: `194ee3e Vincular partidos con solicitudes e invitaciones`.
 
 ## Regla de idioma
 
@@ -170,6 +182,5 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 ## Pendientes inmediatos
 
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
-- Disenar e implementar desafios recurrentes entre parejas o grupos.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Preparar deploy Cloudflare Pages.

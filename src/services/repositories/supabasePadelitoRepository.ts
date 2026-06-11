@@ -20,6 +20,8 @@ import {
   mapNotificationToSupabaseInsert,
   mapPostInteractionToSupabaseInsert,
   mapPostToSupabaseInsert,
+  mapRecurringChallengeParticipantToSupabaseInsert,
+  mapRecurringChallengeToSupabaseInsert,
   mapProfileToSupabaseUpsert,
   mapSupabaseDirectMatchInvitationRow,
   mapSupabaseFollowRow,
@@ -31,6 +33,8 @@ import {
   mapSupabasePostInteractionRow,
   mapSupabasePostRow,
   mapSupabaseProfileRow,
+  mapSupabaseRecurringChallengeParticipantRow,
+  mapSupabaseRecurringChallengeRow,
 } from "./supabasePadelitoMappers";
 import type {
   CreateInvitationInput,
@@ -52,6 +56,8 @@ import type {
   SupabasePostRow,
   SupabasePrivateProfileContactRow,
   SupabaseProfileRow,
+  SupabaseRecurringChallengeParticipantRow,
+  SupabaseRecurringChallengeRow,
 } from "./supabasePadelitoTypes";
 
 type SupabaseListQuery<RowType> = PromiseLike<{
@@ -123,6 +129,8 @@ export function createSupabasePadelitoRepository(
       matchRecordRows,
       matchParticipantRows,
       matchResultRows,
+      recurringChallengeRows,
+      recurringChallengeParticipantRows,
       notificationRows,
     ] = await Promise.all([
       readRows<SupabaseProfileRow>(
@@ -195,6 +203,21 @@ export function createSupabasePadelitoRepository(
           .returns<SupabaseMatchResultRow[]>(),
         "leer resultados",
       ),
+      readRows<SupabaseRecurringChallengeRow>(
+        supabaseClient
+          .from("recurring_challenges")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .returns<SupabaseRecurringChallengeRow[]>(),
+        "leer desafios recurrentes",
+      ),
+      readRows<SupabaseRecurringChallengeParticipantRow>(
+        supabaseClient
+          .from("recurring_challenge_participants")
+          .select("*")
+          .returns<SupabaseRecurringChallengeParticipantRow[]>(),
+        "leer participantes de desafios",
+      ),
       readRows<SupabaseNotificationRow>(
         supabaseClient
           .from("notifications")
@@ -239,6 +262,12 @@ export function createSupabasePadelitoRepository(
         mapSupabaseMatchParticipantRow,
       ),
       matchResults: matchResultRows.map(mapSupabaseMatchResultRow),
+      recurringChallenges: recurringChallengeRows.map(
+        mapSupabaseRecurringChallengeRow,
+      ),
+      recurringChallengeParticipants: recurringChallengeParticipantRows.map(
+        mapSupabaseRecurringChallengeParticipantRow,
+      ),
       notifications: notificationRows.map(mapSupabaseNotificationRow),
       sessionProfileId: user.id,
       quickAccessPromptDismissed: false,
@@ -407,6 +436,41 @@ export function createSupabasePadelitoRepository(
 
     if (matchError) {
       throw createSupabaseError("finalizar partido", matchError);
+    }
+  }
+
+  /**
+   * Crea un desafio recurrente en Supabase.
+   * Se construye para agrupar partidos repetidos entre equipos.
+   * Lo usa la seccion de desafios del perfil.
+   * Sirve para persistir marcador acumulado calculable desde resultados.
+   */
+  async function createRecurringChallenge(
+    challengeInput: Parameters<
+      PadelitoRepository["createRecurringChallenge"]
+    >[0],
+  ): Promise<void> {
+    const { error: challengeError } = await supabaseClient
+      .from("recurring_challenges")
+      .insert(mapRecurringChallengeToSupabaseInsert(challengeInput.challenge));
+
+    if (challengeError) {
+      throw createSupabaseError("crear desafio recurrente", challengeError);
+    }
+
+    const { error: participantsError } = await supabaseClient
+      .from("recurring_challenge_participants")
+      .insert(
+        challengeInput.participants.map(
+          mapRecurringChallengeParticipantToSupabaseInsert,
+        ),
+      );
+
+    if (participantsError) {
+      throw createSupabaseError(
+        "agregar participantes del desafio",
+        participantsError,
+      );
     }
   }
 
@@ -990,6 +1054,7 @@ export function createSupabasePadelitoRepository(
     createMatch,
     createMatchJoinRequest,
     createPost,
+    createRecurringChallenge,
     loadApplicationSnapshot,
     getPrivateProfileContact,
     markNotificationsAsRead,

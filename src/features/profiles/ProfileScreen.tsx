@@ -11,9 +11,13 @@ import {
 import type { Profile } from "../../domain/models/profileModels";
 import type { MatchResult } from "../../domain/models/matchModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
-import type { CreateMatchInput } from "../../services/repositories/padelitoRepository";
+import type {
+  CreateMatchInput,
+  CreateRecurringChallengeInput,
+} from "../../services/repositories/padelitoRepository";
 import { ProfileActivitySection } from "../activity/ProfileActivitySection";
 import { MatchHistorySection } from "../matches/MatchHistorySection";
+import { RecurringChallengesSection } from "../matches/RecurringChallengesSection";
 import { ProfileEditModal } from "./ProfileEditModal";
 
 interface ProfileScreenProps {
@@ -32,6 +36,9 @@ interface ProfileScreenProps {
   onMatchCancel: (matchId: string) => void;
   onMatchCreate: (matchInput: CreateMatchInput) => void;
   onMatchResultRecord: (matchResult: MatchResult) => void;
+  onRecurringChallengeCreate: (
+    challengeInput: CreateRecurringChallengeInput,
+  ) => void;
   onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
   onProfileSave: (profile: Profile) => void;
@@ -55,6 +62,7 @@ export function ProfileScreen({
   onMatchCancel,
   onMatchCreate,
   onMatchResultRecord,
+  onRecurringChallengeCreate,
   onPrivateContactOpen,
   onPostCancel,
   onProfileSave,
@@ -133,6 +141,12 @@ export function ProfileScreen({
         onMatchCancel={onMatchCancel}
         onMatchCreate={onMatchCreate}
         onMatchResultRecord={onMatchResultRecord}
+      />
+
+      <RecurringChallengesSection
+        currentProfile={currentProfile}
+        database={database}
+        onRecurringChallengeCreate={onRecurringChallengeCreate}
       />
 
       <ProfileActivitySection

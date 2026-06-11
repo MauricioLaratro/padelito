@@ -52,6 +52,7 @@ export function CreateMatchModal({
   const [shortNote, setShortNote] = useState("");
   const [currentPlayerSide, setCurrentPlayerSide] =
     useState<MatchParticipantSide>("team_a");
+  const [selectedChallengeId, setSelectedChallengeId] = useState("none");
   const [selectedParticipantSides, setSelectedParticipantSides] = useState<
     Record<string, MatchParticipantSide>
   >({});
@@ -84,6 +85,16 @@ export function CreateMatchModal({
       ),
     )
     .filter((profile): profile is Profile => Boolean(profile));
+  const availableChallenges = database.recurringChallenges.filter(
+    (challenge) =>
+      challenge.status === "active" &&
+      (challenge.ownerProfileId === currentProfile.profileId ||
+        database.recurringChallengeParticipants.some(
+          (challengeParticipant) =>
+            challengeParticipant.challengeId === challenge.challengeId &&
+            challengeParticipant.profileId === currentProfile.profileId,
+        )),
+  );
 
   /**
    * Alterna participante seguido.
@@ -149,6 +160,8 @@ export function CreateMatchModal({
         matchId,
         ownerProfileId: currentProfile.profileId,
         sourcePostId,
+        recurringChallengeId:
+          selectedChallengeId === "none" ? undefined : selectedChallengeId,
         scheduledDate,
         scheduledStartTime,
         placeText,
@@ -188,6 +201,32 @@ export function CreateMatchModal({
 
     onMatchCreate(matchInput);
     onClose();
+  }
+
+  /**
+   * Vincula un desafio y aplica datos habituales.
+   * Se construye para acelerar partidos semanales repetidos.
+   * Lo usa el selector de desafio.
+   * Sirve para reducir carga manual sin forzar una estructura rigida.
+   */
+  function handleChallengeChange(nextChallengeId: string) {
+    setSelectedChallengeId(nextChallengeId);
+
+    const selectedChallenge = availableChallenges.find(
+      (challenge) => challenge.challengeId === nextChallengeId,
+    );
+
+    if (!selectedChallenge) {
+      return;
+    }
+
+    if (selectedChallenge.usualPlaceText) {
+      setPlaceText(selectedChallenge.usualPlaceText);
+    }
+
+    if (selectedChallenge.usualTime) {
+      setScheduledStartTime(selectedChallenge.usualTime);
+    }
   }
 
   return (
@@ -275,6 +314,24 @@ export function CreateMatchModal({
               </option>
             ))}
           </FormField>
+
+          {availableChallenges.length > 0 ? (
+            <FormField
+              fieldType="select"
+              label="Desafio"
+              onChange={(changeEvent) =>
+                handleChallengeChange(changeEvent.target.value)
+              }
+              value={selectedChallengeId}
+            >
+              <option value="none">Sin desafio</option>
+              {availableChallenges.map((challenge) => (
+                <option key={challenge.challengeId} value={challenge.challengeId}>
+                  {challenge.title}
+                </option>
+              ))}
+            </FormField>
+          ) : null}
 
           <section className="grid gap-2 rounded-lg border border-border-subtle bg-surface-primary p-3">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-accent-lime">

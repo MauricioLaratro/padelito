@@ -5,6 +5,11 @@ import type {
   MatchWinnerSide,
 } from "../../domain/enums/matchEnums";
 import type {
+  RecurringChallengeFrequency,
+  RecurringChallengeSide,
+  RecurringChallengeStatus,
+} from "../../domain/enums/recurringChallengeEnums";
+import type {
   EventInteractionType,
   InvitationStatus,
   PostType,
@@ -181,6 +186,36 @@ export interface SupabaseMatchResultRow {
 }
 
 export type SupabaseMatchResultInsert = SupabaseMatchResultRow;
+
+export interface SupabaseRecurringChallengeRow {
+  id: string;
+  owner_profile_id: string;
+  title: string;
+  frequency: RecurringChallengeFrequency;
+  usual_day_of_week: number | null;
+  usual_time: string | null;
+  usual_place_text: string | null;
+  status: RecurringChallengeStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SupabaseRecurringChallengeInsert = Omit<
+  SupabaseRecurringChallengeRow,
+  "created_at" | "updated_at"
+>;
+
+export interface SupabaseRecurringChallengeParticipantRow {
+  challenge_id: string;
+  profile_id: string;
+  side: RecurringChallengeSide;
+  created_at: string;
+}
+
+export type SupabaseRecurringChallengeParticipantInsert = Omit<
+  SupabaseRecurringChallengeParticipantRow,
+  "created_at"
+>;
 
 export interface SupabaseNotificationRow {
   id: string;

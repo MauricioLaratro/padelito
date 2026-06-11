@@ -5,6 +5,10 @@ import type {
   MatchResult,
 } from "../../domain/models/matchModels";
 import type {
+  RecurringChallenge,
+  RecurringChallengeParticipant,
+} from "../../domain/models/recurringChallengeModels";
+import type {
   DirectMatchInvitation,
   MatchJoinRequest,
   Post,
@@ -32,6 +36,10 @@ import type {
   SupabasePostRow,
   SupabaseProfileRow,
   SupabaseProfileUpsert,
+  SupabaseRecurringChallengeInsert,
+  SupabaseRecurringChallengeParticipantInsert,
+  SupabaseRecurringChallengeParticipantRow,
+  SupabaseRecurringChallengeRow,
 } from "./supabasePadelitoTypes";
 
 /**
@@ -574,6 +582,83 @@ export function mapMatchResultToSupabaseInsert(
     winner_side: matchResult.winnerSide,
     summary: optionalTextToNull(matchResult.summary),
     recorded_at: matchResult.recordedAt,
+  };
+}
+
+/**
+ * Convierte una fila de desafio recurrente a dominio.
+ * Se construye para aislar nombres SQL del modulo de desafios.
+ * Lo usa el repositorio Supabase.
+ * Sirve para calcular marcadores acumulados en perfil.
+ */
+export function mapSupabaseRecurringChallengeRow(
+  row: SupabaseRecurringChallengeRow,
+): RecurringChallenge {
+  return {
+    challengeId: row.id,
+    ownerProfileId: row.owner_profile_id,
+    title: row.title,
+    frequency: row.frequency,
+    usualDayOfWeek: nullToUndefined(row.usual_day_of_week),
+    usualTime: row.usual_time ? normalizeTimeValue(row.usual_time) : undefined,
+    usualPlaceText: nullToUndefined(row.usual_place_text),
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Convierte desafio recurrente a insert Supabase.
+ * Se construye para persistir la configuracion base.
+ * Lo usa createRecurringChallenge.
+ * Sirve para mantener id generado por cliente y relaciones inmediatas.
+ */
+export function mapRecurringChallengeToSupabaseInsert(
+  recurringChallenge: RecurringChallenge,
+): SupabaseRecurringChallengeInsert {
+  return {
+    id: recurringChallenge.challengeId,
+    owner_profile_id: recurringChallenge.ownerProfileId,
+    title: recurringChallenge.title,
+    frequency: recurringChallenge.frequency,
+    usual_day_of_week: recurringChallenge.usualDayOfWeek ?? null,
+    usual_time: recurringChallenge.usualTime ?? null,
+    usual_place_text: optionalTextToNull(recurringChallenge.usualPlaceText),
+    status: recurringChallenge.status,
+  };
+}
+
+/**
+ * Convierte participante de desafio a dominio.
+ * Se construye para listar equipos recurrentes.
+ * Lo usa el repositorio Supabase.
+ * Sirve para mostrar quienes integran cada lado.
+ */
+export function mapSupabaseRecurringChallengeParticipantRow(
+  row: SupabaseRecurringChallengeParticipantRow,
+): RecurringChallengeParticipant {
+  return {
+    challengeId: row.challenge_id,
+    profileId: row.profile_id,
+    side: row.side,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Convierte participante de desafio a insert Supabase.
+ * Se construye para crear equipos base del desafio.
+ * Lo usa createRecurringChallenge.
+ * Sirve para evitar nombres libres sin perfil cuando hay usuarios conocidos.
+ */
+export function mapRecurringChallengeParticipantToSupabaseInsert(
+  challengeParticipant: RecurringChallengeParticipant,
+): SupabaseRecurringChallengeParticipantInsert {
+  return {
+    challenge_id: challengeParticipant.challengeId,
+    profile_id: challengeParticipant.profileId,
+    side: challengeParticipant.side,
   };
 }
 

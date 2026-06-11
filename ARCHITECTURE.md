@@ -88,17 +88,20 @@ src/
     matchOptions.ts
     postOptions.ts
     profileOptions.ts
+    recurringChallengeOptions.ts
   domain/
     enums/
       matchEnums.ts
       notificationEnums.ts
       postEnums.ts
       profileEnums.ts
+      recurringChallengeEnums.ts
     models/
       matchModels.ts
       notificationModels.ts
       postModels.ts
       profileModels.ts
+      recurringChallengeModels.ts
   hooks/
     useLocalStorageState.ts
     usePadelitoMvp.ts
@@ -111,8 +114,10 @@ src/
       FeedScreen.tsx
     matches/
       CreateMatchModal.tsx
+      CreateRecurringChallengeModal.tsx
       MatchHistorySection.tsx
       MatchResultModal.tsx
+      RecurringChallengesSection.tsx
     notifications/
       NotificationsScreen.tsx
     onboarding/
@@ -158,6 +163,8 @@ supabase/
     202606100003_private_profile_contact_rpc.sql
     202606100004_match_history.sql
     202606100005_fix_match_history_rls.sql
+    202606110001_link_matches_to_social_flows.sql
+    202606110002_recurring_challenges.sql
 ```
 
 ## Modulo Partidos e Historial implementado
@@ -185,13 +192,15 @@ Principios:
 - participantes aceptados por solicitud o invitacion vinculada tambien entran en `match_participants`;
 - resultados viven en `match_results`;
 - estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
-- desafios recurrentes deben tener entidad propia y asociar multiples partidos en una etapa posterior.
+- desafios recurrentes viven como entidad propia;
+- `match_records.recurringChallengeId` vincula partidos con desafios;
+- marcador acumulado de desafios se calcula desde `match_results` vinculados.
 
 La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento social/local del MVP.
 
 Pendiente arquitectonico:
 
-- crear `recurring_challenges` y relaciones con partidos sin contaminar el feed.
+- evaluar agregados/materialized views solo si el volumen futuro lo justifica.
 
 ## Decision reversible actual
 

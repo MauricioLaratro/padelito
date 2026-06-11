@@ -14,7 +14,11 @@ import type {
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
 import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
-import type { CreateInvitationInput, CreateMatchInput } from "./padelitoRepository";
+import type {
+  CreateInvitationInput,
+  CreateMatchInput,
+  CreateRecurringChallengeInput,
+} from "./padelitoRepository";
 
 export type { CreateInvitationInput } from "./padelitoRepository";
 
@@ -342,6 +346,40 @@ export function recordMatchResult(
       ...database.matchResults.filter(
         (currentMatchResult) =>
           currentMatchResult.matchId !== matchResult.matchId,
+      ),
+    ],
+  };
+}
+
+/**
+ * Crea un desafio recurrente local.
+ * Se construye para llevar marcador acumulado entre parejas o grupos.
+ * Lo usa la seccion de desafios del perfil.
+ * Sirve para validar recurrencia sin tablas agregadas tempranas.
+ */
+export function createRecurringChallenge(
+  database: PadelitoLocalDatabase,
+  challengeInput: CreateRecurringChallengeInput,
+) {
+  const uniqueParticipantsByProfileId = new Map(
+    challengeInput.participants.map((challengeParticipant) => [
+      challengeParticipant.profileId,
+      challengeParticipant,
+    ]),
+  );
+
+  return {
+    ...database,
+    recurringChallenges: [
+      challengeInput.challenge,
+      ...database.recurringChallenges,
+    ],
+    recurringChallengeParticipants: [
+      ...uniqueParticipantsByProfileId.values(),
+      ...database.recurringChallengeParticipants.filter(
+        (challengeParticipant) =>
+          challengeParticipant.challengeId !==
+          challengeInput.challenge.challengeId,
       ),
     ],
   };

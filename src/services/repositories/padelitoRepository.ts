@@ -5,6 +5,10 @@ import type {
   MatchResult,
 } from "../../domain/models/matchModels";
 import type {
+  RecurringChallenge,
+  RecurringChallengeParticipant,
+} from "../../domain/models/recurringChallengeModels";
+import type {
   DirectMatchInvitation,
   LookingForPlayerPost,
   MatchJoinRequest,
@@ -37,6 +41,11 @@ export interface CreateMatchInput {
   result?: MatchResult;
 }
 
+export interface CreateRecurringChallengeInput {
+  challenge: RecurringChallenge;
+  participants: RecurringChallengeParticipant[];
+}
+
 export interface PadelitoRepositorySnapshot {
   profiles: Profile[];
   follows: FollowRelation[];
@@ -47,6 +56,8 @@ export interface PadelitoRepositorySnapshot {
   matchRecords: MatchRecord[];
   matchParticipants: MatchParticipant[];
   matchResults: MatchResult[];
+  recurringChallenges: RecurringChallenge[];
+  recurringChallengeParticipants: RecurringChallengeParticipant[];
   notifications: InternalNotification[];
   sessionProfileId?: string;
   quickAccessPromptDismissed: boolean;
@@ -60,6 +71,9 @@ export interface PadelitoRepository {
   createMatch: (matchInput: CreateMatchInput) => Promise<void>;
   cancelMatch: (matchId: string, ownerProfileId: string) => Promise<void>;
   recordMatchResult: (matchResult: MatchResult) => Promise<void>;
+  createRecurringChallenge: (
+    challengeInput: CreateRecurringChallengeInput,
+  ) => Promise<void>;
   toggleFollowProfile: (
     followerProfileId: string,
     followedProfileId: string,
@@ -113,6 +127,8 @@ export function createEmptyRepositorySnapshot(): PadelitoRepositorySnapshot {
     matchParticipants: [],
     matchRecords: [],
     matchResults: [],
+    recurringChallengeParticipants: [],
+    recurringChallenges: [],
     matchJoinRequests: [],
     notifications: [],
     postInteractions: [],

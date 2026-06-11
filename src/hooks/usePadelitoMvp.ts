@@ -15,6 +15,7 @@ import {
   createMatch,
   createMatchJoinRequest,
   createPost,
+  createRecurringChallenge,
   dismissQuickAccessPrompt,
   getPrivateProfileContact as getLocalPrivateProfileContact,
   getSessionProfile,
@@ -35,6 +36,7 @@ import {
 import {
   createEmptyRepositorySnapshot,
   type CreateMatchInput,
+  type CreateRecurringChallengeInput,
 } from "../services/repositories/padelitoRepository";
 import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
 import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
@@ -631,6 +633,27 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Crea un desafio recurrente.
+   * Se construye para agrupar partidos habituales entre equipos.
+   * Lo usa ProfileScreen.
+   * Sirve para calcular marcador acumulado desde resultados.
+   */
+  function handleRecurringChallengeCreate(
+    challengeInput: CreateRecurringChallengeInput,
+  ) {
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.createRecurringChallenge(challengeInput),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      createRecurringChallenge(currentDatabase, challengeInput),
+    );
+  }
+
+  /**
    * Alterna seguimiento.
    * Se construye para alimentar feed Siguiendo.
    * Lo usan cards y perfil.
@@ -1059,6 +1082,7 @@ export function usePadelitoMvp() {
     handleMatchCancel,
     handleMatchCreate,
     handleMatchResultRecord,
+    handleRecurringChallengeCreate,
     handlePrivateContactOpen,
     handleProfileSave,
     handleQuickAccessDismiss,
@@ -1131,5 +1155,8 @@ function normalizeDatabaseSnapshot(database: PadelitoLocalDatabase) {
     postInteractions: partialDatabase.postInteractions ?? [],
     posts: partialDatabase.posts ?? [],
     profiles: partialDatabase.profiles ?? [],
+    recurringChallengeParticipants:
+      partialDatabase.recurringChallengeParticipants ?? [],
+    recurringChallenges: partialDatabase.recurringChallenges ?? [],
   };
 }

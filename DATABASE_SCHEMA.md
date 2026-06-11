@@ -12,12 +12,14 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - Migracion incremental `202606100004_match_history.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606100005_fix_match_history_rls.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606110001_link_matches_to_social_flows.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606110002_recurring_challenges.sql` aplicada en Supabase Cloud.
 - `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
 - Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
 - `whatsapp_phone` queda fuera de la lectura publica REST; el cliente carga perfiles publicos sin telefono.
 - `match_records`, `match_participants` y `match_results` ya estan creadas para historial y estadisticas simples.
 - `match_records.source_post_id` vincula partidos estructurados con publicaciones `Busco jugador`.
 - `direct_match_invitations.related_match_id` vincula invitaciones directas con partidos estructurados.
+- `match_records.recurring_challenge_id` vincula partidos estructurados con desafios recurrentes.
 
 ## Enums sugeridos
 
@@ -33,6 +35,9 @@ create type invitation_status as enum ('pending', 'accepted', 'rejected', 'cance
 create type match_status as enum ('scheduled', 'completed', 'cancelled');
 create type match_participant_side as enum ('team_a', 'team_b', 'rotating');
 create type match_winner_side as enum ('team_a', 'team_b', 'draw');
+create type recurring_challenge_frequency as enum ('weekly', 'biweekly', 'monthly', 'manual');
+create type recurring_challenge_status as enum ('active', 'paused', 'archived');
+create type recurring_challenge_side as enum ('team_a', 'team_b');
 create type notification_type as enum (
   'new_follower',
   'match_join_request_received',
@@ -233,12 +238,12 @@ Resultado final.
 - summary nullable
 - recorded_at
 
-## MVP+ sugerido: recurring_challenges
+## recurring_challenges
 
 Desafios recurrentes entre parejas o grupos.
 
 - id
-- creator_profile_id
+- owner_profile_id
 - title
 - frequency: weekly / biweekly / monthly / manual
 - usual_day_of_week nullable
@@ -248,29 +253,24 @@ Desafios recurrentes entre parejas o grupos.
 - created_at
 - updated_at
 
-## MVP+ sugerido: recurring_challenge_participants
+## recurring_challenge_participants
 
 Participantes base del desafio.
 
 - id
 - challenge_id
 - profile_id
-- team_label nullable
+- side: team_a / team_b
 - created_at
 
-## MVP+ sugerido: recurring_challenge_matches
+Notas:
 
-Relaciona partidos jugados con un desafio recurrente.
+- un desafio puede representar parejas fijas, grupos o rotaciones semanales;
+- `match_records.recurring_challenge_id` es la relacion con partidos jugados;
+- no existe tabla intermedia de matches porque cada partido pertenece a un desafio como maximo en el MVP;
+- el marcador acumulado se calcula desde `match_results` de partidos vinculados.
 
-- challenge_id
-- match_id
-- created_at
-
-Unique:
-
-- challenge_id + match_id
-
-## MVP+ sugerido: estadisticas
+## Estadisticas
 
 Las estadisticas pueden calcularse desde `matches`, `match_participants` y `match_results` al inicio.
 
@@ -297,7 +297,7 @@ Reglas generales:
 - contacto telefonico no debe exponerse en snapshots publicos
 - partidos visibles para owner y participantes
 - resultados visibles para owner y participantes
-- desafios recurrentes visibles para participantes o segun visibilidad futura
+- desafios recurrentes visibles para owner o participantes
 
 El agente debe escribir migraciones SQL completas y seguras.
 
@@ -311,6 +311,7 @@ El agente debe escribir migraciones SQL completas y seguras.
 - `register_accepted_player_on_linked_match`: busca match por `source_post_id` y agrega participante si existe.
 - `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.
 - `can_read_match`: permite leer partidos, participantes y resultados al owner o participantes sin generar recursion RLS.
+- `can_read_recurring_challenge`: permite leer desafios y participantes al owner o participantes sin generar recursion RLS.
 
 ## Privacidad de contacto
 

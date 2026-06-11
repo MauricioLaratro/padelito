@@ -212,6 +212,9 @@ export function App() {
           onMatchCancel={padelitoMvp.handleMatchCancel}
           onMatchCreate={padelitoMvp.handleMatchCreate}
           onMatchResultRecord={padelitoMvp.handleMatchResultRecord}
+          onRecurringChallengeCreate={
+            padelitoMvp.handleRecurringChallengeCreate
+          }
           onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onPostCancel={padelitoMvp.handlePostCancel}
           onProfileSave={padelitoMvp.handleProfileSave}
