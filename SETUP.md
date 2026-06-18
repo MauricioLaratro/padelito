@@ -107,6 +107,7 @@ Estado de esta instancia:
 - Migraciones ejecutadas desde SQL Editor.
 - Verificacion SQL: `schema_ok`.
 - Buckets creados por migracion: `avatars` y `event-images`.
+- Fotos de perfil: la app procesa el avatar en cliente y lo sube al bucket publico `avatars`.
 - Contacto privado: `get_profile_private_contact(uuid)` instalado y ejecutable por usuarios autenticados.
 - Historial de partidos: `match_records`, `match_participants`, `match_results` y `can_read_match(uuid, uuid)` instalados.
 - Enlace social-partidos: `source_post_id`, `related_match_id`, `register_accepted_player_on_match` y `register_accepted_player_on_linked_match` instalados.

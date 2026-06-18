@@ -83,6 +83,13 @@ export function ProfileActivitySection({
 
   return (
     <div className="grid gap-3">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
+          Actividad
+        </p>
+        <h2 className="text-xl font-black">Tu movimiento</h2>
+      </div>
+
       <ActivityCard title="Publicaciones propias">
         {ownPosts.length > 0 ? (
           ownPosts.map((post) => (

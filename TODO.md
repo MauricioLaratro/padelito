@@ -54,6 +54,8 @@
 - [x] Validar creacion de perfil real en Supabase.
 - [x] Cerrar sesion desde perfil sin borrar datos persistidos.
 - [x] Edicion de perfil.
+- [x] Foto de perfil circular con carga/cambio desde edicion.
+- [x] WhatsApp argentino con prefijo fijo `+549` y normalizacion de numeros pegados.
 - [x] Contacto privado propio sin reexponer `whatsapp_phone` en perfiles publicos.
 
 ## Etapa 5 - Feeds
@@ -99,6 +101,8 @@
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
 - [x] Invalidar cache PWA para refrescar SVG de marca.
 - [x] Ocultar modo demo cuando Supabase esta configurado.
+- [x] Compactar acceso rapido y filtros para mostrar contenido real antes en mobile.
+- [x] Usar avatar reutilizable en perfil, feed y busqueda de jugadores.
 - [ ] Pulir UX.
 - [ ] Probar visualmente pantallas privadas con dos sesiones reales.
 - [ ] Deploy Cloudflare Pages.
@@ -119,6 +123,7 @@
 
 ## Etapa 10 - Cierre MVP y salida local
 - [ ] Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales.
+- [ ] Probar carga/cambio de foto de perfil con imagen real en Supabase Storage.
 - [ ] Pulir UX mobile de feed, perfil y notificaciones con pruebas manuales completas.
 - [x] Permitir archivar/reactivar desafios recurrentes propios.
 - [x] Agregar confirmaciones UI para acciones sensibles.

@@ -1,6 +1,6 @@
-import { Building2, UserRound } from "lucide-react";
 import type { Profile } from "../../domain/models/profileModels";
 import { Button } from "../common/Button";
+import { ProfileAvatar } from "../common/ProfileAvatar";
 
 interface PostAuthorRowProps {
   authorProfile: Profile;
@@ -23,9 +23,6 @@ export function PostAuthorRow({
   onFollowToggle,
   onProfileOpen,
 }: PostAuthorRowProps) {
-  const AuthorIcon =
-    authorProfile.profileType === "organization" ? Building2 : UserRound;
-
   return (
     <div className="flex items-center justify-between gap-3">
       <button
@@ -33,9 +30,12 @@ export function PostAuthorRow({
         onClick={() => onProfileOpen?.(authorProfile.profileId)}
         type="button"
       >
-        <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border-subtle bg-surface-secondary text-accent-lime">
-          <AuthorIcon aria-hidden="true" size={17} />
-        </span>
+        <ProfileAvatar
+          avatarUrl={authorProfile.avatarUrl}
+          displayName={authorProfile.displayName}
+          profileType={authorProfile.profileType}
+          size="sm"
+        />
         <div className="min-w-0">
           <p className="truncate text-sm font-black">
             {authorProfile.displayName}

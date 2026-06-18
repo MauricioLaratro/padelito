@@ -5,7 +5,7 @@ import { ProfileForm } from "./ProfileForm";
 interface ProfileEditModalProps {
   currentProfile: Profile;
   onClose: () => void;
-  onProfileSave: (profile: Profile) => void;
+  onProfileSave: (profile: Profile, avatarFile?: File) => void;
 }
 
 /**
@@ -25,8 +25,8 @@ export function ProfileEditModal({
    * Lo usa ProfileForm.
    * Sirve para volver a la actividad del perfil despues de editar.
    */
-  function handleProfileSave(updatedProfile: Profile) {
-    onProfileSave(updatedProfile);
+  function handleProfileSave(updatedProfile: Profile, avatarFile?: File) {
+    onProfileSave(updatedProfile, avatarFile);
     onClose();
   }
 

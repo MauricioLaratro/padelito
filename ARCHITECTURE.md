@@ -76,6 +76,7 @@ src/
       Chip.tsx
       EmptyState.tsx
       IconButton.tsx
+      ProfileAvatar.tsx
     forms/
       FormField.tsx
     layout/
@@ -145,6 +146,7 @@ src/
   styles/
     global.css
   utils/
+    avatarImageProcessing.ts
     contactFormatters.ts
     dateFormatters.ts
     identifierGenerator.ts
@@ -228,6 +230,19 @@ Regla actual:
 - el repositorio local replica la misma regla para mantener paridad de comportamiento.
 
 Esto mantiene los perfiles publicos inspeccionables sin exponer datos privados.
+
+## Perfil y avatar
+
+La foto de perfil se mantiene como dato publico de baja sensibilidad y se guarda en el bucket `avatars`.
+
+Separacion actual:
+
+- `ProfileAvatar` renderiza el circulo reutilizable para perfil, feed y busqueda;
+- `avatarImageProcessing` prepara la imagen en el cliente con recorte cuadrado y salida 512x512;
+- `PadelitoRepository.uploadProfileAvatar` concentra la escritura a Storage;
+- `ProfileForm` solo coordina preview, validacion visual y envio del archivo al caso de uso.
+
+Esta estructura evita que los componentes de UI dependan directo de Supabase Storage y deja reemplazable el backend de archivos si se cambia la infraestructura.
 
 ## Migrabilidad futura
 

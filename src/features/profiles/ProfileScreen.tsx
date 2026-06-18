@@ -2,6 +2,7 @@ import { BellRing, LogOut, Pencil, UserPlus, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
+import { ProfileAvatar } from "../../components/common/ProfileAvatar";
 import {
   organizationKindLabels,
   playerLevelLabels,
@@ -91,9 +92,13 @@ export function ProfileScreen({
     <section className="grid gap-3 px-4 pb-28 pt-4">
       <article className="rounded-lg border border-border-subtle bg-surface-primary p-4 shadow-floating">
         <div className="flex items-start gap-3">
-          <div className="grid size-14 shrink-0 place-items-center rounded-full bg-accent-lime text-xl font-black text-background-primary">
-            {currentProfile.displayName.slice(0, 1).toUpperCase()}
-          </div>
+          <ProfileAvatar
+            avatarUrl={currentProfile.avatarUrl}
+            className="bg-accent-lime text-background-primary"
+            displayName={currentProfile.displayName}
+            profileType={currentProfile.profileType}
+            size="lg"
+          />
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               {currentProfile.profileType === "player"
@@ -143,6 +148,17 @@ export function ProfileScreen({
         </div>
       </article>
 
+      <ProfileActivitySection
+        currentProfileId={currentProfile.profileId}
+        database={database}
+        onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+        onDirectInvitationCancel={onDirectInvitationCancel}
+        onJoinRequestCancel={onJoinRequestCancel}
+        onJoinRequestStatusChange={onJoinRequestStatusChange}
+        onPrivateContactOpen={onPrivateContactOpen}
+        onPostCancel={onPostCancel}
+      />
+
       <MatchHistorySection
         currentProfile={currentProfile}
         database={database}
@@ -157,17 +173,6 @@ export function ProfileScreen({
         database={database}
         onRecurringChallengeCreate={onRecurringChallengeCreate}
         onRecurringChallengeStatusUpdate={onRecurringChallengeStatusUpdate}
-      />
-
-      <ProfileActivitySection
-        currentProfileId={currentProfile.profileId}
-        database={database}
-        onDirectInvitationStatusChange={onDirectInvitationStatusChange}
-        onDirectInvitationCancel={onDirectInvitationCancel}
-        onJoinRequestCancel={onJoinRequestCancel}
-        onJoinRequestStatusChange={onJoinRequestStatusChange}
-        onPrivateContactOpen={onPrivateContactOpen}
-        onPostCancel={onPostCancel}
       />
 
       {isProfileEditOpen ? (

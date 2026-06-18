@@ -1,7 +1,8 @@
-import { Save, X } from "lucide-react";
-import type { FormEvent } from "react";
+import { Camera, Save, X } from "lucide-react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
+import { ProfileAvatar } from "../../components/common/ProfileAvatar";
 import { FormField } from "../../components/forms/FormField";
 import {
   organizationKindOptions,
@@ -17,11 +18,16 @@ import type {
   ProfileType,
 } from "../../domain/enums/profileEnums";
 import type { Profile } from "../../domain/models/profileModels";
+import {
+  createArgentinianWhatsappPhone,
+  getArgentinianWhatsappLocalPhone,
+} from "../../utils/contactFormatters";
+import { createProcessedAvatarImage } from "../../utils/avatarImageProcessing";
 
 interface ProfileFormProps {
   currentProfile: Profile;
   onCancel?: () => void;
-  onProfileSave: (profile: Profile) => void;
+  onProfileSave: (profile: Profile, avatarFile?: File) => void;
   submitLabel: string;
 }
 
@@ -41,10 +47,14 @@ export function ProfileForm({
     currentProfile.profileType,
   );
   const [displayName, setDisplayName] = useState(currentProfile.displayName);
+  const [avatarUrl, setAvatarUrl] = useState(currentProfile.avatarUrl ?? "");
+  const [avatarFile, setAvatarFile] = useState<File | undefined>();
+  const [avatarError, setAvatarError] = useState("");
+  const [isAvatarProcessing, setIsAvatarProcessing] = useState(false);
   const [bio, setBio] = useState(currentProfile.bio ?? "");
   const [usualPlace, setUsualPlace] = useState(currentProfile.usualPlace ?? "");
-  const [whatsappPhone, setWhatsappPhone] = useState(
-    currentProfile.whatsappPhone ?? "",
+  const [whatsappLocalPhone, setWhatsappLocalPhone] = useState(
+    getArgentinianWhatsappLocalPhone(currentProfile.whatsappPhone),
   );
   const [playerLevel, setPlayerLevel] = useState<PlayerLevel>(
     currentProfile.profileType === "player"
@@ -74,6 +84,42 @@ export function ProfileForm({
   );
 
   /**
+   * Procesa foto elegida para avatar.
+   * Se construye para mostrar preview inmediato y guardar un archivo optimizado.
+   * Lo usa el input de archivo.
+   * Sirve para mantener el recorte circular consistente.
+   */
+  async function handleAvatarChange(changeEvent: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = changeEvent.target.files?.[0];
+    changeEvent.target.value = "";
+
+    if (!selectedFile) {
+      return;
+    }
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setAvatarError("Selecciona una imagen valida.");
+      return;
+    }
+
+    try {
+      setAvatarError("");
+      setIsAvatarProcessing(true);
+      const processedAvatar = await createProcessedAvatarImage(selectedFile);
+      setAvatarUrl(processedAvatar.previewUrl);
+      setAvatarFile(processedAvatar.file);
+    } catch (error) {
+      setAvatarError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo preparar la imagen de perfil.",
+      );
+    } finally {
+      setIsAvatarProcessing(false);
+    }
+  }
+
+  /**
    * Guarda perfil segun tipo seleccionado.
    * Se construye para producir un modelo de dominio completo.
    * Lo usa el submit del formulario.
@@ -84,10 +130,10 @@ export function ProfileForm({
 
     const sharedProfileFields = {
       profileId: currentProfile.profileId,
-      avatarUrl: currentProfile.avatarUrl,
+      avatarUrl,
       displayName,
       bio,
-      whatsappPhone,
+      whatsappPhone: createArgentinianWhatsappPhone(whatsappLocalPhone),
       usualPlace,
       createdAt: currentProfile.createdAt,
       updatedAt: currentProfile.updatedAt,
@@ -95,22 +141,28 @@ export function ProfileForm({
     };
 
     if (profileType === "organization") {
-      onProfileSave({
-        ...sharedProfileFields,
-        profileType: "organization",
-        organizationKind,
-        organizationLink,
-      });
+      onProfileSave(
+        {
+          ...sharedProfileFields,
+          profileType: "organization",
+          organizationKind,
+          organizationLink,
+        },
+        avatarFile,
+      );
       return;
     }
 
-    onProfileSave({
-      ...sharedProfileFields,
-      profileType: "player",
-      playerLevel,
-      preferredPosition,
-      preferredPlayStyle,
-    });
+    onProfileSave(
+      {
+        ...sharedProfileFields,
+        profileType: "player",
+        playerLevel,
+        preferredPosition,
+        preferredPlayStyle,
+      },
+      avatarFile,
+    );
   }
 
   return (
@@ -141,6 +193,36 @@ export function ProfileForm({
       </div>
 
       <div className="grid gap-3">
+        <div className="rounded-lg border border-border-subtle bg-surface-secondary p-3">
+          <div className="flex items-center gap-4">
+            <ProfileAvatar
+              avatarUrl={avatarUrl}
+              displayName={displayName}
+              profileType={profileType}
+              size="xl"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black">Foto de perfil</p>
+              <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-border-subtle bg-surface-primary px-4 text-sm font-black text-text-primary transition hover:border-accent-lime/40">
+                <Camera aria-hidden="true" size={17} />
+                {avatarUrl ? "Cambiar foto" : "Agregar foto"}
+                <input
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={isAvatarProcessing}
+                  onChange={handleAvatarChange}
+                  type="file"
+                />
+              </label>
+              {avatarError ? (
+                <p className="mt-2 text-xs font-bold text-feedback-danger">
+                  {avatarError}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
         <FormField
           label="Nombre"
           onChange={(changeEvent) => setDisplayName(changeEvent.target.value)}
@@ -153,12 +235,25 @@ export function ProfileForm({
           placeholder="Club Norte / Palermo"
           value={usualPlace}
         />
-        <FormField
-          label="WhatsApp opcional"
-          onChange={(changeEvent) => setWhatsappPhone(changeEvent.target.value)}
-          placeholder="54911..."
-          value={whatsappPhone}
-        />
+        <label className="grid gap-1.5 text-xs font-bold text-text-secondary">
+          WhatsApp opcional
+          <div className="flex overflow-hidden rounded-lg border border-border-subtle bg-surface-primary focus-within:border-accent-lime">
+            <span className="grid min-h-11 place-items-center border-r border-border-subtle px-3 text-sm font-black text-accent-lime">
+              +549
+            </span>
+            <input
+              className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-text-primary outline-none placeholder:text-text-secondary/70"
+              inputMode="numeric"
+              onChange={(changeEvent) =>
+                setWhatsappLocalPhone(
+                  getArgentinianWhatsappLocalPhone(changeEvent.target.value),
+                )
+              }
+              placeholder="3764..."
+              value={whatsappLocalPhone}
+            />
+          </div>
+        </label>
         <FormField
           fieldType="textarea"
           label="Bio corta"
@@ -249,7 +344,13 @@ export function ProfileForm({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button className="flex-1" icon={Save} type="submit" variant="primary">
+        <Button
+          className="flex-1"
+          disabled={isAvatarProcessing}
+          icon={Save}
+          type="submit"
+          variant="primary"
+        >
           {submitLabel}
         </Button>
         {onCancel ? (

@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
+import { ProfileAvatar } from "../../components/common/ProfileAvatar";
 import { FormField } from "../../components/forms/FormField";
 import {
   playerLevelLabels,
@@ -161,11 +162,21 @@ function PublicPlayerProfileCard({
   return (
     <article className="rounded-lg border border-accent-lime/45 bg-surface-primary p-4 shadow-floating">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
-            Perfil
-          </p>
-          <h2 className="truncate text-2xl font-black">{profile.displayName}</h2>
+        <div className="flex min-w-0 items-center gap-3">
+          <ProfileAvatar
+            avatarUrl={profile.avatarUrl}
+            displayName={profile.displayName}
+            profileType={profile.profileType}
+            size="lg"
+          />
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
+              Perfil
+            </p>
+            <h2 className="truncate text-2xl font-black">
+              {profile.displayName}
+            </h2>
+          </div>
         </div>
         <Button className="min-h-9 px-3" icon={ArrowLeft} onClick={onBack}>
           Volver
@@ -227,12 +238,20 @@ function PlayerResultCard({
     <article className="rounded-lg border border-border-subtle bg-surface-primary p-4">
       <div className="flex items-start justify-between gap-3">
         <button
-          className="min-w-0 text-left"
+          className="flex min-w-0 items-center gap-3 text-left"
           onClick={() => onProfileSelect(profile.profileId)}
           type="button"
         >
-          <p className="truncate text-base font-black">{profile.displayName}</p>
-          <p className="text-xs font-semibold text-text-secondary">Jugador</p>
+          <ProfileAvatar
+            avatarUrl={profile.avatarUrl}
+            displayName={profile.displayName}
+            profileType={profile.profileType}
+            size="md"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-base font-black">{profile.displayName}</p>
+            <p className="text-xs font-semibold text-text-secondary">Jugador</p>
+          </div>
         </button>
         <Button
           className="min-h-8 px-3 text-xs"

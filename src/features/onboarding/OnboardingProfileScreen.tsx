@@ -4,7 +4,7 @@ import { ProfileForm } from "../profiles/ProfileForm";
 
 interface OnboardingProfileScreenProps {
   currentProfile: Profile;
-  onProfileSave: (profile: Profile) => void;
+  onProfileSave: (profile: Profile, avatarFile?: File) => void;
 }
 
 /**

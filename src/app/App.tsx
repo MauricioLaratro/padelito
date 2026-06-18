@@ -330,9 +330,9 @@ export function App() {
       ) : null}
 
       {padelitoMvp.activeMainView === "feed" ? (
-        <div className="grid gap-3">
+        <div className="grid min-w-0 gap-3">
           {!padelitoMvp.database.quickAccessPromptDismissed ? (
-            <div className="px-4 pt-4">
+            <div className="min-w-0 px-4 pt-4">
               <QuickAccessOnboardingStep
                 onDismiss={padelitoMvp.handleQuickAccessDismiss}
               />

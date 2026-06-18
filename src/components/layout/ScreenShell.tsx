@@ -15,7 +15,7 @@ export function ScreenShell({ children, className = "" }: ScreenShellProps) {
   return (
     <main className="min-h-screen bg-background-primary text-text-primary">
       <div
-        className={`mx-auto min-h-screen max-w-mobile border-x border-border-subtle bg-background-primary ${className}`}
+        className={`mx-auto min-h-screen w-full min-w-0 max-w-mobile border-x border-border-subtle bg-background-primary ${className}`}
       >
         {children}
       </div>

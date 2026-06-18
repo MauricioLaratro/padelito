@@ -43,6 +43,7 @@ import {
 } from "../services/repositories/padelitoRepository";
 import { createSupabasePadelitoRepository } from "../services/repositories/supabasePadelitoRepository";
 import { supabaseBrowserClient } from "../services/supabase/supabaseClient";
+import { readFileAsDataUrl } from "../utils/avatarImageProcessing";
 import { createWhatsappContactUrl } from "../utils/contactFormatters";
 
 export type MainViewIdentifier =
@@ -512,9 +513,37 @@ export function usePadelitoMvp() {
    * Lo usan pantallas de perfil.
    * Sirve para persistir identidad local.
    */
-  function handleProfileSave(updatedProfile: Profile) {
+  function handleProfileSave(updatedProfile: Profile, avatarFile?: File) {
     if (isSupabaseMode && supabaseRepository) {
-      void runRemoteAction(() => supabaseRepository.saveProfile(updatedProfile));
+      void runRemoteAction(async () => {
+        const avatarUrl = avatarFile
+          ? await supabaseRepository.uploadProfileAvatar(
+              updatedProfile.profileId,
+              avatarFile,
+            )
+          : updatedProfile.avatarUrl;
+
+        await supabaseRepository.saveProfile({
+          ...updatedProfile,
+          avatarUrl,
+        });
+      });
+      return;
+    }
+
+    if (avatarFile) {
+      void readFileAsDataUrl(avatarFile)
+        .then((avatarUrl) => {
+          setLocalDatabase((currentDatabase) =>
+            updateOwnProfile(currentDatabase, {
+              ...updatedProfile,
+              avatarUrl,
+            }),
+          );
+        })
+        .catch((error) => {
+          setRemoteErrorMessage(getReadableErrorMessage(error));
+        });
       return;
     }
 

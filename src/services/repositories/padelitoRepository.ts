@@ -66,6 +66,7 @@ export interface PadelitoRepositorySnapshot {
 
 export interface PadelitoRepository {
   loadApplicationSnapshot: () => Promise<PadelitoRepositorySnapshot>;
+  uploadProfileAvatar: (profileId: string, avatarFile: File) => Promise<string>;
   saveProfile: (updatedProfile: Profile) => Promise<void>;
   createPost: (post: Post) => Promise<void>;
   cancelPost: (postId: string, authorProfileId: string) => Promise<void>;

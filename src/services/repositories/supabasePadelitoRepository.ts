@@ -293,6 +293,36 @@ export function createSupabasePadelitoRepository(
   }
 
   /**
+   * Sube avatar propio a Supabase Storage.
+   * Se construye para separar archivos de datos de perfil.
+   * Lo usa el guardado de perfil.
+   * Sirve para persistir fotos publicas de avatar.
+   */
+  async function uploadProfileAvatar(
+    profileId: string,
+    avatarFile: File,
+  ): Promise<string> {
+    const avatarPath = `${profileId}/avatar-${Date.now()}.jpg`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from("avatars")
+      .upload(avatarPath, avatarFile, {
+        cacheControl: "3600",
+        contentType: avatarFile.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw createSupabaseError("subir foto de perfil", uploadError);
+    }
+
+    const { data } = supabaseClient.storage
+      .from("avatars")
+      .getPublicUrl(avatarPath);
+
+    return data.publicUrl;
+  }
+
+  /**
    * Crea una publicacion en Supabase.
    * Se construye para persistir el formulario de nueva publicacion.
    * Lo usara CreatePostModal.
@@ -1107,6 +1137,7 @@ export function createSupabasePadelitoRepository(
     saveProfile,
     toggleEventInteraction,
     toggleFollowProfile,
+    uploadProfileAvatar,
     updateDirectMatchInvitationStatus,
     updateMatchJoinRequestStatus,
   };

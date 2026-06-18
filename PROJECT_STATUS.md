@@ -48,6 +48,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Los perfiles publicos se leen sin `whatsapp_phone`; el contacto privado queda fuera del snapshot general.
 - El contacto privado se consulta por RPC solo para el propio usuario o perfiles vinculados por solicitud/invitacion aceptada.
 - El formulario de perfil se reutiliza entre onboarding y edicion para evitar duplicar reglas.
+- El avatar de perfil se maneja con componente reutilizable, recorte cuadrado client-side y persistencia en el bucket `avatars`.
+- El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
 
 ## Riesgos tecnicos
 
@@ -57,6 +59,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Los partidos estructurados usan ids UUID puros porque `match_records`, `match_participants` y `match_results` enlazan columnas `uuid`.
 - La RLS de partidos requiere evitar recursividad entre `match_records` y `match_participants`; se centraliza lectura en `can_read_match(uuid, uuid)`.
 - El reset de estadisticas debe mantenerse como accion controlada por RPC; no debe exponerse como update directo de `profiles.match_stats_reset_at`.
+- Las fotos de perfil subidas a Storage pueden dejar archivos anteriores sin limpiar; para MVP se acepta y queda como optimizacion futura si el volumen crece.
 - La RLS de desafios recurrentes tambien evita recursion directa; se centraliza lectura en `can_read_recurring_challenge(uuid, uuid)`.
 - Las aceptaciones sociales ahora modifican cupos y participantes desde RPC security definer para evitar writes directos inseguros desde cliente.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
@@ -181,6 +184,14 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - auditoria estatica no encontro `select("*")` en `src`/`scripts` ni lecturas directas de `whatsapp_phone` desde UI publica;
   - segunda sesion queda soportada por `PADELITO_QA_SECOND_EMAIL` y `PADELITO_QA_SECOND_PASSWORD`, pendiente de credencial real secundaria;
   - email Auth revisado contra documentacion oficial de Supabase: SMTP default no es produccion y requiere SMTP propio antes de lanzamiento publico.
+- Refinamiento UX local:
+  - feed mobile compactado con acceso rapido corto, filtros plegados y cards visibles en el primer viewport;
+  - perfil prioriza actividad propia antes de historial/desafios;
+  - avatar circular reutilizable agregado en perfil, feed y busqueda de jugadores;
+  - formulario de perfil permite agregar/cambiar foto y prepara la imagen a 512x512 para buen encuadre circular;
+  - WhatsApp en perfil muestra `+549` fijo y normaliza pegado de numeros completos como `+5493764...` a solo numero local;
+  - verificacion mobile confirmo `scrollWidth` menor al viewport y normalizacion correcta del input;
+  - `npm run qa:supabase` pasa con usuarios de prueba.
 
 ## Git
 
@@ -205,6 +216,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 ## Pendientes inmediatos
 
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
+- Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Revisar acciones destructivas restantes en publicaciones, partidos, invitaciones, desafios e historial secundario.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.

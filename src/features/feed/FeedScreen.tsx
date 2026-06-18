@@ -78,6 +78,7 @@ export function FeedScreen({
   const [placeQuery, setPlaceQuery] = useState("");
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false);
   const pullStartY = useRef<number | null>(null);
   const hasActiveFilters =
     selectedPostType !== "all" ||
@@ -195,7 +196,7 @@ export function FeedScreen({
 
   return (
     <section
-      className="grid gap-3 px-4 pb-28 pt-4"
+      className="grid min-w-0 gap-3 px-4 pb-28 pt-4"
       onTouchCancel={handleFeedTouchEnd}
       onTouchEnd={handleFeedTouchEnd}
       onTouchMove={handleFeedTouchMove}
@@ -222,11 +223,18 @@ export function FeedScreen({
         </div>
       )}
 
-      <div className="rounded-lg border border-border-subtle bg-surface-primary p-3">
-        <div className="mb-3 flex items-center gap-2">
-          <Chip icon={Filter} tone="lime">
+      <div className="min-w-0 rounded-lg border border-border-subtle bg-surface-primary p-3">
+        <div className="flex items-center gap-2">
+          <Button
+            className="min-h-8 px-3 text-xs"
+            icon={Filter}
+            onClick={() =>
+              setAreFiltersOpen((currentAreFiltersOpen) => !currentAreFiltersOpen)
+            }
+            variant={hasActiveFilters ? "primary" : "secondary"}
+          >
             Filtros
-          </Chip>
+          </Button>
           <Chip>{filteredPosts.length} publicaciones</Chip>
           {hasActiveFilters ? (
             <Button
@@ -239,96 +247,101 @@ export function FeedScreen({
             </Button>
           ) : null}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <FormField
-            fieldType="select"
-            label="Tipo"
-            onChange={(changeEvent) =>
-              setSelectedPostType(changeEvent.target.value as PostType | "all")
-            }
-            value={selectedPostType}
-          >
-            <option value="all">Todos</option>
-            {postTypeOptions.map((postTypeOption) => (
-              <option key={postTypeOption.value} value={postTypeOption.value}>
-                {postTypeOption.label}
-              </option>
-            ))}
-          </FormField>
-          <FormField
-            fieldType="select"
-            label="Fecha"
-            onChange={(changeEvent) =>
-              setSelectedDateFilter(
-                changeEvent.target.value as FeedDateFilterIdentifier,
-              )
-            }
-            value={selectedDateFilter}
-          >
-            <option value="all">Todas</option>
-            <option value="today">Hoy</option>
-            <option value="week">7 dias</option>
-          </FormField>
-          <FormField
-            label="Lugar"
-            onChange={(changeEvent) => setPlaceQuery(changeEvent.target.value)}
-            placeholder="Club / zona"
-            value={placeQuery}
-          />
-          <FormField
-            fieldType="select"
-            label="Categoria"
-            onChange={(changeEvent) =>
-              setSelectedPlayerLevel(changeEvent.target.value as PlayerLevel | "all")
-            }
-            value={selectedPlayerLevel}
-          >
-            <option value="all">Todas</option>
-            {playerLevelOptions.map((playerLevelOption) => (
-              <option
-                key={playerLevelOption.value}
-                value={playerLevelOption.value}
-              >
-                {playerLevelOption.label}
-              </option>
-            ))}
-          </FormField>
-          <FormField
-            fieldType="select"
-            label="Posicion"
-            onChange={(changeEvent) =>
-              setSelectedPlayerPosition(
-                changeEvent.target.value as PlayerPosition | "all",
-              )
-            }
-            value={selectedPlayerPosition}
-          >
-            <option value="all">Todas</option>
-            {playerPositionOptions.map((playerPositionOption) => (
-              <option
-                key={playerPositionOption.value}
-                value={playerPositionOption.value}
-              >
-                {playerPositionOption.label}
-              </option>
-            ))}
-          </FormField>
-          <FormField
-            fieldType="select"
-            label="Juego"
-            onChange={(changeEvent) =>
-              setSelectedPlayStyle(changeEvent.target.value as PlayStyle | "all")
-            }
-            value={selectedPlayStyle}
-          >
-            <option value="all">Todos</option>
-            {playStyleOptions.map((playStyleOption) => (
-              <option key={playStyleOption.value} value={playStyleOption.value}>
-                {playStyleOption.label}
-              </option>
-            ))}
-          </FormField>
-        </div>
+
+        {areFiltersOpen ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <FormField
+              fieldType="select"
+              label="Tipo"
+              onChange={(changeEvent) =>
+                setSelectedPostType(changeEvent.target.value as PostType | "all")
+              }
+              value={selectedPostType}
+            >
+              <option value="all">Todos</option>
+              {postTypeOptions.map((postTypeOption) => (
+                <option key={postTypeOption.value} value={postTypeOption.value}>
+                  {postTypeOption.label}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              fieldType="select"
+              label="Fecha"
+              onChange={(changeEvent) =>
+                setSelectedDateFilter(
+                  changeEvent.target.value as FeedDateFilterIdentifier,
+                )
+              }
+              value={selectedDateFilter}
+            >
+              <option value="all">Todas</option>
+              <option value="today">Hoy</option>
+              <option value="week">7 dias</option>
+            </FormField>
+            <FormField
+              label="Lugar"
+              onChange={(changeEvent) => setPlaceQuery(changeEvent.target.value)}
+              placeholder="Club / zona"
+              value={placeQuery}
+            />
+            <FormField
+              fieldType="select"
+              label="Categoria"
+              onChange={(changeEvent) =>
+                setSelectedPlayerLevel(
+                  changeEvent.target.value as PlayerLevel | "all",
+                )
+              }
+              value={selectedPlayerLevel}
+            >
+              <option value="all">Todas</option>
+              {playerLevelOptions.map((playerLevelOption) => (
+                <option
+                  key={playerLevelOption.value}
+                  value={playerLevelOption.value}
+                >
+                  {playerLevelOption.label}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              fieldType="select"
+              label="Posicion"
+              onChange={(changeEvent) =>
+                setSelectedPlayerPosition(
+                  changeEvent.target.value as PlayerPosition | "all",
+                )
+              }
+              value={selectedPlayerPosition}
+            >
+              <option value="all">Todas</option>
+              {playerPositionOptions.map((playerPositionOption) => (
+                <option
+                  key={playerPositionOption.value}
+                  value={playerPositionOption.value}
+                >
+                  {playerPositionOption.label}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              fieldType="select"
+              label="Juego"
+              onChange={(changeEvent) =>
+                setSelectedPlayStyle(changeEvent.target.value as PlayStyle | "all")
+              }
+              value={selectedPlayStyle}
+            >
+              <option value="all">Todos</option>
+              {playStyleOptions.map((playStyleOption) => (
+                <option key={playStyleOption.value} value={playStyleOption.value}>
+                  {playStyleOption.label}
+                </option>
+              ))}
+            </FormField>
+          </div>
+        ) : null}
       </div>
 
       {filteredPosts.length > 0 ? (
