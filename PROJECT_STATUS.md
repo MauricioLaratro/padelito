@@ -192,6 +192,11 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - WhatsApp en perfil muestra `+549` fijo y normaliza pegado de numeros completos como `+5493764...` a solo numero local;
   - verificacion mobile confirmo `scrollWidth` menor al viewport y normalizacion correcta del input;
   - `npm run qa:supabase` pasa con usuarios de prueba.
+- Correccion de permisos de perfil:
+  - se reemplazo `upsert` de perfiles por estrategia `update` propio e `insert` solo si no existe fila;
+  - esto mantiene bloqueada la edicion directa de `match_stats_reset_at` sin pedir `UPDATE` total sobre `profiles`;
+  - prueba directa contra Supabase confirmo update de WhatsApp sin error `42501`;
+  - prueba directa contra Storage confirmo subida permitida al bucket `avatars`.
 
 ## Git
 

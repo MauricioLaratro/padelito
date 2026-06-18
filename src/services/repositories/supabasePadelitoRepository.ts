@@ -283,9 +283,24 @@ export function createSupabasePadelitoRepository(
    * Sirve para crear o actualizar el registro vinculado a auth.users.
    */
   async function saveProfile(updatedProfile: Profile): Promise<void> {
-    const { error } = await supabaseClient
+    const profileInput = mapProfileToSupabaseUpsert(updatedProfile);
+    const { id: profileId, ...profileUpdateInput } = profileInput;
+    const { data: updatedProfileRow, error: updateError } = await supabaseClient
       .from("profiles")
-      .upsert(mapProfileToSupabaseUpsert(updatedProfile), { onConflict: "id" });
+      .update(profileUpdateInput)
+      .eq("id", profileId)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      throw createSupabaseError("guardar perfil", updateError);
+    }
+
+    if (updatedProfileRow) {
+      return;
+    }
+
+    const { error } = await supabaseClient.from("profiles").insert(profileInput);
 
     if (error) {
       throw createSupabaseError("guardar perfil", error);
