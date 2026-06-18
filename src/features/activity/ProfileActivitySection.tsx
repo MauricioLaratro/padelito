@@ -5,6 +5,7 @@ import {
   MapPin,
   MessageCircle,
   Send,
+  Trash2,
   UserRound,
   UsersRound,
   X,
@@ -34,13 +35,16 @@ interface ProfileActivitySectionProps {
     status: "accepted" | "rejected",
   ) => void;
   onDirectInvitationCancel: (invitationId: string) => void;
+  onDirectInvitationDelete: (invitationId: string) => void;
   onJoinRequestStatusChange: (
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onJoinRequestDelete: (requestId: string) => void;
   onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
+  onPostDelete: (postId: string) => void;
 }
 
 /**
@@ -54,10 +58,13 @@ export function ProfileActivitySection({
   database,
   onDirectInvitationStatusChange,
   onDirectInvitationCancel,
+  onDirectInvitationDelete,
   onJoinRequestCancel,
+  onJoinRequestDelete,
   onJoinRequestStatusChange,
   onPrivateContactOpen,
   onPostCancel,
+  onPostDelete,
 }: ProfileActivitySectionProps) {
   const ownPosts = database.posts.filter(
     (post) => post.authorProfileId === currentProfileId,
@@ -96,6 +103,7 @@ export function ProfileActivitySection({
             <OwnPostActivityCard
               key={post.postId}
               onPostCancel={onPostCancel}
+              onPostDelete={onPostDelete}
               post={post}
             />
           ))
@@ -112,6 +120,7 @@ export function ProfileActivitySection({
               key={matchJoinRequest.requestId}
               mode="sent"
               onJoinRequestCancel={onJoinRequestCancel}
+              onJoinRequestDelete={onJoinRequestDelete}
               onJoinRequestStatusChange={onJoinRequestStatusChange}
               onPrivateContactOpen={onPrivateContactOpen}
               request={matchJoinRequest}
@@ -130,6 +139,7 @@ export function ProfileActivitySection({
               key={matchJoinRequest.requestId}
               mode="received"
               onJoinRequestCancel={onJoinRequestCancel}
+              onJoinRequestDelete={onJoinRequestDelete}
               onJoinRequestStatusChange={onJoinRequestStatusChange}
               onPrivateContactOpen={onPrivateContactOpen}
               request={matchJoinRequest}
@@ -149,6 +159,7 @@ export function ProfileActivitySection({
               invitation={directMatchInvitation}
               mode="sent"
               onDirectInvitationCancel={onDirectInvitationCancel}
+              onDirectInvitationDelete={onDirectInvitationDelete}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
               onPrivateContactOpen={onPrivateContactOpen}
             />
@@ -167,6 +178,7 @@ export function ProfileActivitySection({
               invitation={directMatchInvitation}
               mode="received"
               onDirectInvitationCancel={onDirectInvitationCancel}
+              onDirectInvitationDelete={onDirectInvitationDelete}
               onDirectInvitationStatusChange={onDirectInvitationStatusChange}
               onPrivateContactOpen={onPrivateContactOpen}
             />
@@ -195,6 +207,7 @@ export function ProfileActivitySection({
 
 interface OwnPostActivityCardProps {
   onPostCancel: (postId: string) => void;
+  onPostDelete: (postId: string) => void;
   post: PadelitoLocalDatabase["posts"][number];
 }
 
@@ -204,7 +217,11 @@ interface OwnPostActivityCardProps {
  * La usa ProfileActivitySection.
  * Sirve para cancelar publicaciones activas y conservar historial visual.
  */
-function OwnPostActivityCard({ onPostCancel, post }: OwnPostActivityCardProps) {
+function OwnPostActivityCard({
+  onPostCancel,
+  onPostDelete,
+  post,
+}: OwnPostActivityCardProps) {
   return (
     <div className="grid gap-3 rounded-lg border border-border-subtle bg-surface-secondary p-3">
       <div className="flex items-start justify-between gap-3">
@@ -238,7 +255,15 @@ function OwnPostActivityCard({ onPostCancel, post }: OwnPostActivityCardProps) {
         >
           Cancelar publicacion
         </Button>
-      ) : null}
+      ) : (
+        <Button
+          icon={Trash2}
+          onClick={() => onPostDelete(post.postId)}
+          variant="secondary"
+        >
+          Eliminar
+        </Button>
+      )}
     </div>
   );
 }
@@ -252,6 +277,7 @@ interface InvitationActivityCardProps {
     status: "accepted" | "rejected",
   ) => void;
   onDirectInvitationCancel: (invitationId: string) => void;
+  onDirectInvitationDelete: (invitationId: string) => void;
   onPrivateContactOpen: (profileId: string) => void;
 }
 
@@ -266,6 +292,7 @@ function InvitationActivityCard({
   invitation,
   mode,
   onDirectInvitationCancel,
+  onDirectInvitationDelete,
   onDirectInvitationStatusChange,
   onPrivateContactOpen,
 }: InvitationActivityCardProps) {
@@ -377,6 +404,27 @@ function InvitationActivityCard({
           )}
         </div>
       ) : null}
+
+      {invitation.status === "accepted" ? (
+        <Button
+          icon={X}
+          onClick={() => onDirectInvitationCancel(invitation.invitationId)}
+          variant="danger"
+        >
+          {mode === "sent" ? "Cancelar jugador" : "Bajarme"}
+        </Button>
+      ) : null}
+
+      {invitation.status === "rejected" ||
+      invitation.status === "cancelled" ? (
+        <Button
+          icon={Trash2}
+          onClick={() => onDirectInvitationDelete(invitation.invitationId)}
+          variant="secondary"
+        >
+          Eliminar
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -385,6 +433,7 @@ interface RequestActivityCardProps {
   database: PadelitoLocalDatabase;
   mode: "sent" | "received";
   onJoinRequestCancel: (requestId: string) => void;
+  onJoinRequestDelete: (requestId: string) => void;
   onJoinRequestStatusChange: (
     requestId: string,
     status: "accepted" | "rejected",
@@ -403,6 +452,7 @@ function RequestActivityCard({
   database,
   mode,
   onJoinRequestCancel,
+  onJoinRequestDelete,
   onJoinRequestStatusChange,
   onPrivateContactOpen,
   request,
@@ -512,6 +562,26 @@ function RequestActivityCard({
             </>
           )}
         </div>
+      ) : null}
+
+      {request.status === "accepted" ? (
+        <Button
+          icon={X}
+          onClick={() => onJoinRequestCancel(request.requestId)}
+          variant="danger"
+        >
+          {mode === "sent" ? "Bajarme" : "Cancelar jugador"}
+        </Button>
+      ) : null}
+
+      {request.status === "rejected" || request.status === "cancelled" ? (
+        <Button
+          icon={Trash2}
+          onClick={() => onJoinRequestDelete(request.requestId)}
+          variant="secondary"
+        >
+          Eliminar
+        </Button>
       ) : null}
     </div>
   );

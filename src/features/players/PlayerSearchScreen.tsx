@@ -12,6 +12,7 @@ import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ProfileAvatar } from "../../components/common/ProfileAvatar";
+import { PullToRefresh } from "../../components/common/PullToRefresh";
 import { FormField } from "../../components/forms/FormField";
 import {
   playerLevelLabels,
@@ -25,6 +26,7 @@ interface PlayerSearchScreenProps {
   currentProfileId: string;
   database: PadelitoLocalDatabase;
   onFollowToggle: (profileId: string) => void;
+  onDataRefresh: () => void;
   onInvitationStart: (profileId: string) => void;
   onProfileSelect: (profileId: string | null) => void;
   selectedProfileId: string | null;
@@ -40,6 +42,7 @@ export function PlayerSearchScreen({
   currentProfileId,
   database,
   onFollowToggle,
+  onDataRefresh,
   onInvitationStart,
   onProfileSelect,
   selectedProfileId,
@@ -79,7 +82,10 @@ export function PlayerSearchScreen({
   });
 
   return (
-    <section className="grid gap-3 px-4 pb-28 pt-4">
+    <PullToRefresh
+      className="grid gap-3 px-4 pb-28 pt-4"
+      onRefresh={onDataRefresh}
+    >
       <div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
           Jugadores
@@ -126,7 +132,7 @@ export function PlayerSearchScreen({
           />
         )}
       </div>
-    </section>
+    </PullToRefresh>
   );
 }
 

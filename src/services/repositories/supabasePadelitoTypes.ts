@@ -226,6 +226,7 @@ export interface SupabaseNotificationRow {
   related_post_id: string | null;
   related_request_id: string | null;
   related_invitation_id: string | null;
+  related_match_id: string | null;
   title: string;
   body: string;
   read_at: string | null;

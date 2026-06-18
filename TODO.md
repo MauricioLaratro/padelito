@@ -65,6 +65,7 @@
 - [x] Filtros por fecha, categoria, posicion y estilo de juego.
 - [x] Pull-to-refresh mobile preparado para refetch futuro.
 - [x] Pull-to-refresh conectado a snapshot Supabase en modo remoto.
+- [x] Pull-to-refresh compartido en inicio, jugadores, notificaciones y perfil.
 
 ## Etapa 6 - Publicaciones
 - [x] Crear Busco jugador local.
@@ -81,9 +82,13 @@
 - [x] Invitaciones directas locales.
 - [x] Vincular invitaciones directas a un partido propio abierto cuando exista.
 - [x] Descontar cupo y marcar partido completo al aceptar solicitudes o invitaciones.
+- [x] Corregir invitaciones vinculadas a partido para descontar cupo aunque usen `related_match_id`.
+- [x] Cancelar participaciones aceptadas desde organizador o jugador.
 - [x] Notificaciones internas locales.
 - [x] Notificaciones accionables para abrir solicitudes e invitaciones.
+- [x] Eliminar notificaciones propias con swipe hacia la derecha.
 - [x] Actividad en perfil local.
+- [x] Eliminar publicaciones canceladas, solicitudes cerradas e invitaciones cerradas desde perfil.
 - [x] Cards contextuales de invitaciones enviadas y recibidas en perfil.
 - [x] Cancelar invitaciones enviadas pendientes.
 - [x] Buscar jugadores por nombre.
@@ -120,9 +125,13 @@
 - [x] Crear desafios recurrentes entre parejas o grupos.
 - [x] Registrar partidos dentro de un desafio recurrente.
 - [x] Mostrar marcador acumulado del desafio recurrente.
+- [x] Notificar al creador cuando un partido programado ya termino y falta cargar resultado.
+- [x] Notificar a participantes cuando el creador confirma resultado.
 
 ## Etapa 10 - Cierre MVP y salida local
-- [ ] Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales.
+- [ ] Probar manualmente aceptacion de solicitud/invitacion vinculada con dos sesiones reales.
+- [ ] Probar manualmente cancelacion de participacion aceptada desde organizador y jugador.
+- [ ] Probar manualmente swipe-to-delete de notificaciones en celular.
 - [ ] Probar carga/cambio de foto de perfil con imagen real en Supabase Storage.
 - [ ] Pulir UX mobile de feed, perfil y notificaciones con pruebas manuales completas.
 - [x] Permitir archivar/reactivar desafios recurrentes propios.
@@ -131,5 +140,6 @@
 - [x] Validar que el reset de score no pueda editarse directo por REST.
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
 - [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
+- [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [ ] Preparar deploy Cloudflare Pages.

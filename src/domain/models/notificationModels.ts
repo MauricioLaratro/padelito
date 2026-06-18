@@ -8,6 +8,7 @@ export interface InternalNotification {
   relatedPostId?: string;
   relatedRequestId?: string;
   relatedInvitationId?: string;
+  relatedMatchId?: string;
   title: string;
   body: string;
   readAt?: string;

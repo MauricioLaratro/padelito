@@ -11,12 +11,17 @@ import {
   cancelDirectMatchInvitation,
   cancelMatch,
   cancelPost,
+  createMatchResultReminderNotifications,
   type CreateInvitationInput,
   createDirectMatchInvitation,
   createMatch,
   createMatchJoinRequest,
   createPost,
   createRecurringChallenge,
+  deleteDirectMatchInvitation,
+  deleteMatchJoinRequest,
+  deleteNotification,
+  deletePost,
   dismissQuickAccessPrompt,
   getPrivateProfileContact as getLocalPrivateProfileContact,
   getSessionProfile,
@@ -257,6 +262,47 @@ export function usePadelitoMvp() {
       authListener.subscription.unsubscribe();
     };
   }, [loadRemoteSnapshot, setBackendMode, supabaseRepository]);
+
+  useEffect(() => {
+    if (!isSupabaseMode || !sessionProfile?.isOnboardingComplete) {
+      return;
+    }
+
+    void loadRemoteSnapshot();
+  }, [
+    activeMainView,
+    isSupabaseMode,
+    loadRemoteSnapshot,
+    sessionProfile?.isOnboardingComplete,
+    sessionProfile?.profileId,
+  ]);
+
+  useEffect(() => {
+    if (!isSupabaseMode || !sessionProfile?.isOnboardingComplete) {
+      return;
+    }
+
+    /**
+     * Refresca al volver a la app.
+     * Se construye para sincronizar cambios hechos desde otra sesion.
+     * Lo usa el foco del navegador.
+     * Sirve para evitar feeds viejos despues de aceptar invitaciones.
+     */
+    function handleWindowFocus() {
+      void loadRemoteSnapshot();
+    }
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [
+    isSupabaseMode,
+    loadRemoteSnapshot,
+    sessionProfile?.isOnboardingComplete,
+    sessionProfile?.profileId,
+  ]);
 
   /**
    * Ejecuta una accion remota y refresca snapshot.
@@ -602,6 +648,29 @@ export function usePadelitoMvp() {
   }
 
   /**
+   * Elimina una publicacion propia cerrada.
+   * Se construye para limpiar actividad acumulada.
+   * Lo usa ProfileActivitySection.
+   * Sirve para que el perfil no sea un listado infinito de operaciones viejas.
+   */
+  function handlePostDelete(postId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.deletePost(postId, sessionProfile.profileId),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      deletePost(currentDatabase, postId, sessionProfile.profileId),
+    );
+  }
+
+  /**
    * Crea un partido estructurado.
    * Se construye para separar historial real del feed de descubrimiento.
    * Lo usan modales de partido.
@@ -819,10 +888,10 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Cancela postulacion pendiente propia.
-   * Se construye para que el usuario pueda arrepentirse antes de respuesta.
+   * Cancela postulacion o participacion aceptada.
+   * Se construye para que el usuario pueda arrepentirse y liberar cupo.
    * Lo usan cards y actividad de perfil.
-   * Sirve para retirar una solicitud sin borrar historial.
+   * Sirve para retirar una solicitud o jugador confirmado.
    */
   function handleJoinRequestCancel(requestId: string) {
     if (!sessionProfile) {
@@ -841,6 +910,36 @@ export function usePadelitoMvp() {
 
     setLocalDatabase((currentDatabase) =>
       cancelMatchJoinRequest(
+        currentDatabase,
+        requestId,
+        sessionProfile.profileId,
+      ),
+    );
+  }
+
+  /**
+   * Elimina una solicitud cerrada de la actividad.
+   * Se construye para no acumular cards canceladas.
+   * Lo usa ProfileActivitySection.
+   * Sirve para mantener el perfil escaneable.
+   */
+  function handleJoinRequestDelete(requestId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.deleteMatchJoinRequest(
+          requestId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      deleteMatchJoinRequest(
         currentDatabase,
         requestId,
         sessionProfile.profileId,
@@ -933,10 +1032,10 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Cancela una invitacion directa enviada.
-   * Se construye para permitir arrepentimiento antes de una respuesta.
+   * Cancela invitacion o participacion confirmada.
+   * Se construye para permitir arrepentimiento y liberar cupo.
    * Lo usa ProfileActivitySection.
-   * Sirve para retirar propuestas pendientes sin borrar historial.
+   * Sirve para retirar propuestas o jugadores aceptados.
    */
   function handleDirectInvitationCancel(invitationId: string) {
     if (!sessionProfile) {
@@ -955,6 +1054,36 @@ export function usePadelitoMvp() {
 
     setLocalDatabase((currentDatabase) =>
       cancelDirectMatchInvitation(
+        currentDatabase,
+        invitationId,
+        sessionProfile.profileId,
+      ),
+    );
+  }
+
+  /**
+   * Elimina una invitacion cerrada de la actividad.
+   * Se construye para limpiar cards antiguas del perfil.
+   * Lo usa ProfileActivitySection.
+   * Sirve para separar historial de operacion diaria.
+   */
+  function handleDirectInvitationDelete(invitationId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.deleteDirectMatchInvitation(
+          invitationId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      deleteDirectMatchInvitation(
         currentDatabase,
         invitationId,
         sessionProfile.profileId,
@@ -1046,12 +1175,12 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Refresca el feed local.
-   * Se construye para soportar el gesto pull-to-refresh desde el MVP.
-   * Lo usa FeedScreen.
-   * Sirve como punto de reemplazo para refetch Supabase en la siguiente etapa.
+   * Refresca datos visibles de la app.
+   * Se construye para soportar pull-to-refresh en varias pantallas.
+   * Lo usan feed, notificaciones y perfil.
+   * Sirve para sincronizar cambios hechos desde otras sesiones.
    */
-  function handleFeedRefresh() {
+  function handleDataRefresh() {
     setLastFeedRefreshAt(createCurrentIsoDate());
 
     if (isSupabaseMode) {
@@ -1059,7 +1188,17 @@ export function usePadelitoMvp() {
       return;
     }
 
-    setLocalDatabase((currentDatabase) => ({ ...currentDatabase }));
+    if (!sessionProfile) {
+      setLocalDatabase((currentDatabase) => ({ ...currentDatabase }));
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      createMatchResultReminderNotifications(
+        currentDatabase,
+        sessionProfile.profileId,
+      ),
+    );
   }
 
   /**
@@ -1082,6 +1221,36 @@ export function usePadelitoMvp() {
 
     setLocalDatabase((currentDatabase) =>
       markNotificationsAsRead(currentDatabase, sessionProfile.profileId),
+    );
+  }
+
+  /**
+   * Elimina una notificacion propia.
+   * Se construye para respaldar swipe-to-delete.
+   * Lo usa NotificationsScreen.
+   * Sirve para limpiar la bandeja sin afectar historial de partidos.
+   */
+  function handleNotificationDelete(notificationId: string) {
+    if (!sessionProfile) {
+      return;
+    }
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() =>
+        supabaseRepository.deleteNotification(
+          notificationId,
+          sessionProfile.profileId,
+        ),
+      );
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      deleteNotification(
+        currentDatabase,
+        notificationId,
+        sessionProfile.profileId,
+      ),
     );
   }
 
@@ -1161,17 +1330,21 @@ export function usePadelitoMvp() {
     handlePasswordUpdateRequest,
     handleDirectInvitationCreate,
     handleDirectInvitationCancel,
+    handleDirectInvitationDelete,
     handleDirectInvitationStatusChange,
     handleEventInteractionToggle,
-    handleFeedRefresh,
+    handleDataRefresh,
     handleFollowToggle,
     handlePublicProfileOpen,
     handleJoinRequestCreate,
     handleJoinRequestCancel,
+    handleJoinRequestDelete,
     handleJoinRequestStatusChange,
+    handleNotificationDelete,
     handleNotificationsRead,
     handlePostCreate,
     handlePostCancel,
+    handlePostDelete,
     handleMatchCancel,
     handleMatchCreate,
     handleMatchResultRecord,

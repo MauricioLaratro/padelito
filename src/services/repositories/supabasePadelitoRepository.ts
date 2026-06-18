@@ -247,6 +247,14 @@ export function createSupabasePadelitoRepository(
             }
           : profile,
     );
+    const synchronizedNotificationRows =
+      await ensureMatchResultReminderNotifications(
+        user.id,
+        matchRecordRows,
+        matchResultRows,
+        postRows,
+        notificationRows,
+      );
 
     return {
       profiles: profilesWithSessionPrivateContact,
@@ -270,7 +278,7 @@ export function createSupabasePadelitoRepository(
       recurringChallengeParticipants: recurringChallengeParticipantRows.map(
         mapSupabaseRecurringChallengeParticipantRow,
       ),
-      notifications: notificationRows.map(mapSupabaseNotificationRow),
+      notifications: synchronizedNotificationRows.map(mapSupabaseNotificationRow),
       sessionProfileId: user.id,
       quickAccessPromptDismissed: false,
     };
@@ -371,6 +379,27 @@ export function createSupabasePadelitoRepository(
 
     if (error) {
       throw createSupabaseError("cancelar publicacion", error);
+    }
+  }
+
+  /**
+   * Elimina una publicacion propia de Supabase.
+   * Se construye para limpiar actividad cancelada del perfil.
+   * Lo usa ProfileActivitySection.
+   * Sirve para separar historial de partidos del feed operativo.
+   */
+  async function deletePost(
+    postId: string,
+    authorProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("posts")
+      .delete()
+      .eq("id", postId)
+      .eq("author_profile_id", authorProfileId);
+
+    if (error) {
+      throw createSupabaseError("eliminar publicacion", error);
     }
   }
 
@@ -486,6 +515,33 @@ export function createSupabasePadelitoRepository(
     if (matchError) {
       throw createSupabaseError("finalizar partido", matchError);
     }
+
+    const matchParticipants = await readRows<SupabaseMatchParticipantRow>(
+      supabaseClient
+        .from("match_participants")
+        .select("*")
+        .eq("match_id", matchResult.matchId)
+        .returns<SupabaseMatchParticipantRow[]>(),
+      "leer participantes para notificar resultado",
+    );
+
+    await Promise.all(
+      matchParticipants
+        .filter(
+          (matchParticipant) =>
+            matchParticipant.profile_id !== ownerProfileId,
+        )
+        .map((matchParticipant) =>
+          createNotification({
+            recipientProfileId: matchParticipant.profile_id,
+            actorProfileId: ownerProfileId,
+            notificationType: "match_result_recorded",
+            relatedMatchId: matchResult.matchId,
+            title: "Resultado confirmado",
+            body: "El organizador cargo el resultado del partido.",
+          }),
+        ),
+    );
   }
 
   /**
@@ -689,24 +745,62 @@ export function createSupabasePadelitoRepository(
   }
 
   /**
-   * Cancela una solicitud pendiente propia.
-   * Se construye para permitir arrepentimiento con backend real.
+   * Cancela una solicitud o participacion aceptada.
+   * Se construye para liberar cupos desde base de datos.
    * Lo usan feed y perfil.
-   * Sirve para retirar postulacion sin borrar historial.
+   * Sirve para retirar postulaciones o jugadores confirmados.
    */
   async function cancelMatchJoinRequest(
     requestId: string,
-    requesterProfileId: string,
+    actorProfileId: string,
   ): Promise<void> {
+    const { error: cancelRequestError } = await supabaseClient.rpc(
+      "cancel_match_join_request",
+      {
+        request_id_input: requestId,
+      },
+    );
+
+    if (!cancelRequestError) {
+      return;
+    }
+
+    if (!isMissingSchemaFeatureError(cancelRequestError)) {
+      throw createSupabaseError("cancelar solicitud", cancelRequestError);
+    }
+
     const { error } = await supabaseClient
       .from("match_join_requests")
       .update({ status: "cancelled" })
       .eq("id", requestId)
-      .eq("requester_profile_id", requesterProfileId)
+      .eq("requester_profile_id", actorProfileId)
       .eq("status", "pending");
 
     if (error) {
       throw createSupabaseError("cancelar solicitud", error);
+    }
+  }
+
+  /**
+   * Elimina una solicitud cerrada.
+   * Se construye para limpiar actividad del perfil.
+   * Lo usa ProfileActivitySection.
+   * Sirve para evitar que canceladas y rechazadas acumulen scroll.
+   */
+  async function deleteMatchJoinRequest(
+    requestId: string,
+    actorProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("match_join_requests")
+      .delete()
+      .eq("id", requestId)
+      .or(
+        `requester_profile_id.eq.${actorProfileId},owner_profile_id.eq.${actorProfileId}`,
+      );
+
+    if (error) {
+      throw createSupabaseError("eliminar solicitud", error);
     }
   }
 
@@ -881,24 +975,62 @@ export function createSupabasePadelitoRepository(
   }
 
   /**
-   * Cancela una invitacion directa pendiente enviada.
-   * Se construye para que el invitador pueda retirar una propuesta.
+   * Cancela una invitacion directa o participacion aceptada.
+   * Se construye para liberar cupos y participantes desde base.
    * Lo usa la actividad del perfil.
-   * Sirve para mantener control sobre invitaciones propias.
+   * Sirve para retirar propuestas o jugadores confirmados.
    */
   async function cancelDirectMatchInvitation(
     invitationId: string,
-    inviterProfileId: string,
+    actorProfileId: string,
   ): Promise<void> {
+    const { error: cancelInvitationError } = await supabaseClient.rpc(
+      "cancel_direct_match_invitation",
+      {
+        invitation_id_input: invitationId,
+      },
+    );
+
+    if (!cancelInvitationError) {
+      return;
+    }
+
+    if (!isMissingSchemaFeatureError(cancelInvitationError)) {
+      throw createSupabaseError("cancelar invitacion", cancelInvitationError);
+    }
+
     const { error } = await supabaseClient
       .from("direct_match_invitations")
       .update({ status: "cancelled" })
       .eq("id", invitationId)
-      .eq("inviter_profile_id", inviterProfileId)
+      .eq("inviter_profile_id", actorProfileId)
       .eq("status", "pending");
 
     if (error) {
       throw createSupabaseError("cancelar invitacion", error);
+    }
+  }
+
+  /**
+   * Elimina una invitacion cerrada.
+   * Se construye para limpiar actividad del perfil.
+   * Lo usa ProfileActivitySection.
+   * Sirve para evitar acumulacion de cards antiguas.
+   */
+  async function deleteDirectMatchInvitation(
+    invitationId: string,
+    actorProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("direct_match_invitations")
+      .delete()
+      .eq("id", invitationId)
+      .or(
+        `inviter_profile_id.eq.${actorProfileId},invited_profile_id.eq.${actorProfileId}`,
+      );
+
+    if (error) {
+      throw createSupabaseError("eliminar invitacion", error);
     }
   }
 
@@ -971,6 +1103,27 @@ export function createSupabasePadelitoRepository(
 
     if (error) {
       throw createSupabaseError("marcar notificaciones como leidas", error);
+    }
+  }
+
+  /**
+   * Elimina una notificacion propia en Supabase.
+   * Se construye para respaldar el gesto swipe-to-delete.
+   * Lo usa NotificationsScreen.
+   * Sirve para mantener la bandeja limpia y persistente.
+   */
+  async function deleteNotification(
+    notificationId: string,
+    recipientProfileId: string,
+  ): Promise<void> {
+    const { error } = await supabaseClient
+      .from("notifications")
+      .delete()
+      .eq("id", notificationId)
+      .eq("recipient_profile_id", recipientProfileId);
+
+    if (error) {
+      throw createSupabaseError("eliminar notificacion", error);
     }
   }
 
@@ -1133,16 +1286,82 @@ export function createSupabasePadelitoRepository(
     }
   }
 
+  /**
+   * Asegura recordatorios de resultado pendientes.
+   * Se construye para materializar avisos durante cada snapshot remoto.
+   * Lo usa loadApplicationSnapshot.
+   * Sirve para pedir resultado cuando un partido propio ya termino.
+   */
+  async function ensureMatchResultReminderNotifications(
+    ownerProfileId: string,
+    matchRows: SupabaseMatchRecordRow[],
+    resultRows: SupabaseMatchResultRow[],
+    postRows: SupabasePostRow[],
+    notificationRows: SupabaseNotificationRow[],
+  ): Promise<SupabaseNotificationRow[]> {
+    const dueMatchRows = matchRows.filter(
+      (matchRow) =>
+        matchRow.owner_profile_id === ownerProfileId &&
+        matchRow.status === "scheduled" &&
+        isMatchPastResultReminderTime(matchRow, postRows) &&
+        !resultRows.some((resultRow) => resultRow.match_id === matchRow.id) &&
+        !notificationRows.some(
+          (notificationRow) =>
+            notificationRow.recipient_profile_id === ownerProfileId &&
+            notificationRow.related_match_id === matchRow.id &&
+            notificationRow.notification_type === "match_result_reminder",
+        ),
+    );
+
+    if (dueMatchRows.length === 0) {
+      return notificationRows;
+    }
+
+    const { error } = await supabaseClient.from("notifications").insert(
+      dueMatchRows.map((matchRow) =>
+        mapNotificationToSupabaseInsert({
+          recipientProfileId: ownerProfileId,
+          actorProfileId: ownerProfileId,
+          notificationType: "match_result_reminder",
+          relatedMatchId: matchRow.id,
+          title: "Como termino el partido?",
+          body: "El partido ya deberia haber terminado. Carga el resultado cuando puedas.",
+        }),
+      ),
+    );
+
+    if (error) {
+      if (isMissingSchemaFeatureError(error)) {
+        return notificationRows;
+      }
+
+      throw createSupabaseError("crear recordatorio de resultado", error);
+    }
+
+    return readRows<SupabaseNotificationRow>(
+      supabaseClient
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .returns<SupabaseNotificationRow[]>(),
+      "leer notificaciones actualizadas",
+    );
+  }
+
   return {
     cancelMatch,
     cancelMatchJoinRequest,
     cancelDirectMatchInvitation,
     cancelPost,
+    deletePost,
     createDirectMatchInvitation,
     createMatch,
     createMatchJoinRequest,
     createPost,
     createRecurringChallenge,
+    deleteDirectMatchInvitation,
+    deleteMatchJoinRequest,
+    deleteNotification,
     updateRecurringChallengeStatus,
     loadApplicationSnapshot,
     getPrivateProfileContact,
@@ -1363,6 +1582,44 @@ function appendConfirmedPlayerName(
 }
 
 /**
+ * Verifica si un partido ya deberia pedir resultado.
+ * Se construye para crear recordatorios sin scheduler externo.
+ * Lo usa ensureMatchResultReminderNotifications.
+ * Sirve para refrescar avisos al abrir la app.
+ */
+function isMatchPastResultReminderTime(
+  matchRow: SupabaseMatchRecordRow,
+  postRows: SupabasePostRow[],
+) {
+  const sourcePost = matchRow.source_post_id
+    ? postRows.find((postRow) => postRow.id === matchRow.source_post_id)
+    : null;
+  const reminderTime =
+    sourcePost?.scheduled_end_time?.slice(0, 5) ??
+    addMinutesToTimeValue(matchRow.scheduled_start_time, 90);
+  const reminderDateTime = new Date(
+    `${matchRow.scheduled_date}T${reminderTime}:00`,
+  );
+
+  return reminderDateTime.getTime() <= Date.now();
+}
+
+/**
+ * Suma minutos a un valor de hora SQL.
+ * Se construye como fallback cuando no hay hora de fin.
+ * Lo usa isMatchPastResultReminderTime.
+ * Sirve para evitar cambiar el modelo de partido en esta iteracion.
+ */
+function addMinutesToTimeValue(timeValue: string, minutesToAdd: number) {
+  const [hours, minutes] = timeValue.slice(0, 5).split(":").map(Number);
+  const dateValue = new Date(2000, 0, 1, hours, minutes + minutesToAdd);
+  const nextHours = `${dateValue.getHours()}`.padStart(2, "0");
+  const nextMinutes = `${dateValue.getMinutes()}`.padStart(2, "0");
+
+  return `${nextHours}:${nextMinutes}`;
+}
+
+/**
  * Detecta errores provocados por una base todavia sin la ultima migracion.
  * Se construye para degradar flujos nuevos en vez de mostrar errores tecnicos.
  * Lo usa el repositorio Supabase en RPC e inserts nuevos.
@@ -1378,7 +1635,9 @@ function isMissingSchemaFeatureError(error: SupabaseRepositoryError) {
     normalizedMessage.includes("related_match_id") ||
     normalizedMessage.includes("source_post_id") ||
     normalizedMessage.includes("answer_match_join_request") ||
-    normalizedMessage.includes("answer_direct_match_invitation")
+    normalizedMessage.includes("answer_direct_match_invitation") ||
+    normalizedMessage.includes("cancel_match_join_request") ||
+    normalizedMessage.includes("cancel_direct_match_invitation")
   );
 }
 

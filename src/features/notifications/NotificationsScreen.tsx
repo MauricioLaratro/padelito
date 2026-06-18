@@ -6,14 +6,17 @@ import {
   ChevronRight,
   MapPin,
   MessageCircle,
+  Trash2,
   UserRound,
   UsersRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import type { ReactNode, TouchEvent } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
+import { PullToRefresh } from "../../components/common/PullToRefresh";
 import {
   invitationStatusLabels,
   requestStatusLabels,
@@ -39,6 +42,8 @@ interface NotificationsScreenProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
+  onDataRefresh: () => void;
+  onNotificationDelete: (notificationId: string) => void;
   onNotificationsRead: () => void;
   onPrivateContactOpen: (profileId: string) => void;
   onProfileOpen: (profileId: string) => void;
@@ -57,6 +62,8 @@ export function NotificationsScreen({
   onDirectInvitationStatusChange,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
+  onDataRefresh,
+  onNotificationDelete,
   onNotificationsRead,
   onPrivateContactOpen,
   onProfileOpen,
@@ -73,7 +80,10 @@ export function NotificationsScreen({
     );
 
   return (
-    <section className="grid gap-3 px-4 pb-28 pt-4">
+    <PullToRefresh
+      className="grid gap-3 px-4 pb-28 pt-4"
+      onRefresh={onDataRefresh}
+    >
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
@@ -88,9 +98,10 @@ export function NotificationsScreen({
 
       {visibleNotifications.length > 0 ? (
         visibleNotifications.map((notification) => (
-          <article
-            className="rounded-lg border border-border-subtle bg-surface-primary p-4"
+          <SwipeableNotificationCard
             key={notification.notificationId}
+            notification={notification}
+            onDelete={onNotificationDelete}
           >
             <button
               className="flex w-full items-start gap-3 text-left"
@@ -130,20 +141,30 @@ export function NotificationsScreen({
             </button>
 
             {selectedNotificationId === notification.notificationId ? (
-              <NotificationDetail
-                currentProfileId={currentProfileId}
-                database={database}
-                notification={notification}
-                onDirectInvitationStatusChange={
-                  onDirectInvitationStatusChange
-                }
-                onJoinRequestCancel={onJoinRequestCancel}
-                onJoinRequestStatusChange={onJoinRequestStatusChange}
-                onPrivateContactOpen={onPrivateContactOpen}
-                onProfileOpen={onProfileOpen}
-              />
+              <>
+                <NotificationDetail
+                  currentProfileId={currentProfileId}
+                  database={database}
+                  notification={notification}
+                  onDirectInvitationStatusChange={
+                    onDirectInvitationStatusChange
+                  }
+                  onJoinRequestCancel={onJoinRequestCancel}
+                  onJoinRequestStatusChange={onJoinRequestStatusChange}
+                  onPrivateContactOpen={onPrivateContactOpen}
+                  onProfileOpen={onProfileOpen}
+                />
+                <Button
+                  className="mt-3"
+                  icon={Trash2}
+                  onClick={() => onNotificationDelete(notification.notificationId)}
+                  variant="secondary"
+                >
+                  Eliminar
+                </Button>
+              </>
             ) : null}
-          </article>
+          </SwipeableNotificationCard>
         ))
       ) : (
         <EmptyState
@@ -152,7 +173,89 @@ export function NotificationsScreen({
           title="Sin notificaciones"
         />
       )}
-    </section>
+    </PullToRefresh>
+  );
+}
+
+interface SwipeableNotificationCardProps {
+  children: ReactNode;
+  notification: InternalNotification;
+  onDelete: (notificationId: string) => void;
+}
+
+/**
+ * Card de notificacion con gesto de eliminar.
+ * Se construye para limpiar avisos con swipe hacia la derecha.
+ * Lo usa NotificationsScreen.
+ * Sirve para una bandeja operativa al estilo mobile.
+ */
+function SwipeableNotificationCard({
+  children,
+  notification,
+  onDelete,
+}: SwipeableNotificationCardProps) {
+  const [dragDistance, setDragDistance] = useState(0);
+  const dragStartX = useRef<number | null>(null);
+
+  /**
+   * Guarda inicio horizontal del gesto.
+   * Se construye para distinguir swipe de scroll vertical.
+   * Lo usa touchstart.
+   * Sirve para detectar eliminacion intencional.
+   */
+  function handleTouchStart(touchEvent: TouchEvent<HTMLElement>) {
+    dragStartX.current = touchEvent.touches[0]?.clientX ?? null;
+  }
+
+  /**
+   * Actualiza desplazamiento visual de la card.
+   * Se construye para dar feedback antes de borrar.
+   * Lo usa touchmove.
+   * Sirve para que el gesto se entienda sin texto extra.
+   */
+  function handleTouchMove(touchEvent: TouchEvent<HTMLElement>) {
+    if (dragStartX.current === null) {
+      return;
+    }
+
+    const currentX = touchEvent.touches[0]?.clientX ?? dragStartX.current;
+    setDragDistance(Math.min(Math.max(0, currentX - dragStartX.current), 96));
+  }
+
+  /**
+   * Borra si el swipe supera el umbral.
+   * Se construye para evitar eliminaciones accidentales.
+   * Lo usa touchend/touchcancel.
+   * Sirve para persistir limpieza de bandeja.
+   */
+  function handleTouchEnd() {
+    const shouldDelete = dragDistance >= 72;
+    dragStartX.current = null;
+    setDragDistance(0);
+
+    if (shouldDelete) {
+      onDelete(notification.notificationId);
+    }
+  }
+
+  return (
+    <article
+      className="relative overflow-hidden rounded-lg border border-border-subtle bg-surface-primary"
+      onTouchCancel={handleTouchEnd}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onTouchStart={handleTouchStart}
+    >
+      <div className="absolute inset-y-0 left-0 grid w-24 place-items-center bg-feedback-danger/20 text-feedback-danger">
+        <Trash2 aria-hidden="true" size={18} />
+      </div>
+      <div
+        className="relative bg-surface-primary p-4 transition-transform"
+        style={{ transform: `translateX(${dragDistance}px)` }}
+      >
+        {children}
+      </div>
+    </article>
   );
 }
 

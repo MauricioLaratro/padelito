@@ -90,9 +90,27 @@ export function App() {
       post.missingPlayersCount > 0,
   );
   const availableInvitationMatches = padelitoMvp.database.matchRecords.filter(
-    (matchRecord) =>
-      matchRecord.ownerProfileId === currentSessionProfile.profileId &&
-      matchRecord.status === "scheduled",
+    (matchRecord) => {
+      if (
+        matchRecord.ownerProfileId !== currentSessionProfile.profileId ||
+        matchRecord.status !== "scheduled"
+      ) {
+        return false;
+      }
+
+      const sourcePost = matchRecord.sourcePostId
+        ? padelitoMvp.database.posts.find(
+            (post) => post.postId === matchRecord.sourcePostId,
+          )
+        : null;
+
+      return (
+        !sourcePost ||
+        (sourcePost.postType === "looking_for_player" &&
+          sourcePost.isActive &&
+          sourcePost.missingPlayersCount > 0)
+      );
+    },
   );
 
   /**
@@ -138,6 +156,22 @@ export function App() {
   }
 
   /**
+   * Solicita confirmacion para eliminar publicacion cerrada.
+   * Se construye para limpiar perfil sin borrar partidos estructurados.
+   * Lo usa ProfileScreen.
+   * Sirve para retirar actividad operativa antigua.
+   */
+  function confirmPostDelete(postId: string) {
+    requestConfirmation({
+      body: "La publicacion se elimina de tu actividad. El partido estructurado, si existe, queda en historial.",
+      confirmLabel: "Eliminar",
+      onConfirm: () => padelitoMvp.handlePostDelete(postId),
+      title: "Eliminar publicacion",
+      tone: "danger",
+    });
+  }
+
+  /**
    * Solicita confirmacion para cancelar solicitud.
    * Se construye para evitar retirar postulaciones por accidente.
    * Lo usan feed, notificaciones y perfil.
@@ -145,10 +179,26 @@ export function App() {
    */
   function confirmJoinRequestCancel(requestId: string) {
     requestConfirmation({
-      body: "Vas a retirar tu solicitud pendiente para este partido.",
+      body: "Vas a retirar esta solicitud o participacion. Si ya estaba aceptada, se libera el cupo.",
       confirmLabel: "Cancelar",
       onConfirm: () => padelitoMvp.handleJoinRequestCancel(requestId),
       title: "Cancelar solicitud",
+    });
+  }
+
+  /**
+   * Solicita confirmacion para eliminar solicitud cerrada.
+   * Se construye para limpiar actividad sin tocar partidos activos.
+   * Lo usa ProfileScreen.
+   * Sirve para quitar cards canceladas o rechazadas.
+   */
+  function confirmJoinRequestDelete(requestId: string) {
+    requestConfirmation({
+      body: "La solicitud se elimina de tu actividad.",
+      confirmLabel: "Eliminar",
+      onConfirm: () => padelitoMvp.handleJoinRequestDelete(requestId),
+      title: "Eliminar solicitud",
+      tone: "danger",
     });
   }
 
@@ -160,10 +210,26 @@ export function App() {
    */
   function confirmDirectInvitationCancel(invitationId: string) {
     requestConfirmation({
-      body: "La invitacion pendiente se retira y el jugador ya no podra aceptarla.",
+      body: "La invitacion se cancela. Si ya estaba aceptada, se libera el cupo y se retira al jugador.",
       confirmLabel: "Cancelar",
       onConfirm: () => padelitoMvp.handleDirectInvitationCancel(invitationId),
       title: "Cancelar invitacion",
+    });
+  }
+
+  /**
+   * Solicita confirmacion para eliminar invitacion cerrada.
+   * Se construye para limpiar actividad antigua.
+   * Lo usa ProfileScreen.
+   * Sirve para evitar scroll acumulado en el perfil.
+   */
+  function confirmDirectInvitationDelete(invitationId: string) {
+    requestConfirmation({
+      body: "La invitacion se elimina de tu actividad.",
+      confirmLabel: "Eliminar",
+      onConfirm: () => padelitoMvp.handleDirectInvitationDelete(invitationId),
+      title: "Eliminar invitacion",
+      tone: "danger",
     });
   }
 
@@ -348,7 +414,7 @@ export function App() {
             onInvitationStart={padelitoMvp.setInvitedProfileId}
             onJoinRequestCancel={confirmJoinRequestCancel}
             onJoinRequestCreate={padelitoMvp.handleJoinRequestCreate}
-            onFeedRefresh={padelitoMvp.handleFeedRefresh}
+            onFeedRefresh={padelitoMvp.handleDataRefresh}
             onPostCancel={confirmPostCancel}
             onPostCreateStart={() => padelitoMvp.setIsCreatePostOpen(true)}
             onProfileOpen={padelitoMvp.handlePublicProfileOpen}
@@ -361,6 +427,7 @@ export function App() {
         <PlayerSearchScreen
           currentProfileId={currentSessionProfile.profileId}
           database={padelitoMvp.database}
+          onDataRefresh={padelitoMvp.handleDataRefresh}
           onFollowToggle={padelitoMvp.handleFollowToggle}
           onInvitationStart={padelitoMvp.setInvitedProfileId}
           onProfileSelect={padelitoMvp.setSelectedPublicProfileId}
@@ -376,8 +443,10 @@ export function App() {
           onDirectInvitationStatusChange={
             handleDirectInvitationStatusChange
           }
+          onDataRefresh={padelitoMvp.handleDataRefresh}
           onJoinRequestCancel={confirmJoinRequestCancel}
           onJoinRequestStatusChange={handleJoinRequestStatusChange}
+          onNotificationDelete={padelitoMvp.handleNotificationDelete}
           onNotificationsRead={padelitoMvp.handleNotificationsRead}
           onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onProfileOpen={padelitoMvp.handlePublicProfileOpen}
@@ -392,7 +461,10 @@ export function App() {
             handleDirectInvitationStatusChange
           }
           onDirectInvitationCancel={confirmDirectInvitationCancel}
+          onDirectInvitationDelete={confirmDirectInvitationDelete}
+          onDataRefresh={padelitoMvp.handleDataRefresh}
           onJoinRequestCancel={confirmJoinRequestCancel}
+          onJoinRequestDelete={confirmJoinRequestDelete}
           onJoinRequestStatusChange={handleJoinRequestStatusChange}
           onMatchCancel={confirmMatchCancel}
           onMatchCreate={padelitoMvp.handleMatchCreate}
@@ -406,6 +478,7 @@ export function App() {
           }
           onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
           onPostCancel={confirmPostCancel}
+          onPostDelete={confirmPostDelete}
           onProfileSave={padelitoMvp.handleProfileSave}
           onQuickAccessReset={padelitoMvp.handleQuickAccessShow}
           onSignOut={padelitoMvp.handleSignOut}

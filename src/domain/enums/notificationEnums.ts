@@ -7,4 +7,6 @@ export type NotificationType =
   | "direct_match_invitation_accepted"
   | "direct_match_invitation_rejected"
   | "event_reminder"
+  | "match_result_reminder"
+  | "match_result_recorded"
   | "match_reminder";

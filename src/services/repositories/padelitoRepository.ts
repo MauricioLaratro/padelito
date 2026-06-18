@@ -70,6 +70,7 @@ export interface PadelitoRepository {
   saveProfile: (updatedProfile: Profile) => Promise<void>;
   createPost: (post: Post) => Promise<void>;
   cancelPost: (postId: string, authorProfileId: string) => Promise<void>;
+  deletePost: (postId: string, authorProfileId: string) => Promise<void>;
   createMatch: (matchInput: CreateMatchInput) => Promise<void>;
   cancelMatch: (matchId: string, ownerProfileId: string) => Promise<void>;
   recordMatchResult: (
@@ -96,7 +97,11 @@ export interface PadelitoRepository {
   ) => Promise<void>;
   cancelMatchJoinRequest: (
     requestId: string,
-    requesterProfileId: string,
+    actorProfileId: string,
+  ) => Promise<void>;
+  deleteMatchJoinRequest: (
+    requestId: string,
+    actorProfileId: string,
   ) => Promise<void>;
   updateMatchJoinRequestStatus: (
     requestId: string,
@@ -108,7 +113,11 @@ export interface PadelitoRepository {
   ) => Promise<void>;
   cancelDirectMatchInvitation: (
     invitationId: string,
-    inviterProfileId: string,
+    actorProfileId: string,
+  ) => Promise<void>;
+  deleteDirectMatchInvitation: (
+    invitationId: string,
+    actorProfileId: string,
   ) => Promise<void>;
   updateDirectMatchInvitationStatus: (
     invitationId: string,
@@ -120,6 +129,10 @@ export interface PadelitoRepository {
     interactionType: EventInteractionType,
   ) => Promise<void>;
   markNotificationsAsRead: (recipientProfileId: string) => Promise<void>;
+  deleteNotification: (
+    notificationId: string,
+    recipientProfileId: string,
+  ) => Promise<void>;
   getPrivateProfileContact: (
     targetProfileId: string,
   ) => Promise<PrivateProfileContact | null>;

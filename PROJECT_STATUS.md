@@ -16,6 +16,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - `.env.local` creado localmente con URL y publishable key de Supabase. No se versiona.
 - Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos, enlace entre feed social y partidos, y desafios recurrentes.
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
+- Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
 
 ## Comprension del producto
 
@@ -50,6 +51,11 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El formulario de perfil se reutiliza entre onboarding y edicion para evitar duplicar reglas.
 - El avatar de perfil se maneja con componente reutilizable, recorte cuadrado client-side y persistencia en el bucket `avatars`.
 - El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
+- Feed, jugadores, notificaciones y perfil comparten un componente reutilizable de pull-to-refresh que recarga el snapshot remoto.
+- La bandeja de notificaciones es operativa: se puede marcar todo como leido o eliminar avisos propios con gesto hacia la derecha.
+- Solicitudes e invitaciones aceptadas pueden cancelarse desde ambos lados del vinculo y liberan cupo/participante cuando corresponde.
+- Los recordatorios de resultado se materializan al refrescar/abrir la app cuando un partido propio programado ya termino.
+- Cuando el creador registra resultado, los participantes reciben una notificacion informativa.
 
 ## Riesgos tecnicos
 
@@ -62,6 +68,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Las fotos de perfil subidas a Storage pueden dejar archivos anteriores sin limpiar; para MVP se acepta y queda como optimizacion futura si el volumen crece.
 - La RLS de desafios recurrentes tambien evita recursion directa; se centraliza lectura en `can_read_recurring_challenge(uuid, uuid)`.
 - Las aceptaciones sociales ahora modifican cupos y participantes desde RPC security definer para evitar writes directos inseguros desde cliente.
+- Las cancelaciones de participaciones aceptadas dependen de RPC security definer para mantener consistencia entre `posts`, `match_records` y `match_participants`.
+- Los recordatorios de resultado no usan scheduler externo en el MVP; se crean al cargar/refrescar snapshot, por lo que no existen hasta que el creador vuelve a abrir o refrescar la app.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -197,6 +205,20 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - esto mantiene bloqueada la edicion directa de `match_stats_reset_at` sin pedir `UPDATE` total sobre `profiles`;
   - prueba directa contra Supabase confirmo update de WhatsApp sin error `42501`;
   - prueba directa contra Storage confirmo subida permitida al bucket `avatars`.
+- Actividad operativa y refresco:
+  - migracion `202606180002_activity_refresh_and_cancellations.sql` aplicada en Supabase Cloud;
+  - `notifications.related_match_id` instalado para enlazar recordatorios y resultados con partidos;
+  - RPCs `cancel_match_join_request(uuid)` y `cancel_direct_match_invitation(uuid)` instaladas y verificadas;
+  - RPC `answer_direct_match_invitation` actualizada para descontar cupo aunque la invitacion venga vinculada por `related_match_id`;
+  - feed, jugadores, notificaciones y perfil usan pull-to-refresh compartido;
+  - notificaciones propias pueden eliminarse con swipe hacia la derecha o boton contextual;
+  - perfil permite eliminar publicaciones canceladas, solicitudes cerradas e invitaciones cerradas;
+  - perfil permite cancelar participaciones aceptadas desde organizador o jugador;
+  - `npm run build` pasa;
+  - `npm run lint` pasa;
+  - `npm run qa:supabase` pasa con `test@padelito.test` y `test2@padelito.test`;
+  - verificacion puntual confirma columna `notifications.related_match_id` y RPCs de cancelacion disponibles;
+  - navegador integrado cargo `http://127.0.0.1:5173/` sin errores de consola.
 
 ## Git
 
@@ -210,8 +232,20 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit GitHub: `2b7b811 Documentar publicacion en GitHub`.
 - Commit Supabase/Auth: `acf5a94 Conectar Supabase y auth real`.
 - Commit logout/UI: `72fc11a Agregar cierre de sesion y limpiar UI`.
+- Commit login diario: `eae4a22 Agregar login con contrasena y sesion persistente`.
+- Commit acceso/marca: `c800185 Corregir acceso y actualizar marca`.
+- Commit test/busqueda: `e73ae49 Documentar usuario de prueba y busqueda de jugadores`.
+- Commit invitaciones/cupos: `dc4d4b0 Vincular invitaciones a partidos y cupos`.
+- Commit gestion social: `edc76d3 Completar gestion social y privacidad`.
 - Commit perfil/contacto: `3c0cefe Completar perfil y contacto privado`.
+- Commit historial: `d24f0ed Agregar historial de partidos y estadisticas`.
 - Commit enlace partidos/social: `194ee3e Vincular partidos con solicitudes e invitaciones`.
+- Commit desafios: `1fb0348 Agregar desafios recurrentes`.
+- Commit archivar desafios: `5debea7 Permitir archivar desafios recurrentes`.
+- Commit QA/privacidad: `852947b Cerrar QA y privacidad del MVP`.
+- Commit reset score: `62812ee Ajustar historial y reset de score`.
+- Commit UX perfil: `0c07089 Refinar perfil y experiencia mobile`.
+- Commit permisos perfil: `61f614b Corregir permisos al guardar perfil`.
 
 ## Regla de idioma
 
@@ -221,8 +255,10 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 ## Pendientes inmediatos
 
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
+- Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
+- Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
-- Revisar acciones destructivas restantes en publicaciones, partidos, invitaciones, desafios e historial secundario.
+- Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
 - Preparar deploy Cloudflare Pages.

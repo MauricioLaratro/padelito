@@ -168,6 +168,7 @@ supabase/
     202606110001_link_matches_to_social_flows.sql
     202606110002_recurring_challenges.sql
     202606180001_profile_match_stats_reset.sql
+    202606180002_activity_refresh_and_cancellations.sql
 ```
 
 ## Modulo Partidos e Historial implementado
@@ -195,6 +196,7 @@ Principios:
 - participantes aceptados por solicitud o invitacion vinculada tambien entran en `match_participants`;
 - resultados viven en `match_results`;
 - resultados solo pueden registrarse o editarse desde el creador del partido;
+- al registrar resultado se notifican los participantes no organizadores;
 - estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
 - `profiles.matchStatsResetAt` permite resetear score visible sin borrar ni editar resultados historicos;
 - desafios recurrentes viven como entidad propia;
@@ -206,6 +208,20 @@ La Etapa 9 no debe introducir ranking global ni cambiar el posicionamiento socia
 Pendiente arquitectonico:
 
 - evaluar agregados/materialized views solo si el volumen futuro lo justifica.
+- separar historial operativo antiguo de la actividad diaria si el perfil necesita mas densidad.
+
+## Actividad, refresco y notificaciones
+
+La app usa snapshot completo como contrato entre repositorios y UI. Para evitar estados viejos despues de acciones cruzadas:
+
+- las escrituras remotas pasan por `runRemoteAction` y recargan snapshot al finalizar;
+- feed, jugadores, notificaciones y perfil usan `PullToRefresh`;
+- el foco del navegador y el cambio de vista recargan snapshot cuando hay sesion Supabase completa;
+- la bandeja de notificaciones permite eliminar avisos propios sin borrar entidades historicas;
+- solicitudes e invitaciones aceptadas se cancelan por RPC para liberar cupo y remover participante;
+- los recordatorios de resultado se crean al cargar/refrescar snapshot cuando un partido propio ya termino y no tiene resultado.
+
+Esta decision evita introducir realtime/scheduler antes de validar uso real. Si el MVP necesita actualizacion instantanea entre dispositivos, el siguiente paso natural es Supabase Realtime sobre posts, solicitudes, invitaciones y notificaciones.
 
 ## Decision reversible actual
 

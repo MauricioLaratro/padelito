@@ -248,6 +248,25 @@ export function cancelPost(
 }
 
 /**
+ * Elimina una publicacion propia cancelada.
+ * Se construye para limpiar actividad que ya no debe ocupar el perfil.
+ * Lo usa ProfileActivitySection.
+ * Sirve para evitar historiales operativos infinitos dentro del perfil.
+ */
+export function deletePost(
+  database: PadelitoLocalDatabase,
+  postId: string,
+  authorProfileId: string,
+) {
+  return {
+    ...database,
+    posts: database.posts.filter(
+      (post) => post.postId !== postId || post.authorProfileId !== authorProfileId,
+    ),
+  };
+}
+
+/**
  * Crea un partido con participantes normalizados.
  * Se construye para separar historial real de publicaciones del feed.
  * Lo usan formularios de partido.
@@ -340,6 +359,23 @@ export function recordMatchResult(
     return database;
   }
 
+  const participantNotifications = database.matchParticipants
+    .filter(
+      (matchParticipant) =>
+        matchParticipant.matchId === matchResult.matchId &&
+        matchParticipant.profileId !== ownerProfileId,
+    )
+    .map((matchParticipant) =>
+      createNotification({
+        recipientProfileId: matchParticipant.profileId,
+        actorProfileId: ownerProfileId,
+        notificationType: "match_result_recorded",
+        relatedMatchId: matchResult.matchId,
+        title: "Resultado confirmado",
+        body: "El organizador cargo el resultado del partido.",
+      }),
+    );
+
   return {
     ...database,
     matchRecords: database.matchRecords.map((matchRecord) =>
@@ -359,6 +395,7 @@ export function recordMatchResult(
           currentMatchResult.matchId !== matchResult.matchId,
       ),
     ],
+    notifications: [...database.notifications, ...participantNotifications],
   };
 }
 
@@ -514,28 +551,80 @@ export function createMatchJoinRequest(
 }
 
 /**
- * Cancela una solicitud pendiente propia.
- * Se construye para permitir arrepentimiento sin bloquear al jugador.
+ * Cancela una solicitud propia o una participacion aceptada.
+ * Se construye para permitir arrepentimiento y liberar cupo.
  * Lo usan cards y actividad de perfil.
- * Sirve para que el solicitante pueda retirar su postulacion antes de una respuesta.
+ * Sirve para retirar postulaciones o jugadores ya confirmados.
  */
 export function cancelMatchJoinRequest(
   database: PadelitoLocalDatabase,
   requestId: string,
-  requesterProfileId: string,
+  actorProfileId: string,
 ) {
+  const request = database.matchJoinRequests.find(
+    (matchJoinRequest) => matchJoinRequest.requestId === requestId,
+  );
+
+  if (!request) {
+    return database;
+  }
+
+  const canCancelPending =
+    request.status === "pending" && request.requesterProfileId === actorProfileId;
+  const canCancelAccepted =
+    request.status === "accepted" &&
+    (request.requesterProfileId === actorProfileId ||
+      request.ownerProfileId === actorProfileId);
+
+  if (!canCancelPending && !canCancelAccepted) {
+    return database;
+  }
+
+  const currentTimestamp = createCurrentIsoDate();
+  const nextDatabase =
+    request.status === "accepted"
+      ? releaseAcceptedProfileFromLinkedPostAndMatch(
+          database,
+          request.postId,
+          undefined,
+          request.requesterProfileId,
+          currentTimestamp,
+        )
+      : database;
+
   return {
-    ...database,
-    matchJoinRequests: database.matchJoinRequests.map((matchJoinRequest) =>
-      matchJoinRequest.requestId === requestId &&
-      matchJoinRequest.requesterProfileId === requesterProfileId &&
-      matchJoinRequest.status === "pending"
+    ...nextDatabase,
+    matchJoinRequests: nextDatabase.matchJoinRequests.map((matchJoinRequest) =>
+      matchJoinRequest.requestId === requestId
         ? {
             ...matchJoinRequest,
             status: "cancelled" as const,
-            updatedAt: createCurrentIsoDate(),
+            updatedAt: currentTimestamp,
           }
         : matchJoinRequest,
+    ),
+  };
+}
+
+/**
+ * Elimina una solicitud cerrada del perfil.
+ * Se construye para limpiar cards canceladas o rechazadas.
+ * Lo usa ProfileActivitySection.
+ * Sirve para que la actividad diaria no crezca sin limite.
+ */
+export function deleteMatchJoinRequest(
+  database: PadelitoLocalDatabase,
+  requestId: string,
+  actorProfileId: string,
+) {
+  return {
+    ...database,
+    matchJoinRequests: database.matchJoinRequests.filter(
+      (matchJoinRequest) =>
+        matchJoinRequest.requestId !== requestId ||
+        matchJoinRequest.status === "pending" ||
+        (matchJoinRequest.requesterProfileId !== actorProfileId &&
+          matchJoinRequest.ownerProfileId !== actorProfileId),
     ),
   };
 }
@@ -795,29 +884,83 @@ export function updateDirectMatchInvitationStatus(
 }
 
 /**
- * Cancela una invitacion directa pendiente propia.
- * Se construye para permitir arrepentimiento del invitador.
+ * Cancela una invitacion directa o participacion aceptada.
+ * Se construye para permitir arrepentimiento y liberar cupo.
  * Lo usa la actividad del perfil.
- * Sirve para retirar invitaciones antes de que el destinatario responda.
+ * Sirve para retirar invitaciones o jugadores confirmados.
  */
 export function cancelDirectMatchInvitation(
   database: PadelitoLocalDatabase,
   invitationId: string,
-  inviterProfileId: string,
+  actorProfileId: string,
 ) {
+  const invitation = database.directMatchInvitations.find(
+    (directMatchInvitation) =>
+      directMatchInvitation.invitationId === invitationId,
+  );
+
+  if (!invitation) {
+    return database;
+  }
+
+  const canCancelPending =
+    invitation.status === "pending" &&
+    invitation.inviterProfileId === actorProfileId;
+  const canCancelAccepted =
+    invitation.status === "accepted" &&
+    (invitation.inviterProfileId === actorProfileId ||
+      invitation.invitedProfileId === actorProfileId);
+
+  if (!canCancelPending && !canCancelAccepted) {
+    return database;
+  }
+
+  const currentTimestamp = createCurrentIsoDate();
+  const nextDatabase =
+    invitation.status === "accepted"
+      ? releaseAcceptedProfileFromLinkedPostAndMatch(
+          database,
+          invitation.relatedPostId,
+          invitation.relatedMatchId,
+          invitation.invitedProfileId,
+          currentTimestamp,
+        )
+      : database;
+
   return {
-    ...database,
-    directMatchInvitations: database.directMatchInvitations.map(
+    ...nextDatabase,
+    directMatchInvitations: nextDatabase.directMatchInvitations.map(
       (directMatchInvitation) =>
-        directMatchInvitation.invitationId === invitationId &&
-        directMatchInvitation.inviterProfileId === inviterProfileId &&
-        directMatchInvitation.status === "pending"
+        directMatchInvitation.invitationId === invitationId
           ? {
               ...directMatchInvitation,
               status: "cancelled" as const,
-              updatedAt: createCurrentIsoDate(),
+              updatedAt: currentTimestamp,
             }
           : directMatchInvitation,
+    ),
+  };
+}
+
+/**
+ * Elimina una invitacion cerrada del perfil.
+ * Se construye para limpiar invitaciones canceladas o rechazadas.
+ * Lo usa ProfileActivitySection.
+ * Sirve para separar operacion diaria de historial.
+ */
+export function deleteDirectMatchInvitation(
+  database: PadelitoLocalDatabase,
+  invitationId: string,
+  actorProfileId: string,
+) {
+  return {
+    ...database,
+    directMatchInvitations: database.directMatchInvitations.filter(
+      (directMatchInvitation) =>
+        directMatchInvitation.invitationId !== invitationId ||
+        directMatchInvitation.status === "pending" ||
+        (directMatchInvitation.inviterProfileId !== actorProfileId &&
+          directMatchInvitation.invitedProfileId !== actorProfileId),
     ),
   };
 }
@@ -888,6 +1031,75 @@ export function markNotificationsAsRead(
           }
         : notification,
     ),
+  };
+}
+
+/**
+ * Elimina una notificacion propia.
+ * Se construye para soportar gesto de deslizar en la bandeja.
+ * Lo usa NotificationsScreen.
+ * Sirve para mantener la bandeja como espacio operativo, no historial infinito.
+ */
+export function deleteNotification(
+  database: PadelitoLocalDatabase,
+  notificationId: string,
+  recipientProfileId: string,
+) {
+  return {
+    ...database,
+    notifications: database.notifications.filter(
+      (notification) =>
+        notification.notificationId !== notificationId ||
+        notification.recipientProfileId !== recipientProfileId,
+    ),
+  };
+}
+
+/**
+ * Crea recordatorios locales para cargar resultado.
+ * Se construye para que refrescar tambien active tareas pendientes.
+ * Lo usa usePadelitoMvp en modo local.
+ * Sirve para avisar al creador cuando termino un partido sin resultado.
+ */
+export function createMatchResultReminderNotifications(
+  database: PadelitoLocalDatabase,
+  ownerProfileId: string,
+) {
+  const currentTimestamp = createCurrentIsoDate();
+  const reminderNotifications = database.matchRecords
+    .filter(
+      (matchRecord) =>
+        matchRecord.ownerProfileId === ownerProfileId &&
+        matchRecord.status === "scheduled" &&
+        isMatchPastResultReminderTime(database, matchRecord.matchId) &&
+        !database.matchResults.some(
+          (matchResult) => matchResult.matchId === matchRecord.matchId,
+        ) &&
+        !database.notifications.some(
+          (notification) =>
+            notification.recipientProfileId === ownerProfileId &&
+            notification.relatedMatchId === matchRecord.matchId &&
+            notification.notificationType === "match_result_reminder",
+        ),
+    )
+    .map((matchRecord) => ({
+      actorProfileId: ownerProfileId,
+      body: "El partido ya deberia haber terminado. Carga el resultado cuando puedas.",
+      createdAt: currentTimestamp,
+      notificationId: createEntityIdentifier("notification"),
+      notificationType: "match_result_reminder" as const,
+      recipientProfileId: ownerProfileId,
+      relatedMatchId: matchRecord.matchId,
+      title: "Como termino el partido?",
+    }));
+
+  if (reminderNotifications.length === 0) {
+    return database;
+  }
+
+  return {
+    ...database,
+    notifications: [...database.notifications, ...reminderNotifications],
   };
 }
 
@@ -1033,6 +1245,80 @@ function updateLookingForPlayerPostAfterAcceptance(
 }
 
 /**
+ * Libera un jugador confirmado de post y partido vinculado.
+ * Se construye para cancelar participaciones aceptadas.
+ * Lo usan cancelaciones de solicitudes e invitaciones.
+ * Sirve para devolver cupo y quitar al jugador del historial programado.
+ */
+function releaseAcceptedProfileFromLinkedPostAndMatch(
+  database: PadelitoLocalDatabase,
+  relatedPostId: string | undefined,
+  relatedMatchId: string | undefined,
+  acceptedProfileId: string,
+  updatedTimestamp: string,
+) {
+  const linkedMatch = database.matchRecords.find(
+    (matchRecord) =>
+      matchRecord.status === "scheduled" &&
+      (matchRecord.matchId === relatedMatchId ||
+        (relatedPostId && matchRecord.sourcePostId === relatedPostId)),
+  );
+  const resolvedPostId = relatedPostId ?? linkedMatch?.sourcePostId;
+  const acceptedProfile = database.profiles.find(
+    (profile) => profile.profileId === acceptedProfileId,
+  );
+
+  return {
+    ...database,
+    posts: resolvedPostId
+      ? releaseAcceptedPlayerFromPost(
+          database.posts,
+          resolvedPostId,
+          acceptedProfile?.displayName,
+          updatedTimestamp,
+        )
+      : database.posts,
+    matchParticipants: linkedMatch
+      ? database.matchParticipants.filter(
+          (matchParticipant) =>
+            matchParticipant.matchId !== linkedMatch.matchId ||
+            matchParticipant.profileId !== acceptedProfileId,
+        )
+      : database.matchParticipants,
+  };
+}
+
+/**
+ * Devuelve cupo a una publicacion de partido.
+ * Se construye para que cancelar una aceptacion reactive el feed si hace falta.
+ * Lo usa releaseAcceptedProfileFromLinkedPostAndMatch.
+ * Sirve para que "Falta 1" vuelva cuando se baja un jugador confirmado.
+ */
+function releaseAcceptedPlayerFromPost(
+  posts: Post[],
+  postId: string,
+  acceptedPlayerName: string | undefined,
+  updatedTimestamp: string,
+) {
+  return posts.map((post) => {
+    if (post.postId !== postId || post.postType !== "looking_for_player") {
+      return post;
+    }
+
+    return {
+      ...post,
+      confirmedPlayersText: removeConfirmedPlayerName(
+        post.confirmedPlayersText,
+        acceptedPlayerName,
+      ),
+      isActive: true,
+      missingPlayersCount: Math.min(post.missingPlayersCount + 1, 24),
+      updatedAt: updatedTimestamp,
+    };
+  });
+}
+
+/**
  * Agrega un nombre al texto de confirmados evitando duplicados simples.
  * Se construye porque el MVP todavia guarda confirmados como texto compacto.
  * Lo usan actualizaciones locales de cupo.
@@ -1061,6 +1347,80 @@ function appendConfirmedPlayerName(
     : normalizedPlayerName;
 
   return nextConfirmedPlayersText.slice(0, CONFIRMED_PLAYERS_TEXT_LIMIT);
+}
+
+/**
+ * Quita un nombre de la lista compacta de confirmados.
+ * Se construye para mantener legible la card al cancelar participacion.
+ * Lo usa releaseAcceptedPlayerFromPost.
+ * Sirve para no dejar jugadores retirados como confirmados.
+ */
+function removeConfirmedPlayerName(
+  confirmedPlayersText: string | undefined,
+  acceptedPlayerName: string | undefined,
+) {
+  const normalizedPlayerName = acceptedPlayerName?.trim().toLowerCase();
+
+  if (!confirmedPlayersText || !normalizedPlayerName) {
+    return confirmedPlayersText;
+  }
+
+  const remainingPlayerNames = confirmedPlayersText
+    .split(",")
+    .map((playerName) => playerName.trim())
+    .filter(
+      (playerName) => playerName.toLowerCase() !== normalizedPlayerName,
+    );
+
+  return remainingPlayerNames.length > 0
+    ? remainingPlayerNames.join(", ").slice(0, CONFIRMED_PLAYERS_TEXT_LIMIT)
+    : undefined;
+}
+
+/**
+ * Verifica si el partido ya paso su hora probable de cierre.
+ * Se construye para disparar recordatorios sin backend cron.
+ * Lo usa createMatchResultReminderNotifications.
+ * Sirve para pedir resultado cuando el partido ya termino.
+ */
+function isMatchPastResultReminderTime(
+  database: PadelitoLocalDatabase,
+  matchId: string,
+) {
+  const matchRecord = database.matchRecords.find(
+    (currentMatchRecord) => currentMatchRecord.matchId === matchId,
+  );
+
+  if (!matchRecord) {
+    return false;
+  }
+
+  const sourcePost = matchRecord.sourcePostId
+    ? database.posts.find((post) => post.postId === matchRecord.sourcePostId)
+    : null;
+  const reminderTime =
+    sourcePost?.scheduledEndTime ??
+    addMinutesToTimeValue(matchRecord.scheduledStartTime, 90);
+  const reminderDateTime = new Date(
+    `${matchRecord.scheduledDate}T${reminderTime}:00`,
+  );
+
+  return reminderDateTime.getTime() <= Date.now();
+}
+
+/**
+ * Suma minutos a un valor HH:mm.
+ * Se construye para estimar fin de partido cuando no hay hora final.
+ * Lo usa isMatchPastResultReminderTime.
+ * Sirve como fallback simple sin agregar campo nuevo aun.
+ */
+function addMinutesToTimeValue(timeValue: string, minutesToAdd: number) {
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  const dateValue = new Date(2000, 0, 1, hours, minutes + minutesToAdd);
+  const nextHours = `${dateValue.getHours()}`.padStart(2, "0");
+  const nextMinutes = `${dateValue.getMinutes()}`.padStart(2, "0");
+
+  return `${nextHours}:${nextMinutes}`;
 }
 
 /**

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { ProfileAvatar } from "../../components/common/ProfileAvatar";
+import { PullToRefresh } from "../../components/common/PullToRefresh";
 import {
   organizationKindLabels,
   playerLevelLabels,
@@ -30,11 +31,14 @@ interface ProfileScreenProps {
     status: "accepted" | "rejected",
   ) => void;
   onDirectInvitationCancel: (invitationId: string) => void;
+  onDirectInvitationDelete: (invitationId: string) => void;
   onJoinRequestStatusChange: (
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
+  onJoinRequestDelete: (requestId: string) => void;
+  onDataRefresh: () => void;
   onMatchCancel: (matchId: string) => void;
   onMatchCreate: (matchInput: CreateMatchInput) => void;
   onMatchResultRecord: (matchResult: MatchResult) => void;
@@ -48,6 +52,7 @@ interface ProfileScreenProps {
   ) => void;
   onPrivateContactOpen: (profileId: string) => void;
   onPostCancel: (postId: string) => void;
+  onPostDelete: (postId: string) => void;
   onProfileSave: (profile: Profile) => void;
   onQuickAccessReset: () => void;
   onSignOut: () => void;
@@ -64,8 +69,11 @@ export function ProfileScreen({
   database,
   onDirectInvitationStatusChange,
   onDirectInvitationCancel,
+  onDirectInvitationDelete,
   onJoinRequestCancel,
+  onJoinRequestDelete,
   onJoinRequestStatusChange,
+  onDataRefresh,
   onMatchCancel,
   onMatchCreate,
   onMatchResultRecord,
@@ -74,6 +82,7 @@ export function ProfileScreen({
   onRecurringChallengeStatusUpdate,
   onPrivateContactOpen,
   onPostCancel,
+  onPostDelete,
   onProfileSave,
   onQuickAccessReset,
   onSignOut,
@@ -89,7 +98,10 @@ export function ProfileScreen({
   ).length;
 
   return (
-    <section className="grid gap-3 px-4 pb-28 pt-4">
+    <PullToRefresh
+      className="grid gap-3 px-4 pb-28 pt-4"
+      onRefresh={onDataRefresh}
+    >
       <article className="rounded-lg border border-border-subtle bg-surface-primary p-4 shadow-floating">
         <div className="flex items-start gap-3">
           <ProfileAvatar
@@ -153,10 +165,13 @@ export function ProfileScreen({
         database={database}
         onDirectInvitationStatusChange={onDirectInvitationStatusChange}
         onDirectInvitationCancel={onDirectInvitationCancel}
+        onDirectInvitationDelete={onDirectInvitationDelete}
         onJoinRequestCancel={onJoinRequestCancel}
+        onJoinRequestDelete={onJoinRequestDelete}
         onJoinRequestStatusChange={onJoinRequestStatusChange}
         onPrivateContactOpen={onPrivateContactOpen}
         onPostCancel={onPostCancel}
+        onPostDelete={onPostDelete}
       />
 
       <MatchHistorySection
@@ -182,6 +197,6 @@ export function ProfileScreen({
           onProfileSave={onProfileSave}
         />
       ) : null}
-    </section>
+    </PullToRefresh>
   );
 }
