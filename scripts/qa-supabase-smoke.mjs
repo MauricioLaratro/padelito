@@ -100,6 +100,27 @@ async function assertWhatsappIsPrivate(client, label) {
 }
 
 /**
+ * Valida que el reset de score no sea editable por REST.
+ * Se construye para que el usuario solo pueda ejecutar la accion controlada.
+ * Lo usa la sesion autenticada de QA.
+ * Sirve para proteger estadisticas sin mutar datos.
+ */
+async function assertMatchStatsResetIsNotDirectlyEditable(
+  client,
+  currentUserId,
+) {
+  const { error } = await client
+    .from("profiles")
+    .update({ match_stats_reset_at: "2000-01-01T00:00:00.000Z" })
+    .eq("id", currentUserId);
+
+  assertCondition(
+    Boolean(error),
+    "match_stats_reset_at no deberia poder editarse directamente por REST",
+  );
+}
+
+/**
  * Ejecuta verificaciones autenticadas de RLS.
  * Se construye para cubrir tablas sensibles sin crear datos.
  * Lo usa la sesion primaria de QA.
@@ -256,13 +277,17 @@ async function main() {
 
   const currentUserId = primarySession.data.user.id;
   await assertWhatsappIsPrivate(primaryClient, "authenticated");
+  await assertMatchStatsResetIsNotDirectlyEditable(
+    primaryClient,
+    currentUserId,
+  );
 
   const publicProfiles = await readRows(
     "leer perfiles publicos",
     primaryClient
       .from("profiles")
       .select(
-        "id, profile_type, display_name, avatar_url, bio, usual_place, player_level, preferred_position, preferred_play_style, organization_kind, organization_link, created_at, updated_at",
+        "id, profile_type, display_name, avatar_url, bio, usual_place, match_stats_reset_at, player_level, preferred_position, preferred_play_style, organization_kind, organization_link, created_at, updated_at",
       )
       .limit(50),
   );
@@ -304,6 +329,7 @@ async function main() {
       {
         checks: {
           authenticatedPrivacy: privacySummary,
+          matchStatsResetDirectUpdateBlocked: true,
           publicProfiles: publicProfiles.length,
           secondSession: secondSessionSummary,
           whatsappColumnBlocked: true,

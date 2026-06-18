@@ -2,6 +2,7 @@ import {
   CalendarDays,
   MapPin,
   Plus,
+  RotateCcw,
   Trophy,
   UsersRound,
   X,
@@ -29,6 +30,7 @@ interface MatchHistorySectionProps {
   onMatchCancel: (matchId: string) => void;
   onMatchCreate: (matchInput: CreateMatchInput) => void;
   onMatchResultRecord: (matchResult: MatchResult) => void;
+  onOwnMatchStatsReset: () => void;
 }
 
 /**
@@ -43,6 +45,7 @@ export function MatchHistorySection({
   onMatchCancel,
   onMatchCreate,
   onMatchResultRecord,
+  onOwnMatchStatsReset,
 }: MatchHistorySectionProps) {
   const [isCreateMatchOpen, setIsCreateMatchOpen] = useState(false);
   const [resultMatchId, setResultMatchId] = useState<string | null>(null);
@@ -81,6 +84,7 @@ export function MatchHistorySection({
     currentProfile.profileId,
     database,
     visibleMatches,
+    currentProfile.matchStatsResetAt,
   );
 
   return (
@@ -92,14 +96,24 @@ export function MatchHistorySection({
           </p>
           <h2 className="text-xl font-black">Historial</h2>
         </div>
-        <Button
-          className="min-h-9 px-3"
-          icon={Plus}
-          onClick={() => setIsCreateMatchOpen(true)}
-          variant="primary"
-        >
-          Crear
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            className="min-h-9 px-3"
+            icon={RotateCcw}
+            onClick={onOwnMatchStatsReset}
+            variant="secondary"
+          >
+            Resetear score
+          </Button>
+          <Button
+            className="min-h-9 px-3"
+            icon={Plus}
+            onClick={() => setIsCreateMatchOpen(true)}
+            variant="primary"
+          >
+            Crear
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-4 gap-2">
@@ -108,6 +122,12 @@ export function MatchHistorySection({
         <StatTile label="Perdidos" value={matchStats.lostMatches} />
         <StatTile label="Efectividad" value={`${matchStats.winRate}%`} />
       </div>
+
+      {currentProfile.matchStatsResetAt ? (
+        <p className="mt-2 text-xs text-text-secondary">
+          Score calculado desde el ultimo reset.
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-3">
         {visibleMatches.length > 0 ? (
@@ -308,12 +328,19 @@ function calculateProfileMatchStats(
   profileId: string,
   database: PadelitoLocalDatabase,
   visibleMatches: MatchRecord[],
+  matchStatsResetAt?: string,
 ) {
-  const completedMatches = visibleMatches.filter((matchRecord) =>
-    database.matchResults.some(
+  const completedMatches = visibleMatches.filter((matchRecord) => {
+    const result = database.matchResults.find(
       (matchResult) => matchResult.matchId === matchRecord.matchId,
-    ),
-  );
+    );
+
+    if (!result) {
+      return false;
+    }
+
+    return !matchStatsResetAt || result.recordedAt >= matchStatsResetAt;
+  });
   const decisiveMatches = completedMatches
     .map((matchRecord) => {
       const participant = database.matchParticipants.find(

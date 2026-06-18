@@ -82,6 +82,7 @@ const publicProfileSelectColumns = `
   avatar_url,
   bio,
   usual_place,
+  match_stats_reset_at,
   player_level,
   preferred_position,
   preferred_play_style,
@@ -419,6 +420,7 @@ export function createSupabasePadelitoRepository(
    */
   async function recordMatchResult(
     matchResult: Parameters<PadelitoRepository["recordMatchResult"]>[0],
+    ownerProfileId: Parameters<PadelitoRepository["recordMatchResult"]>[1],
   ): Promise<void> {
     const { error: resultError } = await supabaseClient
       .from("match_results")
@@ -433,10 +435,25 @@ export function createSupabasePadelitoRepository(
     const { error: matchError } = await supabaseClient
       .from("match_records")
       .update({ status: "completed" })
-      .eq("id", matchResult.matchId);
+      .eq("id", matchResult.matchId)
+      .eq("owner_profile_id", ownerProfileId);
 
     if (matchError) {
       throw createSupabaseError("finalizar partido", matchError);
+    }
+  }
+
+  /**
+   * Reinicia estadisticas visibles del perfil propio en Supabase.
+   * Se construye para no editar resultados historicos.
+   * Lo usa la seccion de historial del perfil.
+   * Sirve para contar rendimiento desde un nuevo punto.
+   */
+  async function resetOwnMatchStats(): Promise<void> {
+    const { error } = await supabaseClient.rpc("reset_own_match_stats");
+
+    if (error) {
+      throw createSupabaseError("resetear estadisticas", error);
     }
   }
 
@@ -1086,6 +1103,7 @@ export function createSupabasePadelitoRepository(
     getPrivateProfileContact,
     markNotificationsAsRead,
     recordMatchResult,
+    resetOwnMatchStats,
     saveProfile,
     toggleEventInteraction,
     toggleFollowProfile,
@@ -1122,6 +1140,7 @@ function createDraftProfile(profileId: string, email?: string): Profile {
     bio: "",
     whatsappPhone: "",
     usualPlace: "",
+    matchStatsResetAt: undefined,
     playerLevel: "sixth",
     preferredPosition: "drive",
     preferredPlayStyle: "both",

@@ -14,6 +14,7 @@ export interface BaseProfile {
   bio?: string;
   whatsappPhone?: string;
   usualPlace?: string;
+  matchStatsResetAt?: string;
   createdAt: string;
   updatedAt: string;
   isOnboardingComplete: boolean;

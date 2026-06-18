@@ -183,6 +183,21 @@ export function App() {
   }
 
   /**
+   * Solicita confirmacion para resetear score propio.
+   * Se construye para no editar resultados ni historial.
+   * Lo usa MatchHistorySection mediante ProfileScreen.
+   * Sirve para volver a empezar las estadisticas del perfil.
+   */
+  function confirmOwnMatchStatsReset() {
+    requestConfirmation({
+      body: "Tus partidos siguen en el historial, pero tus estadisticas vuelven a cero desde ahora.",
+      confirmLabel: "Resetear",
+      onConfirm: padelitoMvp.handleOwnMatchStatsReset,
+      title: "Resetear score",
+    });
+  }
+
+  /**
    * Responde solicitudes con confirmacion al rechazar.
    * Se construye para que aceptar siga rapido y rechazar sea consciente.
    * Lo usan notificaciones y actividad de perfil.
@@ -382,6 +397,7 @@ export function App() {
           onMatchCancel={confirmMatchCancel}
           onMatchCreate={padelitoMvp.handleMatchCreate}
           onMatchResultRecord={padelitoMvp.handleMatchResultRecord}
+          onOwnMatchStatsReset={confirmOwnMatchStatsReset}
           onRecurringChallengeCreate={
             padelitoMvp.handleRecurringChallengeCreate
           }

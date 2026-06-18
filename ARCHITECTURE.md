@@ -165,6 +165,7 @@ supabase/
     202606100005_fix_match_history_rls.sql
     202606110001_link_matches_to_social_flows.sql
     202606110002_recurring_challenges.sql
+    202606180001_profile_match_stats_reset.sql
 ```
 
 ## Modulo Partidos e Historial implementado
@@ -191,7 +192,9 @@ Principios:
 - participantes manuales viven en `match_participants`;
 - participantes aceptados por solicitud o invitacion vinculada tambien entran en `match_participants`;
 - resultados viven en `match_results`;
+- resultados solo pueden registrarse o editarse desde el creador del partido;
 - estadisticas deben calcularse desde resultados antes de crear tablas agregadas;
+- `profiles.matchStatsResetAt` permite resetear score visible sin borrar ni editar resultados historicos;
 - desafios recurrentes viven como entidad propia;
 - `match_records.recurringChallengeId` vincula partidos con desafios;
 - marcador acumulado de desafios se calcula desde `match_results` vinculados.

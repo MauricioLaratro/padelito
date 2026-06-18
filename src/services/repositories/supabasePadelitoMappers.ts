@@ -106,6 +106,7 @@ export function mapSupabaseProfileRow(row: SupabaseProfileRow): Profile {
     bio: nullToUndefined(row.bio),
     whatsappPhone: nullToUndefined(row.whatsapp_phone),
     usualPlace: nullToUndefined(row.usual_place),
+    matchStatsResetAt: nullToUndefined(row.match_stats_reset_at),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     isOnboardingComplete: true,

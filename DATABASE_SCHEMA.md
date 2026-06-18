@@ -13,6 +13,7 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - Migracion incremental `202606100005_fix_match_history_rls.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606110001_link_matches_to_social_flows.sql` aplicada en Supabase Cloud.
 - Migracion incremental `202606110002_recurring_challenges.sql` aplicada en Supabase Cloud.
+- Migracion incremental `202606180001_profile_match_stats_reset.sql` aplicada en Supabase Cloud.
 - `missing_players_count` admite `0-24`; `0` representa partido completo y se usa para retirar oportunidades del feed.
 - Las respuestas aceptadas se centralizan en RPC para descontar cupos de forma consistente.
 - `whatsapp_phone` queda fuera de la lectura publica REST; el cliente carga perfiles publicos sin telefono.
@@ -20,6 +21,7 @@ Este esquema es una base inicial. El agente puede ajustarlo con buen criterio, p
 - `match_records.source_post_id` vincula partidos estructurados con publicaciones `Busco jugador`.
 - `direct_match_invitations.related_match_id` vincula invitaciones directas con partidos estructurados.
 - `match_records.recurring_challenge_id` vincula partidos estructurados con desafios recurrentes.
+- `profiles.match_stats_reset_at` permite recalcular estadisticas personales desde el ultimo reset sin modificar resultados historicos.
 
 ## Enums sugeridos
 
@@ -69,6 +71,7 @@ Campos:
 - preferred_play_style nullable
 - organization_kind nullable
 - organization_link nullable
+- match_stats_reset_at nullable
 - created_at
 - updated_at
 
@@ -297,7 +300,9 @@ Reglas generales:
 - contacto telefonico no debe exponerse en snapshots publicos
 - partidos visibles para owner y participantes
 - resultados visibles para owner y participantes
+- solo el owner del partido puede crear o editar resultados
 - desafios recurrentes visibles para owner o participantes
+- `match_stats_reset_at` no debe editarse directo por REST; se cambia mediante RPC controlado
 
 El agente debe escribir migraciones SQL completas y seguras.
 
@@ -312,6 +317,8 @@ El agente debe escribir migraciones SQL completas y seguras.
 - `append_confirmed_player_name`: evita duplicados simples en el texto compacto de confirmados.
 - `can_read_match`: permite leer partidos, participantes y resultados al owner o participantes sin generar recursion RLS.
 - `can_read_recurring_challenge`: permite leer desafios y participantes al owner o participantes sin generar recursion RLS.
+- `reset_own_match_stats`: actualiza `profiles.match_stats_reset_at` para `auth.uid()` usando la hora del servidor.
+- `prevent_profile_match_stats_reset_direct_update`: bloquea cambios directos sobre `match_stats_reset_at` fuera de la accion controlada.
 
 ## Privacidad de contacto
 

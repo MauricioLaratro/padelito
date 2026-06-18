@@ -71,7 +71,11 @@ export interface PadelitoRepository {
   cancelPost: (postId: string, authorProfileId: string) => Promise<void>;
   createMatch: (matchInput: CreateMatchInput) => Promise<void>;
   cancelMatch: (matchId: string, ownerProfileId: string) => Promise<void>;
-  recordMatchResult: (matchResult: MatchResult) => Promise<void>;
+  recordMatchResult: (
+    matchResult: MatchResult,
+    ownerProfileId: string,
+  ) => Promise<void>;
+  resetOwnMatchStats: () => Promise<void>;
   createRecurringChallenge: (
     challengeInput: CreateRecurringChallengeInput,
   ) => Promise<void>;

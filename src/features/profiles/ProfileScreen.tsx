@@ -37,6 +37,7 @@ interface ProfileScreenProps {
   onMatchCancel: (matchId: string) => void;
   onMatchCreate: (matchInput: CreateMatchInput) => void;
   onMatchResultRecord: (matchResult: MatchResult) => void;
+  onOwnMatchStatsReset: () => void;
   onRecurringChallengeCreate: (
     challengeInput: CreateRecurringChallengeInput,
   ) => void;
@@ -67,6 +68,7 @@ export function ProfileScreen({
   onMatchCancel,
   onMatchCreate,
   onMatchResultRecord,
+  onOwnMatchStatsReset,
   onRecurringChallengeCreate,
   onRecurringChallengeStatusUpdate,
   onPrivateContactOpen,
@@ -147,6 +149,7 @@ export function ProfileScreen({
         onMatchCancel={onMatchCancel}
         onMatchCreate={onMatchCreate}
         onMatchResultRecord={onMatchResultRecord}
+        onOwnMatchStatsReset={onOwnMatchStatsReset}
       />
 
       <RecurringChallengesSection

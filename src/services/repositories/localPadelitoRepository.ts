@@ -330,6 +330,16 @@ export function recordMatchResult(
   matchResult: MatchResult,
   ownerProfileId: string,
 ) {
+  const ownedMatch = database.matchRecords.find(
+    (matchRecord) =>
+      matchRecord.matchId === matchResult.matchId &&
+      matchRecord.ownerProfileId === ownerProfileId,
+  );
+
+  if (!ownedMatch) {
+    return database;
+  }
+
   return {
     ...database,
     matchRecords: database.matchRecords.map((matchRecord) =>
@@ -349,6 +359,31 @@ export function recordMatchResult(
           currentMatchResult.matchId !== matchResult.matchId,
       ),
     ],
+  };
+}
+
+/**
+ * Reinicia estadisticas propias en modo local.
+ * Se construye para no editar resultados historicos.
+ * Lo usa la seccion de historial del perfil.
+ * Sirve para recalcular rendimiento desde un nuevo punto.
+ */
+export function resetOwnMatchStats(
+  database: PadelitoLocalDatabase,
+  profileId: string,
+  resetAt: string,
+) {
+  return {
+    ...database,
+    profiles: database.profiles.map((profile) =>
+      profile.profileId === profileId
+        ? {
+            ...profile,
+            matchStatsResetAt: resetAt,
+            updatedAt: resetAt,
+          }
+        : profile,
+    ),
   };
 }
 

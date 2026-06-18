@@ -109,8 +109,10 @@
 - [x] Permitir marcar partido como incompleto para buscar jugadores.
 - [x] Convertir postulantes aceptados en participantes del partido.
 - [x] Registrar resultado al finalizar partido.
+- [x] Restringir registro/edicion de resultado al creador del partido.
 - [x] Mostrar historial de partidos en perfil de cada participante.
 - [x] Crear dashboard simple de estadisticas: jugados, victorias, derrotas y porcentaje.
+- [x] Permitir resetear score propio sin editar resultados historicos.
 - [x] Crear desafios recurrentes entre parejas o grupos.
 - [x] Registrar partidos dentro de un desafio recurrente.
 - [x] Mostrar marcador acumulado del desafio recurrente.
@@ -121,6 +123,7 @@
 - [x] Permitir archivar/reactivar desafios recurrentes propios.
 - [x] Agregar confirmaciones UI para acciones sensibles.
 - [x] Agregar smoke test Supabase para auth, RLS y privacidad.
+- [x] Validar que el reset de score no pueda editarse directo por REST.
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
 - [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.

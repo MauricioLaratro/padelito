@@ -32,6 +32,7 @@ export interface SupabaseProfileRow {
   bio: string | null;
   whatsapp_phone: string | null;
   usual_place: string | null;
+  match_stats_reset_at: string | null;
   player_level: PlayerLevel | null;
   preferred_position: PlayerPosition | null;
   preferred_play_style: PlayStyle | null;
@@ -43,7 +44,7 @@ export interface SupabaseProfileRow {
 
 export type SupabaseProfileUpsert = Omit<
   SupabaseProfileRow,
-  "created_at" | "updated_at"
+  "created_at" | "updated_at" | "match_stats_reset_at"
 >;
 
 export interface SupabasePrivateProfileContactRow {

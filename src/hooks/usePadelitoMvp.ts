@@ -23,6 +23,7 @@ import {
   getVisiblePostsForFeed,
   markNotificationsAsRead,
   recordMatchResult,
+  resetOwnMatchStats,
   signInWithDemoProfile,
   toggleEventInteraction,
   toggleFollowProfile,
@@ -624,13 +625,39 @@ export function usePadelitoMvp() {
 
     if (isSupabaseMode && supabaseRepository) {
       void runRemoteAction(() =>
-        supabaseRepository.recordMatchResult(matchResult),
+        supabaseRepository.recordMatchResult(
+          matchResult,
+          sessionProfile.profileId,
+        ),
       );
       return;
     }
 
     setLocalDatabase((currentDatabase) =>
       recordMatchResult(currentDatabase, matchResult, sessionProfile.profileId),
+    );
+  }
+
+  /**
+   * Reinicia estadisticas propias del perfil.
+   * Se construye para no editar resultados historicos.
+   * Lo usa MatchHistorySection.
+   * Sirve para que cada jugador vuelva a empezar su score.
+   */
+  function handleOwnMatchStatsReset() {
+    if (!sessionProfile) {
+      return;
+    }
+
+    const resetAt = createCurrentIsoDate();
+
+    if (isSupabaseMode && supabaseRepository) {
+      void runRemoteAction(() => supabaseRepository.resetOwnMatchStats());
+      return;
+    }
+
+    setLocalDatabase((currentDatabase) =>
+      resetOwnMatchStats(currentDatabase, sessionProfile.profileId, resetAt),
     );
   }
 
@@ -1119,6 +1146,7 @@ export function usePadelitoMvp() {
     handleMatchCancel,
     handleMatchCreate,
     handleMatchResultRecord,
+    handleOwnMatchStatsReset,
     handleRecurringChallengeCreate,
     handleRecurringChallengeStatusUpdate,
     handlePrivateContactOpen,
