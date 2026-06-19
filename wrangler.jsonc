@@ -1,0 +1,6 @@
+{
+  // Configuracion minima para publicar la PWA estatica en Cloudflare Pages.
+  "name": "padelito",
+  "pages_build_output_dir": "dist",
+  "compatibility_date": "2026-06-19"
+}

@@ -198,5 +198,42 @@ origin/codex/base-mvp-local
 
 Cloudflare Pages:
 
+- project name: `padelito`
+- preview gratuito creado: `https://padelito-29z.pages.dev`
 - build command: `npm run build`
 - output directory: `dist`
+- production branch: `codex/base-mvp-local`
+- variables configuradas en Cloudflare Pages:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+
+Archivo local de configuracion:
+
+```txt
+wrangler.jsonc
+```
+
+Deploy directo desde esta maquina:
+
+```powershell
+$env:CLOUDFLARE_API_TOKEN="token-con-permiso-pages"
+npx wrangler pages deploy dist --project-name=padelito --branch=codex/base-mvp-local --commit-dirty=true
+```
+
+Estado:
+
+- Proyecto Pages creado por API.
+- Variables publicas de Supabase configuradas para preview y produccion.
+- Conexion GitHub desde Cloudflare fallo por un problema de la instalacion Pages Git de Cloudflare.
+- Deploy directo con `wrangler` quedo bloqueado porque falta `CLOUDFLARE_API_TOKEN` local.
+
+Pasos manuales para destrabar deploy sin pagar:
+
+1. En Cloudflare, reinstalar o reconectar la integracion GitHub de Pages si se quiere deploy automatico desde repo.
+2. Alternativamente, crear un API Token de Cloudflare con permisos de Pages y definir `CLOUDFLARE_API_TOKEN` en la terminal local.
+3. Ejecutar el comando de deploy directo anterior.
+
+Antes de probar Auth en el dominio Pages:
+
+1. Supabase Dashboard > Authentication > Providers > Email: desactivar `Confirm email`.
+2. Supabase Dashboard > Authentication > URL Configuration: agregar `https://padelito-29z.pages.dev` como Site URL o Redirect URL permitida.

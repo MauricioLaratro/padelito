@@ -17,6 +17,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos, enlace entre feed social y partidos, y desafios recurrentes.
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
 - Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
+- Cloudflare Pages creado en plan gratuito con proyecto `padelito` y dominio `https://padelito-29z.pages.dev`, pendiente de primer deploy.
 
 ## Comprension del producto
 
@@ -38,6 +39,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Registro pide email, nombre de usuario, contraseña y repetición de contraseña; el nombre queda guardado en metadata de Auth para prellenar onboarding.
 - Recuperación de contraseña usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
 - Para preview cerrado sin costo se recomienda desactivar `Confirm email` en Supabase Auth > Providers > Email; antes de un lanzamiento público abierto debe revaluarse junto con SMTP propio.
+- Para que recuperacion de contrasena funcione en Pages, Supabase Auth debe permitir `https://padelito-29z.pages.dev` en URL Configuration.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
@@ -74,6 +76,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Los recordatorios de resultado no usan scheduler externo en el MVP; se crean al cargar/refrescar snapshot, por lo que no existen hasta que el creador vuelve a abrir o refrescar la app.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - Desactivar `Confirm email` reduce fricción y evita rate limit en registro, pero implica aceptar cuentas sin verificación de correo durante el preview cerrado.
+- El deploy directo de Pages desde esta maquina requiere `CLOUDFLARE_API_TOKEN`; la API MCP pudo crear/configurar el proyecto, pero no subir archivos locales sin ese token.
+- La conexion Pages GitHub devolvio error interno de instalacion Git de Cloudflare, por lo que requiere reconexion manual de la app GitHub de Pages o token local para deploy directo.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -232,6 +236,15 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `npm run lint` pasa;
   - `npm run qa:supabase` pasa con usuarios de prueba;
   - navegador integrado no pudo mostrar el dashboard de Supabase Auth porque la página quedó sin DOM visible; queda pendiente desactivar `Confirm email` desde Authentication > Providers > Email.
+- Cloudflare Pages:
+  - proyecto Pages `padelito` creado por API en la cuenta Cloudflare;
+  - dominio gratuito asignado: `https://padelito-29z.pages.dev`;
+  - rama de produccion configurada: `codex/base-mvp-local`;
+  - variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` configuradas en preview y produccion;
+  - `wrangler.jsonc` agregado para deploy directo desde `dist`;
+  - `npm run build` y `npm run lint` pasan antes del intento de deploy;
+  - deploy directo con `wrangler pages deploy` quedo bloqueado por falta de `CLOUDFLARE_API_TOKEN`;
+  - intento de conectar GitHub por API fallo con error interno de la instalacion Cloudflare Pages Git.
 
 ## Git
 
@@ -260,6 +273,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit UX perfil: `0c07089 Refinar perfil y experiencia mobile`.
 - Commit permisos perfil: `61f614b Corregir permisos al guardar perfil`.
 - Commit auth/textos: `Ajustar registro y textos de auth`.
+- Commit deploy Cloudflare: `Preparar despliegue gratuito en Cloudflare`.
 
 ## Regla de idioma
 
@@ -274,6 +288,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Desactivar `Confirm email` en Supabase Auth > Providers > Email para probar registro directo sin correo.
+- Agregar `https://padelito-29z.pages.dev` como URL permitida en Supabase Auth.
+- Definir `CLOUDFLARE_API_TOKEN` local o reconectar GitHub en Cloudflare Pages para ejecutar el primer deploy.
 - Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
 - Preparar deploy Cloudflare Pages.
