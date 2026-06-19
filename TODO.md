@@ -107,6 +107,7 @@
 - [x] Evitar service worker en desarrollo para no romper HMR.
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
 - [x] Invalidar cache PWA para refrescar SVG de marca.
+- [x] Evitar que la PWA sirva `index.html` viejo despues de despliegues productivos.
 - [x] Ocultar modo demo cuando Supabase esta configurado.
 - [x] Compactar acceso rapido y filtros para mostrar contenido real antes en mobile.
 - [x] Usar avatar reutilizable en perfil, feed y busqueda de jugadores.

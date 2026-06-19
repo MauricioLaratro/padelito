@@ -1,5 +1,5 @@
-const staticCacheName = "padelito-static-v2";
-const staticAssetUrls = ["/", "/index.html", "/manifest.webmanifest", "/app-icon.svg", "/logo-padelito.svg"];
+const staticCacheName = "padelito-static-v3";
+const staticAssetUrls = ["/manifest.webmanifest", "/app-icon.svg", "/logo-padelito.svg"];
 
 self.addEventListener("install", (installEvent) => {
   // Guarda los recursos minimos para que la PWA pueda abrir rapido.
@@ -30,10 +30,16 @@ self.addEventListener("fetch", (fetchEvent) => {
     return;
   }
 
-  // Responde desde cache cuando existe y cae a red para contenido nuevo.
+  if (fetchEvent.request.mode === "navigate") {
+    // Prioriza red para evitar que el inicio quede congelado con builds viejos.
+    fetchEvent.respondWith(
+      fetch(fetchEvent.request).catch(() => caches.match("/index.html")),
+    );
+    return;
+  }
+
+  // Mantiene cache-first solo para assets estables, no para la app shell.
   fetchEvent.respondWith(
-    caches.match(fetchEvent.request).then((cachedResponse) => {
-      return cachedResponse ?? fetch(fetchEvent.request);
-    }),
+    caches.match(fetchEvent.request).then((cachedResponse) => cachedResponse ?? fetch(fetchEvent.request)),
   );
 });

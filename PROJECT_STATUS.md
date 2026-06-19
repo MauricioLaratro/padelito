@@ -249,6 +249,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `https://padelito-29z.pages.dev` responde `200`;
   - assets productivos verificados: JS y CSS responden `200`.
   - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
+  - cache PWA actualizado a `padelito-static-v3` y navegacion cambiada a network-first para evitar que `/` e `index.html` queden congelados en builds viejos.
 
 ## Git
 
