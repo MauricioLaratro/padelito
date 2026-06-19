@@ -18,6 +18,7 @@ MVP local testeable disponible, publicado en GitHub, conectado a Supabase y desp
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
 - Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
 - Cloudflare Pages creado en plan gratuito con proyecto beta `padelito-posadas`; deploy productivo verificado en `https://padelito-posadas.pages.dev`.
+- La beta se mantiene en `pages.dev` hasta adquirir dominio propio; el SMTP propio queda diferido porque requiere un dominio verificable.
 
 ## Comprension del producto
 
@@ -40,6 +41,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Recuperación de contraseña usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
 - Para preview cerrado sin costo se recomienda desactivar `Confirm email` en Supabase Auth > Providers > Email; antes de un lanzamiento público abierto debe revaluarse junto con SMTP propio.
 - Para que recuperacion de contrasena funcione en Pages, Supabase Auth debe permitir `https://padelito-posadas.pages.dev` en URL Configuration.
+- Supabase Auth ya usa `https://padelito-posadas.pages.dev` como Site URL y Redirect URL permitido.
+- Sin dominio propio no se configura Resend/Brevo todavia; la recuperacion por email queda limitada al proveedor integrado de Supabase durante la beta cerrada.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
@@ -79,6 +82,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Desactivar `Confirm email` reduce fricción y evita rate limit en registro, pero implica aceptar cuentas sin verificación de correo durante el preview cerrado.
 - Cloudflare Pages queda atado a la rama `codex/base-mvp-local`; si se cambia de rama principal antes del dominio propio, hay que actualizar la production branch.
 - El dominio gratuito `pages.dev` sirve para preview, pero el lanzamiento publico final necesita dominio propio, SMTP propio y revision de URLs permitidas en Supabase Auth.
+- Mientras no haya dominio propio, los emails de Auth no pueden salir como `no-reply@padelito-posadas.pages.dev` porque `pages.dev` no es un dominio controlado por Padelito.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -93,6 +97,16 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - `http://localhost:5174` usado como puerto de desarrollo fresco para evitar cache vieja del service worker.
 - `npm run build` pasa.
 - `npm run lint` pasa.
+- Cierre beta sin dominio propio:
+  - Supabase Auth URL Configuration verificado con `https://padelito-posadas.pages.dev` como Site URL;
+  - Redirect URLs contiene `https://padelito-posadas.pages.dev`;
+  - `npm run lint` pasa;
+  - `npm run build` pasa;
+  - `npm run qa:supabase` pasa con `test@padelito.test` y `test2@padelito.test`;
+  - produccion carga `https://padelito-posadas.pages.dev`;
+  - login productivo con `test@padelito.test` funciona;
+  - perfil productivo carga sin errores de consola de la app;
+  - logout productivo vuelve al formulario en el primer intento.
 - Cierre de sesion:
   - se corrigio la carrera entre refresco automatico por navegacion y logout;
   - si Supabase informa sesion vencida durante logout, la app limpia la sesion local y vuelve al formulario sin requerir segundo intento;
@@ -251,13 +265,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `wrangler.jsonc` fue retirado porque ocultaba las variables `VITE_SUPABASE_*` del build de Pages;
   - `npm run build` y `npm run lint` pasan antes del intento de deploy;
   - fuente GitHub reconectada en Cloudflare Pages: `MauricioLaratro/padelito`;
-  - ultimo deployment productivo verificado: `68c0a851-dd11-4aa0-b6ed-8a08db1cadc1`;
+  - ultimo deployment productivo verificado: `68058c6f-12da-45e9-b6ee-eb785c6334a5`;
   - build y deploy de Cloudflare Pages finalizaron en `success`;
   - `https://padelito-posadas.pages.dev` responde `200`;
   - assets productivos verificados: JS y CSS responden `200`.
   - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
   - cache PWA actualizado a `padelito-static-v3` y navegacion cambiada a network-first para evitar que `/` e `index.html` queden congelados en builds viejos.
-  - JS productivo `index-DKxvSvYL.js` verificado con variables `VITE_SUPABASE_*` inyectadas.
+  - JS productivo `index-D20E4b4J.js` verificado con variables `VITE_SUPABASE_*` inyectadas.
 
 ## Git
 
@@ -290,6 +304,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit documentacion deploy: `Documentar despliegue productivo en Cloudflare`.
 - Commit variables Cloudflare: `Corregir variables de Supabase en Cloudflare`.
 - Commit cache PWA: `Corregir cache de la PWA en produccion`.
+- Commit dominio beta: `Documentar dominio beta de Posadas`.
+- Commit logout vencido: `Corregir cierre de sesion vencida`.
 
 ## Regla de idioma
 
@@ -302,8 +318,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
 - Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
-- Agregar `https://padelito-posadas.pages.dev` en Supabase Auth > URL Configuration para recuperacion de contrasena.
-- Probar manualmente registro, login, logout y recuperacion desde `https://padelito-posadas.pages.dev`.
+- Probar manualmente registro desde `https://padelito-posadas.pages.dev` con cuenta nueva real de beta.
+- Probar manualmente recuperacion de contrasena desde `https://padelito-posadas.pages.dev`, sabiendo que sin SMTP propio rige el limite del proveedor integrado de Supabase.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
-- Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
+- Configurar SMTP propio en Supabase Auth cuando haya dominio propio verificable, proveedor y credenciales.

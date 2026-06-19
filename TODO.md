@@ -148,11 +148,13 @@
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
 - [x] Auditar textos visibles y alerts para evitar inglés y errores sin acentos.
 - [x] Desactivar `Confirm email` en Supabase Auth > Providers > Email para registro directo sin correo.
-- [ ] Agregar `https://padelito-posadas.pages.dev` en Supabase Auth > URL Configuration.
+- [x] Agregar `https://padelito-posadas.pages.dev` en Supabase Auth > URL Configuration.
 - [x] Reconectar Pages Git en Cloudflare o definir `CLOUDFLARE_API_TOKEN` local para subir `dist`.
-- [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
+- [ ] Configurar SMTP propio en Supabase cuando exista dominio propio verificable y proveedor.
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [x] Preparar deploy Cloudflare Pages.
-- [ ] Probar manualmente registro, login, logout y recuperacion desde `https://padelito-posadas.pages.dev`.
-- [ ] Reprobar manualmente logout con sesion vencida en `https://padelito-posadas.pages.dev`.
+- [x] Probar login y logout desde `https://padelito-posadas.pages.dev` con `test@padelito.test`.
+- [ ] Probar manualmente registro con una cuenta nueva real de beta desde `https://padelito-posadas.pages.dev`.
+- [ ] Probar manualmente recuperacion desde `https://padelito-posadas.pages.dev`, considerando el limite de email de Supabase sin SMTP propio.
+- [x] Reprobar logout corregido en `https://padelito-posadas.pages.dev`.
