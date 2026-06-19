@@ -781,8 +781,8 @@ export function createDirectMatchInvitation(
     notificationType: "direct_match_invitation_received",
     relatedPostId: invitation.relatedPostId,
     relatedInvitationId: invitation.invitationId,
-    title: "Invitacion a partido",
-    body: "Recibiste una invitacion directa para jugar.",
+    title: "Invitación a partido",
+    body: "Recibiste una invitación directa para jugar.",
   });
 
   return {
@@ -841,11 +841,11 @@ export function updateDirectMatchInvitationStatus(
     relatedPostId: invitation.relatedPostId,
     relatedInvitationId: invitation.invitationId,
     title:
-      status === "accepted" ? "Invitacion aceptada" : "Invitacion rechazada",
+      status === "accepted" ? "Invitación aceptada" : "Invitación rechazada",
     body:
       status === "accepted"
-        ? "Aceptaron tu invitacion para jugar."
-        : "Rechazaron tu invitacion para este partido.",
+        ? "Aceptaron tu invitación para jugar."
+        : "Rechazaron tu invitación para este partido.",
   });
 
   return {
@@ -1084,13 +1084,13 @@ export function createMatchResultReminderNotifications(
     )
     .map((matchRecord) => ({
       actorProfileId: ownerProfileId,
-      body: "El partido ya deberia haber terminado. Carga el resultado cuando puedas.",
+      body: "El partido ya debería haber terminado. Cargá el resultado cuando puedas.",
       createdAt: currentTimestamp,
       notificationId: createEntityIdentifier("notification"),
       notificationType: "match_result_reminder" as const,
       recipientProfileId: ownerProfileId,
       relatedMatchId: matchRecord.matchId,
-      title: "Como termino el partido?",
+      title: "¿Cómo terminó el partido?",
     }));
 
   if (reminderNotifications.length === 0) {

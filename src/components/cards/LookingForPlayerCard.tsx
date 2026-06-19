@@ -166,7 +166,7 @@ export function LookingForPlayerCard({
           variant={isOwnPost || isPendingRequest ? "danger" : "primary"}
         >
           {isOwnPost
-            ? "Cancelar publicacion"
+            ? "Cancelar publicación"
             : isPendingRequest
               ? "Cancelar solicitud"
               : existingRequest && existingRequest.status !== "cancelled"

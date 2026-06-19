@@ -96,7 +96,7 @@ export function PlayerSearchScreen({
       <FormField
         label="Buscar"
         onChange={(changeEvent) => setPlayerQuery(changeEvent.target.value)}
-        placeholder="Nombre, zona, categoria"
+        placeholder="Nombre, zona, categoría"
         value={playerQuery}
       />
 

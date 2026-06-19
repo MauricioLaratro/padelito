@@ -253,7 +253,7 @@ function OwnPostActivityCard({
           onClick={() => onPostCancel(post.postId)}
           variant="danger"
         >
-          Cancelar publicacion
+          Cancelar publicación
         </Button>
       ) : (
         <Button
@@ -319,7 +319,7 @@ function InvitationActivityCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-accent-lime">
-            {mode === "sent" ? "Invitacion enviada" : "Invitacion recibida"}
+            {mode === "sent" ? "Invitación enviada" : "Invitación recibida"}
           </p>
           <h4 className="mt-1 text-sm font-black">
             Partido {playStyleLabels[invitation.desiredPlayStyle]}
@@ -351,7 +351,7 @@ function InvitationActivityCard({
         <div className="grid gap-2">
           {mode === "sent" ? (
             <p className="text-sm leading-6 text-feedback-success">
-              Aceptaron tu invitacion para este partido.
+              Aceptaron tu invitación para este partido.
             </p>
           ) : null}
           <Button
@@ -399,7 +399,7 @@ function InvitationActivityCard({
               onClick={() => onDirectInvitationCancel(invitation.invitationId)}
               variant="danger"
             >
-              Cancelar invitacion
+              Cancelar invitación
             </Button>
           )}
         </div>

@@ -209,7 +209,7 @@ export function FeedScreen({
             />
             <FormField
               fieldType="select"
-              label="Categoria"
+              label="Categoría"
               onChange={(changeEvent) =>
                 setSelectedPlayerLevel(
                   changeEvent.target.value as PlayerLevel | "all",
@@ -229,7 +229,7 @@ export function FeedScreen({
             </FormField>
             <FormField
               fieldType="select"
-              label="Posicion"
+              label="Posición"
               onChange={(changeEvent) =>
                 setSelectedPlayerPosition(
                   changeEvent.target.value as PlayerPosition | "all",
@@ -287,8 +287,8 @@ export function FeedScreen({
         ))
       ) : (
         <EmptyState
-          actionLabel="Crear publicacion"
-          description="No hay resultados para estos filtros. Publica una oportunidad para mover la comunidad."
+          actionLabel="Crear publicación"
+          description="No hay resultados para estos filtros. Publicá una oportunidad para mover la comunidad."
           icon={Search}
           onAction={onPostCreateStart}
           title="Sin publicaciones"

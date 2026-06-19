@@ -44,6 +44,8 @@
 - [x] Auth simple con Supabase por magic link.
 - [x] Auth con email y contrasena para login cotidiano.
 - [x] Registro con email y contrasena.
+- [x] Registro con nombre de usuario, contraseña y repetición de contraseña.
+- [x] Retirar magic link de la UI para reservar emails a recuperación.
 - [x] Sesion persistente al reabrir la app.
 - [x] Mensajes humanos ante rate limit de emails.
 - [x] Recuperacion y creacion de contrasena para cuentas existentes.
@@ -139,6 +141,8 @@
 - [x] Agregar smoke test Supabase para auth, RLS y privacidad.
 - [x] Validar que el reset de score no pueda editarse directo por REST.
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
+- [x] Auditar textos visibles y alerts para evitar inglés y errores sin acentos.
+- [ ] Desactivar `Confirm email` en Supabase Auth > Providers > Email para registro directo sin correo.
 - [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.

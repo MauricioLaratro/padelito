@@ -98,7 +98,7 @@ export function ProfileForm({
     }
 
     if (!selectedFile.type.startsWith("image/")) {
-      setAvatarError("Selecciona una imagen valida.");
+      setAvatarError("Seleccioná una imagen válida.");
       return;
     }
 
@@ -188,7 +188,7 @@ export function ProfileForm({
           onClick={() => setProfileType("organization")}
           type="button"
         >
-          Organizacion
+          Organización
         </button>
       </div>
 
@@ -265,7 +265,7 @@ export function ProfileForm({
           <>
             <FormField
               fieldType="select"
-              label="Categoria"
+              label="Categoría"
               onChange={(changeEvent) =>
                 setPlayerLevel(changeEvent.target.value as PlayerLevel)
               }
@@ -282,7 +282,7 @@ export function ProfileForm({
             </FormField>
             <FormField
               fieldType="select"
-              label="Posicion"
+              label="Posición"
               onChange={(changeEvent) =>
                 setPreferredPosition(changeEvent.target.value as PlayerPosition)
               }
@@ -316,7 +316,7 @@ export function ProfileForm({
           <>
             <FormField
               fieldType="select"
-              label="Tipo de organizacion"
+              label="Tipo de organización"
               onChange={(changeEvent) =>
                 setOrganizationKind(changeEvent.target.value as OrganizationKind)
               }

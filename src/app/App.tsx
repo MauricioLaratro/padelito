@@ -57,7 +57,6 @@ export function App() {
         isEmailAuthEnabled={padelitoMvp.isEmailAuthEnabled}
         isPasswordRecoveryMode={padelitoMvp.isPasswordRecoveryMode}
         onDemoSignIn={padelitoMvp.handleDemoSignIn}
-        onEmailSignInRequest={padelitoMvp.handleEmailSignInRequest}
         onPasswordResetRequest={padelitoMvp.handlePasswordResetRequest}
         onPasswordSignInRequest={padelitoMvp.handlePasswordSignInRequest}
         onPasswordSignUpRequest={padelitoMvp.handlePasswordSignUpRequest}
@@ -148,10 +147,10 @@ export function App() {
    */
   function confirmPostCancel(postId: string) {
     requestConfirmation({
-      body: "La publicacion deja de aparecer en el feed, pero queda en tu actividad.",
+      body: "La publicación deja de aparecer en el feed, pero queda en tu actividad.",
       confirmLabel: "Cancelar",
       onConfirm: () => padelitoMvp.handlePostCancel(postId),
-      title: "Cancelar publicacion",
+      title: "Cancelar publicación",
     });
   }
 
@@ -163,10 +162,10 @@ export function App() {
    */
   function confirmPostDelete(postId: string) {
     requestConfirmation({
-      body: "La publicacion se elimina de tu actividad. El partido estructurado, si existe, queda en historial.",
+      body: "La publicación se elimina de tu actividad. El partido estructurado, si existe, queda en historial.",
       confirmLabel: "Eliminar",
       onConfirm: () => padelitoMvp.handlePostDelete(postId),
-      title: "Eliminar publicacion",
+      title: "Eliminar publicación",
       tone: "danger",
     });
   }
@@ -179,7 +178,7 @@ export function App() {
    */
   function confirmJoinRequestCancel(requestId: string) {
     requestConfirmation({
-      body: "Vas a retirar esta solicitud o participacion. Si ya estaba aceptada, se libera el cupo.",
+      body: "Vas a retirar esta solicitud o participación. Si ya estaba aceptada, se libera el cupo.",
       confirmLabel: "Cancelar",
       onConfirm: () => padelitoMvp.handleJoinRequestCancel(requestId),
       title: "Cancelar solicitud",
@@ -210,10 +209,10 @@ export function App() {
    */
   function confirmDirectInvitationCancel(invitationId: string) {
     requestConfirmation({
-      body: "La invitacion se cancela. Si ya estaba aceptada, se libera el cupo y se retira al jugador.",
+      body: "La invitación se cancela. Si ya estaba aceptada, se libera el cupo y se retira al jugador.",
       confirmLabel: "Cancelar",
       onConfirm: () => padelitoMvp.handleDirectInvitationCancel(invitationId),
-      title: "Cancelar invitacion",
+      title: "Cancelar invitación",
     });
   }
 
@@ -225,10 +224,10 @@ export function App() {
    */
   function confirmDirectInvitationDelete(invitationId: string) {
     requestConfirmation({
-      body: "La invitacion se elimina de tu actividad.",
+      body: "La invitación se elimina de tu actividad.",
       confirmLabel: "Eliminar",
       onConfirm: () => padelitoMvp.handleDirectInvitationDelete(invitationId),
-      title: "Eliminar invitacion",
+      title: "Eliminar invitación",
       tone: "danger",
     });
   }
@@ -256,7 +255,7 @@ export function App() {
    */
   function confirmOwnMatchStatsReset() {
     requestConfirmation({
-      body: "Tus partidos siguen en el historial, pero tus estadisticas vuelven a cero desde ahora.",
+      body: "Tus partidos siguen en el historial, pero tus estadísticas vuelven a cero desde ahora.",
       confirmLabel: "Resetear",
       onConfirm: padelitoMvp.handleOwnMatchStatsReset,
       title: "Resetear score",
@@ -279,7 +278,7 @@ export function App() {
     }
 
     requestConfirmation({
-      body: "El jugador vera que su solicitud fue rechazada.",
+      body: "El jugador verá que su solicitud fue rechazada.",
       confirmLabel: "Rechazar",
       onConfirm: () => padelitoMvp.handleJoinRequestStatusChange(requestId, status),
       title: "Rechazar solicitud",
@@ -302,11 +301,11 @@ export function App() {
     }
 
     requestConfirmation({
-      body: "La invitacion quedara rechazada para el jugador que la envio.",
+      body: "La invitación quedará rechazada para el jugador que la envió.",
       confirmLabel: "Rechazar",
       onConfirm: () =>
         padelitoMvp.handleDirectInvitationStatusChange(invitationId, status),
-      title: "Rechazar invitacion",
+      title: "Rechazar invitación",
     });
   }
 
@@ -326,11 +325,11 @@ export function App() {
     }
 
     requestConfirmation({
-      body: "El desafio deja de estar disponible para nuevos partidos, sin borrar su historial.",
+      body: "El desafío deja de estar disponible para nuevos partidos, sin borrar su historial.",
       confirmLabel: "Archivar",
       onConfirm: () =>
         padelitoMvp.handleRecurringChallengeStatusUpdate(challengeId, status),
-      title: "Archivar desafio",
+      title: "Archivar desafío",
     });
   }
 
@@ -349,7 +348,7 @@ export function App() {
           className="h-auto w-40"
           src="/logo-padelito.svg"
         />
-        <nav aria-label="Navegacion principal" className="flex gap-2">
+        <nav aria-label="Navegación principal" className="flex gap-2">
           <IconButton
             icon={Home}
             isActive={padelitoMvp.activeMainView === "feed"}
@@ -488,7 +487,7 @@ export function App() {
       {padelitoMvp.activeMainView === "feed" ? (
         <FloatingCreatePostButton
           icon={Plus}
-          label="Crear publicacion"
+          label="Crear publicación"
           onClick={() => padelitoMvp.setIsCreatePostOpen(true)}
         />
       ) : null}

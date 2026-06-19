@@ -125,7 +125,7 @@ export function createInitialLocalDatabase(): PadelitoLocalDatabase {
         isActive: true,
         title: "Americano nocturno",
         description:
-          "Formato social por categoria, musica y tercer tiempo al finalizar.",
+          "Formato social por categoría, música y tercer tiempo al finalizar.",
         imageUrl: "",
         whatsappUrl: "https://wa.me/5491100000002",
         registrationUrl: "https://example.com/americano",

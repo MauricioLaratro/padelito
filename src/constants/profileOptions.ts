@@ -18,7 +18,7 @@ export const playerLevelLabels: Record<PlayerLevel, string> = {
 
 export const playerPositionLabels: Record<PlayerPosition, string> = {
   drive: "Drive",
-  backhand: "Reves",
+  backhand: "Revés",
   both: "Ambos",
   any: "Indiferente",
 };

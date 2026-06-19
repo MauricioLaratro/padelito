@@ -15,7 +15,7 @@ export const postTypeLabels: Record<PostType, string> = {
 };
 
 export const postVisibilityLabels: Record<PostVisibility, string> = {
-  public: "Publica",
+  public: "Pública",
   followers_only: "Solo seguidores",
 };
 
@@ -35,7 +35,7 @@ export const invitationStatusLabels: Record<InvitationStatus, string> = {
 
 export const eventInteractionLabels: Record<EventInteractionType, string> = {
   interested: "Me interesa",
-  attending: "Asistire",
+  attending: "Asistiré",
 };
 
 export const postTypeOptions = Object.entries(postTypeLabels).map(

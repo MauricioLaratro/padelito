@@ -211,14 +211,14 @@ export function createSupabasePadelitoRepository(
           .select("*")
           .order("created_at", { ascending: false })
           .returns<SupabaseRecurringChallengeRow[]>(),
-        "leer desafios recurrentes",
+        "leer desafíos recurrentes",
       ),
       readRows<SupabaseRecurringChallengeParticipantRow>(
         supabaseClient
           .from("recurring_challenge_participants")
           .select("*")
           .returns<SupabaseRecurringChallengeParticipantRow[]>(),
-        "leer participantes de desafios",
+        "leer participantes de desafíos",
       ),
       readRows<SupabaseNotificationRow>(
         supabaseClient
@@ -231,11 +231,18 @@ export function createSupabasePadelitoRepository(
     ]);
 
     const profiles = profileRows.map(mapSupabaseProfileRow);
+    const metadataDisplayName =
+      typeof user.user_metadata?.display_name === "string"
+        ? user.user_metadata.display_name
+        : undefined;
     const profilesWithSessionDraft = profiles.some(
       (profile) => profile.profileId === user.id,
     )
       ? profiles
-      : [createDraftProfile(user.id, user.email), ...profiles];
+      : [
+          createDraftProfile(user.id, user.email, metadataDisplayName),
+          ...profiles,
+        ];
     const sessionPrivateContact = await getPrivateProfileContact(user.id);
     const profilesWithSessionPrivateContact = profilesWithSessionDraft.map(
       (profile) =>
@@ -357,7 +364,7 @@ export function createSupabasePadelitoRepository(
       .insert(mapPostToSupabaseInsert(post));
 
     if (error) {
-      throw createSupabaseError("crear publicacion", error);
+      throw createSupabaseError("crear publicación", error);
     }
   }
 
@@ -378,7 +385,7 @@ export function createSupabasePadelitoRepository(
       .eq("author_profile_id", authorProfileId);
 
     if (error) {
-      throw createSupabaseError("cancelar publicacion", error);
+      throw createSupabaseError("cancelar publicación", error);
     }
   }
 
@@ -399,7 +406,7 @@ export function createSupabasePadelitoRepository(
       .eq("author_profile_id", authorProfileId);
 
     if (error) {
-      throw createSupabaseError("eliminar publicacion", error);
+      throw createSupabaseError("eliminar publicación", error);
     }
   }
 
@@ -422,7 +429,7 @@ export function createSupabasePadelitoRepository(
 
       if (sourcePostError) {
         throw createSupabaseError(
-          "crear publicacion vinculada al partido",
+          "crear publicación vinculada al partido",
           sourcePostError,
         );
       }
@@ -554,7 +561,7 @@ export function createSupabasePadelitoRepository(
     const { error } = await supabaseClient.rpc("reset_own_match_stats");
 
     if (error) {
-      throw createSupabaseError("resetear estadisticas", error);
+      throw createSupabaseError("resetear estadísticas", error);
     }
   }
 
@@ -574,7 +581,7 @@ export function createSupabasePadelitoRepository(
       .insert(mapRecurringChallengeToSupabaseInsert(challengeInput.challenge));
 
     if (challengeError) {
-      throw createSupabaseError("crear desafio recurrente", challengeError);
+      throw createSupabaseError("crear desafío recurrente", challengeError);
     }
 
     const { error: participantsError } = await supabaseClient
@@ -587,7 +594,7 @@ export function createSupabasePadelitoRepository(
 
     if (participantsError) {
       throw createSupabaseError(
-        "agregar participantes del desafio",
+        "agregar participantes del desafío",
         participantsError,
       );
     }
@@ -614,7 +621,7 @@ export function createSupabasePadelitoRepository(
       .eq("owner_profile_id", ownerProfileId);
 
     if (error) {
-      throw createSupabaseError("actualizar desafio recurrente", error);
+      throw createSupabaseError("actualizar desafío recurrente", error);
     }
   }
 
@@ -697,7 +704,7 @@ export function createSupabasePadelitoRepository(
         .eq("id", postId)
         .returns<SupabasePostRow[]>()
         .maybeSingle(),
-      "buscar publicacion para solicitud",
+      "buscar publicación para solicitud",
     );
 
     if (!requestedPost || requestedPost.post_type !== "looking_for_player") {
@@ -906,8 +913,8 @@ export function createSupabasePadelitoRepository(
       notificationType: "direct_match_invitation_received",
       relatedPostId: invitationInput.relatedPostId,
       relatedInvitationId: savedInvitation.id,
-      title: "Invitacion a partido",
-      body: "Recibiste una invitacion directa para jugar.",
+      title: "Invitación a partido",
+      body: "Recibiste una invitación directa para jugar.",
     });
   }
 
@@ -928,7 +935,7 @@ export function createSupabasePadelitoRepository(
         .eq("id", invitationId)
         .returns<SupabaseDirectMatchInvitationRow[]>()
         .maybeSingle(),
-      "buscar invitacion",
+      "buscar invitación",
     );
 
     if (!invitation || invitation.status !== "pending") {
@@ -950,10 +957,10 @@ export function createSupabasePadelitoRepository(
         .eq("id", invitationId);
 
       if (legacyUpdateError) {
-        throw createSupabaseError("actualizar invitacion", legacyUpdateError);
+        throw createSupabaseError("actualizar invitación", legacyUpdateError);
       }
     } else if (error) {
-      throw createSupabaseError("actualizar invitacion", error);
+      throw createSupabaseError("actualizar invitación", error);
     }
 
     await createNotification({
@@ -966,11 +973,11 @@ export function createSupabasePadelitoRepository(
       relatedPostId: invitation.related_post_id ?? undefined,
       relatedInvitationId: invitation.id,
       title:
-        status === "accepted" ? "Invitacion aceptada" : "Invitacion rechazada",
+        status === "accepted" ? "Invitación aceptada" : "Invitación rechazada",
       body:
         status === "accepted"
-          ? "Aceptaron tu invitacion para jugar."
-          : "Rechazaron tu invitacion para este partido.",
+          ? "Aceptaron tu invitación para jugar."
+          : "Rechazaron tu invitación para este partido.",
     });
   }
 
@@ -996,7 +1003,7 @@ export function createSupabasePadelitoRepository(
     }
 
     if (!isMissingSchemaFeatureError(cancelInvitationError)) {
-      throw createSupabaseError("cancelar invitacion", cancelInvitationError);
+      throw createSupabaseError("cancelar invitación", cancelInvitationError);
     }
 
     const { error } = await supabaseClient
@@ -1007,7 +1014,7 @@ export function createSupabasePadelitoRepository(
       .eq("status", "pending");
 
     if (error) {
-      throw createSupabaseError("cancelar invitacion", error);
+      throw createSupabaseError("cancelar invitación", error);
     }
   }
 
@@ -1030,7 +1037,7 @@ export function createSupabasePadelitoRepository(
       );
 
     if (error) {
-      throw createSupabaseError("eliminar invitacion", error);
+      throw createSupabaseError("eliminar invitación", error);
     }
   }
 
@@ -1055,7 +1062,7 @@ export function createSupabasePadelitoRepository(
           .eq("interaction_type", interactionType)
           .returns<SupabasePostInteractionRow[]>()
           .maybeSingle(),
-        "buscar interaccion de evento",
+        "buscar interacción de evento",
       );
 
     if (existingInteraction) {
@@ -1065,7 +1072,7 @@ export function createSupabasePadelitoRepository(
         .eq("id", existingInteraction.id);
 
       if (error) {
-        throw createSupabaseError("eliminar interaccion de evento", error);
+        throw createSupabaseError("eliminar interacción de evento", error);
       }
 
       return;
@@ -1082,7 +1089,7 @@ export function createSupabasePadelitoRepository(
       );
 
     if (error) {
-      throw createSupabaseError("crear interaccion de evento", error);
+      throw createSupabaseError("crear interacción de evento", error);
     }
   }
 
@@ -1102,7 +1109,7 @@ export function createSupabasePadelitoRepository(
       .is("read_at", null);
 
     if (error) {
-      throw createSupabaseError("marcar notificaciones como leidas", error);
+      throw createSupabaseError("marcar notificaciones como leídas", error);
     }
   }
 
@@ -1123,7 +1130,7 @@ export function createSupabasePadelitoRepository(
       .eq("recipient_profile_id", recipientProfileId);
 
     if (error) {
-      throw createSupabaseError("eliminar notificacion", error);
+      throw createSupabaseError("eliminar notificación", error);
     }
   }
 
@@ -1242,11 +1249,11 @@ export function createSupabasePadelitoRepository(
     }
 
     if (!error) {
-      throw new Error("Supabase no devolvio datos al insertar invitacion directa.");
+      throw new Error("Supabase no devolvió datos al insertar la invitación directa.");
     }
 
     if (!isMissingSchemaFeatureError(error)) {
-      throw createSupabaseError("insertar invitacion directa", error);
+      throw createSupabaseError("insertar invitación directa", error);
     }
 
     const {
@@ -1264,7 +1271,7 @@ export function createSupabasePadelitoRepository(
         .select("*")
         .returns<SupabaseDirectMatchInvitationRow[]>()
         .single(),
-      "insertar invitacion directa sin partido vinculado",
+      "insertar invitación directa sin partido vinculado",
     );
   }
 
@@ -1282,7 +1289,7 @@ export function createSupabasePadelitoRepository(
       .insert(mapNotificationToSupabaseInsert(notification));
 
     if (error) {
-      throw createSupabaseError("crear notificacion", error);
+      throw createSupabaseError("crear notificación", error);
     }
   }
 
@@ -1324,8 +1331,8 @@ export function createSupabasePadelitoRepository(
           actorProfileId: ownerProfileId,
           notificationType: "match_result_reminder",
           relatedMatchId: matchRow.id,
-          title: "Como termino el partido?",
-          body: "El partido ya deberia haber terminado. Carga el resultado cuando puedas.",
+          title: "¿Cómo terminó el partido?",
+          body: "El partido ya debería haber terminado. Cargá el resultado cuando puedas.",
         }),
       ),
     );
@@ -1393,9 +1400,14 @@ function createEmptySnapshot(): PadelitoRepositorySnapshot {
  * Lo usa loadApplicationSnapshot.
  * Sirve para que onboarding pueda guardar el perfil real con el id correcto.
  */
-function createDraftProfile(profileId: string, email?: string): Profile {
+function createDraftProfile(
+  profileId: string,
+  email?: string,
+  displayName?: string,
+): Profile {
   const currentTimestamp = createCurrentIsoDate();
-  const fallbackDisplayName = email?.split("@")[0] || "Jugador Padelito";
+  const fallbackDisplayName =
+    displayName?.trim() || email?.split("@")[0] || "Jugador Padelito";
 
   return {
     profileId,
@@ -1470,7 +1482,7 @@ async function writeSingleRow<RowType>(
   }
 
   if (!data) {
-    throw new Error(`Supabase no devolvio datos al ${actionDescription}.`);
+    throw new Error(`Supabase no devolvió datos al ${actionDescription}.`);
   }
 
   return data;
@@ -1495,7 +1507,7 @@ async function registerAcceptedPlayerOnPostFromClient(
         .eq("id", postId)
         .returns<SupabasePostRow[]>()
         .maybeSingle(),
-      "buscar publicacion para descontar cupo",
+      "buscar publicación para descontar cupo",
     ),
     readOptionalRow<SupabaseProfileRow>(
       supabaseClient
@@ -1651,5 +1663,57 @@ function createSupabaseError(
   actionDescription: string,
   error: SupabaseRepositoryError,
 ): Error {
-  return new Error(`No se pudo ${actionDescription}: ${error.message}`);
+  return new Error(
+    `No se pudo ${actionDescription}: ${getReadableSupabaseErrorMessage(error)}`,
+  );
+}
+
+/**
+ * Traduce errores tecnicos de Supabase a mensajes de producto.
+ * Se construye para que la UI no muestre ingles ni detalles internos.
+ * Lo usa createSupabaseError.
+ * Sirve para orientar al usuario sin exponer SQL, RLS o schema cache.
+ */
+function getReadableSupabaseErrorMessage(error: SupabaseRepositoryError) {
+  const normalizedMessage = error.message.toLowerCase();
+
+  if (
+    normalizedMessage.includes("schema cache") ||
+    normalizedMessage.includes("could not find the function") ||
+    normalizedMessage.includes("could not find") ||
+    normalizedMessage.includes("column")
+  ) {
+    return "la base de datos todavía no tiene la última actualización aplicada.";
+  }
+
+  if (
+    normalizedMessage.includes("duplicate key") ||
+    normalizedMessage.includes("already exists")
+  ) {
+    return "ese registro ya existe.";
+  }
+
+  if (
+    normalizedMessage.includes("row-level security") ||
+    normalizedMessage.includes("permission denied") ||
+    normalizedMessage.includes("not authorized") ||
+    normalizedMessage.includes("not allowed") ||
+    normalizedMessage.includes("violates")
+  ) {
+    return "no tenés permisos para realizar esta acción.";
+  }
+
+  if (
+    normalizedMessage.includes("jwt") ||
+    normalizedMessage.includes("token") ||
+    normalizedMessage.includes("session")
+  ) {
+    return "tu sesión venció. Cerrá sesión e ingresá nuevamente.";
+  }
+
+  if (normalizedMessage.includes("network")) {
+    return "no pudimos conectar con el servidor. Revisá tu conexión.";
+  }
+
+  return "ocurrió un problema al guardar los cambios.";
 }

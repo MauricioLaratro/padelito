@@ -39,7 +39,7 @@ export function QuickAccessOnboardingStep({
           </h2>
         </div>
         <Button
-          aria-label="Ocultar acceso rapido"
+          aria-label="Ocultar acceso rápido"
           className="min-h-9 px-3"
           icon={X}
           onClick={onDismiss}

@@ -25,7 +25,7 @@ export function OnboardingProfileScreen({
         </p>
         <h1 className="mt-2 text-2xl font-black">Completa tu base</h1>
         <p className="mt-2 text-sm leading-6 text-text-secondary">
-          Datos minimos para que otros jugadores entiendan categoria, zona y
+          Datos mínimos para que otros jugadores entiendan categoría, zona y
           disponibilidad.
         </p>
 

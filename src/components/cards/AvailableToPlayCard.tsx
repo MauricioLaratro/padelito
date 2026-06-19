@@ -108,7 +108,7 @@ export function AvailableToPlayCard({
           }}
           variant={isOwnPost ? "danger" : "primary"}
         >
-          {isOwnPost ? "Cancelar publicacion" : "Invitar a jugar"}
+          {isOwnPost ? "Cancelar publicación" : "Invitar a jugar"}
         </Button>
       </div>
     </article>

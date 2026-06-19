@@ -125,7 +125,7 @@ export function MatchHistorySection({
 
       {currentProfile.matchStatsResetAt ? (
         <p className="mt-2 text-xs text-text-secondary">
-          Score calculado desde el ultimo reset.
+          Score calculado desde el último reset.
         </p>
       ) : null}
 
@@ -143,7 +143,7 @@ export function MatchHistorySection({
           ))
         ) : (
           <p className="text-sm text-text-secondary">
-            Todavia no hay partidos registrados.
+            Todavía no hay partidos registrados.
           </p>
         )}
       </div>

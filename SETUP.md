@@ -119,6 +119,15 @@ Estado de esta instancia:
 
 La documentacion oficial de Supabase indica que el SMTP default es solo para exploracion/demos, con restricciones fuertes y sin garantia de entrega. Para produccion hay que configurar SMTP propio desde Supabase Auth.
 
+Para el preview gratuito y cerrado del MVP se evita que el registro dependa de email:
+
+- La app registra con email, nombre de usuario, contraseña y repetición de contraseña.
+- La app ya no muestra magic link como acceso cotidiano.
+- El envío de email queda reservado para recuperación de contraseña.
+- En Supabase Dashboard hay que entrar a Authentication > Providers > Email y desactivar `Confirm email`.
+- Con `Confirm email` desactivado, Supabase confirma implícitamente el email y el registro devuelve sesión inmediata.
+- Antes de un lanzamiento público abierto conviene revaluar esta decisión y activar SMTP propio si se vuelve a exigir confirmación.
+
 Checklist antes del lanzamiento publico:
 
 - Elegir proveedor SMTP: Resend, AWS SES, Postmark, SendGrid, Brevo u otro compatible.
@@ -126,7 +135,7 @@ Checklist antes del lanzamiento publico:
 - Configurar SPF, DKIM y DMARC del dominio de envio.
 - Configurar Custom SMTP en Supabase Dashboard > Authentication.
 - Revisar Authentication > Rate Limits despues de activar SMTP propio.
-- Mantener magic link como alternativa secundaria y priorizar email/contrasena para reducir envios.
+- Mantener login por email/contraseña como flujo principal para reducir envíos.
 
 Referencias:
 
@@ -135,15 +144,14 @@ Referencias:
 
 ## Sesion de usuario
 
-- Acceso real recomendado: email y contrasena.
-- Registro real: crear cuenta con email y contrasena desde la pantalla inicial.
-- Acceso alternativo: magic link por email para primer acceso o recuperacion puntual.
-- Recuperacion: usar `Crear o recuperar contrasena`, abrir el enlace recibido y guardar una nueva contrasena en la app.
+- Acceso real recomendado: email y contraseña.
+- Registro real: crear cuenta con email, nombre de usuario, contraseña y repetición de contraseña desde la pantalla inicial.
+- Recuperación: usar `Olvidé mi contraseña`, abrir el enlace recibido y guardar una nueva contraseña en la app.
 - Persistencia: Supabase mantiene el perfil en `public.profiles` vinculado a `auth.users.id`.
-- Persistencia de sesion: el cliente Supabase conserva la sesion del navegador, refresca token y la app intenta recuperarla antes de mostrar el formulario de acceso.
-- Rate limit de email: Supabase controla el limite de envio; la app no persiste cooldown local y muestra un mensaje humano si el servicio rechaza el email.
-- Cierre de sesion: desde Perfil, `Cerrar sesion` elimina la sesion local del navegador pero no borra datos.
-- Reingreso: usando el mismo email/contrasena, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
+- Persistencia de sesión: el cliente Supabase conserva la sesión del navegador, refresca token y la app intenta recuperarla antes de mostrar el formulario de acceso.
+- Rate limit de email: solo debería afectar recuperación de contraseña mientras se use SMTP default.
+- Cierre de sesión: desde Perfil, `Cerrar sesión` elimina la sesión local del navegador pero no borra datos.
+- Reingreso: usando el mismo email/contraseña, Supabase recupera el mismo usuario y la app vuelve a cargar su perfil y actividad.
 
 ## Datos de prueba
 

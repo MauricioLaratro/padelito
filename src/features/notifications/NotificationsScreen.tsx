@@ -92,7 +92,7 @@ export function NotificationsScreen({
           <h1 className="text-2xl font-black">Notificaciones</h1>
         </div>
         <Button icon={CheckCheck} onClick={onNotificationsRead} variant="secondary">
-          Marcar leidas
+          Marcar leídas
         </Button>
       </div>
 
@@ -168,7 +168,7 @@ export function NotificationsScreen({
         ))
       ) : (
         <EmptyState
-          description="Cuando alguien te siga, se postule o responda una invitacion, aparece aca."
+          description="Cuando alguien te siga, se postule o responda una invitación, aparece acá."
           icon={Bell}
           title="Sin notificaciones"
         />

@@ -42,7 +42,7 @@ export function PostAuthorRow({
           </p>
           <p className="text-xs font-semibold text-text-secondary">
             {authorProfile.profileType === "organization"
-              ? "Organizacion"
+              ? "Organización"
               : "Jugador"}
           </p>
         </div>

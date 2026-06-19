@@ -151,7 +151,7 @@ export function EventPostCard({
                 }
                 variant={isAttending ? "secondary" : "primary"}
               >
-                Asistire
+                Asistiré
               </Button>
             </>
           )}

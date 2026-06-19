@@ -318,13 +318,13 @@ export function CreateMatchModal({
           {availableChallenges.length > 0 ? (
             <FormField
               fieldType="select"
-              label="Desafio"
+              label="Desafío"
               onChange={(changeEvent) =>
                 handleChallengeChange(changeEvent.target.value)
               }
               value={selectedChallengeId}
             >
-              <option value="none">Sin desafio</option>
+              <option value="none">Sin desafío</option>
               {availableChallenges.map((challenge) => (
                 <option key={challenge.challengeId} value={challenge.challengeId}>
                   {challenge.title}
@@ -376,7 +376,7 @@ export function CreateMatchModal({
               ))
             ) : (
               <p className="text-sm text-text-secondary">
-                Segui jugadores para agregarlos rapido al partido.
+                Seguí jugadores para agregarlos rápido al partido.
               </p>
             )}
           </section>
@@ -414,7 +414,7 @@ export function CreateMatchModal({
               />
               <FormField
                 fieldType="select"
-                label="Categoria"
+                label="Categoría"
                 onChange={(changeEvent) =>
                   setSelectedLevel(changeEvent.target.value as PlayerLevel)
                 }
@@ -431,7 +431,7 @@ export function CreateMatchModal({
               </FormField>
               <FormField
                 fieldType="select"
-                label="Posicion"
+                label="Posición"
                 onChange={(changeEvent) =>
                   setSelectedPosition(
                     changeEvent.target.value as PlayerPosition,

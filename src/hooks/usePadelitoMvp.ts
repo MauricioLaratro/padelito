@@ -58,14 +58,10 @@ export type MainViewIdentifier =
   | "notifications";
 export type BackendModeIdentifier = "local" | "supabase";
 export type AuthLoadingActionIdentifier =
-  | "magicLink"
   | "passwordReset"
   | "passwordSignIn"
   | "passwordSignUp"
   | "passwordUpdate";
-
-const LEGACY_MAGIC_LINK_COOLDOWN_STORAGE_KEY =
-  "padelito-magic-link-cooldown-expires-at-v1";
 
 /**
  * Orquesta el estado funcional del MVP local.
@@ -177,10 +173,6 @@ export function usePadelitoMvp() {
       setIsRemoteSnapshotLoading(false);
     }
   }, [supabaseRepository]);
-
-  useEffect(() => {
-    window.localStorage.removeItem(LEGACY_MAGIC_LINK_COOLDOWN_STORAGE_KEY);
-  }, []);
 
   useEffect(() => {
     if (!supabaseBrowserClient || !supabaseRepository) {
@@ -312,7 +304,7 @@ export function usePadelitoMvp() {
    */
   async function runRemoteAction(action: () => Promise<void>) {
     if (!supabaseRepository) {
-      setRemoteErrorMessage("El acceso real no esta disponible en este entorno.");
+      setRemoteErrorMessage("El acceso real no está disponible en este entorno.");
       return false;
     }
 
@@ -343,14 +335,14 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Inicia sesion con email y contrasena.
+   * Inicia sesión con email y contraseña.
    * Se construye para que el acceso diario no dependa del email.
    * Lo usa AuthScreen.
    * Sirve para recuperar el perfil persistido con una accion directa.
    */
   async function handlePasswordSignInRequest(email: string, password: string) {
     if (!supabaseBrowserClient) {
-      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      setAuthErrorMessage("El acceso real no está disponible en este entorno.");
       return;
     }
 
@@ -376,14 +368,18 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Crea cuenta con email y contrasena.
-   * Se construye para evitar depender de magic link en cada ingreso.
+   * Crea cuenta con email y contraseña.
+   * Se construye para evitar depender del email en cada ingreso.
    * Lo usa AuthScreen.
    * Sirve para registrar usuarios reales y mantener el perfil por auth.users.id.
    */
-  async function handlePasswordSignUpRequest(email: string, password: string) {
+  async function handlePasswordSignUpRequest(
+    email: string,
+    displayName: string,
+    password: string,
+  ) {
     if (!supabaseBrowserClient) {
-      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      setAuthErrorMessage("El acceso real no está disponible en este entorno.");
       return;
     }
 
@@ -396,6 +392,9 @@ export function usePadelitoMvp() {
       email,
       password,
       options: {
+        data: {
+          display_name: displayName,
+        },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -409,10 +408,10 @@ export function usePadelitoMvp() {
     if (data.session) {
       setBackendMode("supabase");
       await loadRemoteSnapshot();
-      setAuthStatusMessage("Cuenta creada. Ya podes completar tu perfil.");
+      setAuthStatusMessage("Cuenta creada. Ya podés completar tu perfil.");
     } else {
       setAuthStatusMessage(
-        "Si el email es nuevo, te enviamos confirmacion. Si ya tenias cuenta, usa Crear o recuperar contrasena.",
+        "Cuenta creada, pero Supabase todavía pide confirmar email. Para registro directo hay que desactivar esa confirmación en Auth.",
       );
     }
 
@@ -420,14 +419,14 @@ export function usePadelitoMvp() {
   }
 
   /**
-   * Envia email para crear o recuperar contrasena.
-   * Se construye para cuentas existentes nacidas por magic link.
+   * Envía email para crear o recuperar contraseña.
+   * Se construye para cuentas existentes que olvidaron su acceso.
    * Lo usa AuthScreen.
    * Sirve para iniciar el flujo correcto antes de llamar updateUser.
    */
   async function handlePasswordResetRequest(email: string) {
     if (!supabaseBrowserClient) {
-      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      setAuthErrorMessage("El acceso real no está disponible en este entorno.");
       return;
     }
 
@@ -450,19 +449,19 @@ export function usePadelitoMvp() {
     }
 
     setAuthStatusMessage(
-      "Te enviamos un enlace para crear o recuperar tu contrasena.",
+      "Te enviamos un enlace para crear o recuperar tu contraseña.",
     );
   }
 
   /**
-   * Guarda una nueva contrasena despues del enlace de recuperacion.
+   * Guarda una nueva contraseña después del enlace de recuperación.
    * Se construye para completar el flujo PASSWORD_RECOVERY de Supabase.
    * Lo usa AuthScreen cuando el usuario vuelve desde el email.
-   * Sirve para que cuentas existentes puedan entrar luego con contrasena.
+   * Sirve para que cuentas existentes puedan entrar luego con contraseña.
    */
   async function handlePasswordUpdateRequest(password: string) {
     if (!supabaseBrowserClient) {
-      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
+      setAuthErrorMessage("El acceso real no está disponible en este entorno.");
       return;
     }
 
@@ -483,7 +482,7 @@ export function usePadelitoMvp() {
     setBackendMode("supabase");
     setIsPasswordRecoveryMode(false);
     setAuthLoadingAction(null);
-    setAuthStatusMessage("Contrasena actualizada.");
+    setAuthStatusMessage("Contraseña actualizada.");
     await loadRemoteSnapshot();
   }
 
@@ -506,7 +505,7 @@ export function usePadelitoMvp() {
       const { error } = await supabaseBrowserClient.auth.signOut();
 
       if (error) {
-        setRemoteErrorMessage(getReadableErrorMessage(error));
+        setRemoteErrorMessage(getReadableAuthErrorMessage(error));
         return;
       }
 
@@ -518,39 +517,6 @@ export function usePadelitoMvp() {
       ...currentDatabase,
       sessionProfileId: undefined,
     }));
-  }
-
-  /**
-   * Solicita enlace magico de Supabase.
-   * Se construye para iniciar auth real sin password.
-   * Lo usa AuthScreen.
-   * Sirve para activar backend real cuando Supabase esta configurado.
-   */
-  async function handleEmailSignInRequest(email: string) {
-    if (!supabaseBrowserClient) {
-      setAuthErrorMessage("El acceso real no esta disponible en este entorno.");
-      return;
-    }
-
-    setAuthLoadingAction("magicLink");
-    setAuthErrorMessage(null);
-    setAuthStatusMessage(null);
-
-    const { error } = await supabaseBrowserClient.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-
-    if (error) {
-      setAuthLoadingAction(null);
-      setAuthErrorMessage(getReadableAuthErrorMessage(error));
-      return;
-    }
-
-    setAuthLoadingAction(null);
-    setAuthStatusMessage("Te enviamos un enlace de acceso al email.");
   }
 
   /**
@@ -1116,20 +1082,20 @@ export function usePadelitoMvp() {
 
       if (!privateContact) {
         setRemoteErrorMessage(
-          "El contacto privado queda disponible cuando hay una solicitud o invitacion aceptada.",
+          "El contacto privado queda disponible cuando hay una solicitud o invitación aceptada.",
         );
         return;
       }
 
       if (!privateContact.whatsappPhone) {
-        setRemoteErrorMessage("Ese perfil todavia no tiene WhatsApp cargado.");
+        setRemoteErrorMessage("Ese perfil todavía no tiene WhatsApp cargado.");
         return;
       }
 
       const whatsappUrl = createWhatsappContactUrl(privateContact.whatsappPhone);
 
       if (!whatsappUrl) {
-        setRemoteErrorMessage("Ese WhatsApp no parece tener un formato valido.");
+        setRemoteErrorMessage("Ese WhatsApp no parece tener un formato válido.");
         return;
       }
 
@@ -1323,7 +1289,6 @@ export function usePadelitoMvp() {
     setSelectedPublicProfileId,
     handleDemoSignIn,
     handleSignOut,
-    handleEmailSignInRequest,
     handlePasswordResetRequest,
     handlePasswordSignInRequest,
     handlePasswordSignUpRequest,
@@ -1370,13 +1335,13 @@ function getReadableErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "Ocurrio un error inesperado.";
+  return "Ocurrió un error inesperado.";
 }
 
 /**
  * Convierte errores de auth en mensajes aptos para jugadores.
  * Se construye para esconder textos tecnicos del proveedor.
- * Lo usan acciones de acceso por contrasena y magic link.
+ * Lo usan acciones de acceso por contraseña y recuperación.
  * Sirve para que la pantalla de entrada explique el siguiente paso.
  */
 function getReadableAuthErrorMessage(error: unknown) {
@@ -1384,22 +1349,44 @@ function getReadableAuthErrorMessage(error: unknown) {
   const normalizedMessage = readableMessage.toLowerCase();
 
   if (normalizedMessage.includes("rate limit")) {
-    return "El envio de emails esta limitado temporalmente. Proba con contrasena o intenta mas tarde.";
+    return "El envío de emails está limitado temporalmente. Si ya tenés cuenta, entrá con contraseña; si no, intentá más tarde.";
+  }
+
+  if (
+    normalizedMessage.includes("already registered") ||
+    normalizedMessage.includes("already exists") ||
+    normalizedMessage.includes("user exists")
+  ) {
+    return "Ese email ya tiene cuenta. Entrá con contraseña o recuperala.";
+  }
+
+  if (
+    normalizedMessage.includes("signup") &&
+    normalizedMessage.includes("disabled")
+  ) {
+    return "El registro está desactivado temporalmente.";
+  }
+
+  if (
+    normalizedMessage.includes("invalid email") ||
+    normalizedMessage.includes("email address")
+  ) {
+    return "Revisá el email ingresado.";
   }
 
   if (normalizedMessage.includes("invalid login credentials")) {
-    return "El email o la contrasena no coinciden.";
+    return "El email o la contraseña no coinciden.";
   }
 
   if (normalizedMessage.includes("email not confirmed")) {
-    return "Todavia falta confirmar el email desde el enlace que te enviamos.";
+    return "Todavía falta confirmar el email desde el enlace que te enviamos.";
   }
 
   if (normalizedMessage.includes("password")) {
-    return "Revisa la contrasena. Debe tener al menos 6 caracteres.";
+    return "Revisá la contraseña. Debe tener entre 8 y 64 caracteres.";
   }
 
-  return readableMessage;
+  return "No pudimos completar el acceso. Revisá los datos e intentá nuevamente.";
 }
 
 /**

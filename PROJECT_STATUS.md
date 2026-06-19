@@ -4,7 +4,7 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contrasena, registro, recuperacion de contrasena, sesion persistente y magic link como alternativa. El modulo de partidos ya cubre historial, resultados, estadisticas, busqueda de jugadores y desafios recurrentes.
+MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contraseña, registro con nombre de usuario y doble contraseña, recuperación de contraseña por email y sesión persistente. El módulo de partidos ya cubre historial, resultados, estadísticas, búsqueda de jugadores y desafíos recurrentes.
 
 - App React/Vite levantada en `http://localhost:5173` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
@@ -32,10 +32,12 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - MVP sin app nativa, rankings, marketplace, chat, geolocalizacion ni torneos internos.
 - Repositorio local temporal para probar flujos sin pedir credenciales.
 - Supabase queda conectado por cliente browser con fallback demo local.
-- Auth real usa email/contrasena para el acceso diario, magic link como alternativa y mantiene modo demo local.
+- Auth real usa email/contraseña para el acceso diario y mantiene modo demo local cuando Supabase no está configurado.
 - Supabase mantiene sesion persistente en el navegador con refresh automatico de token.
-- Magic link queda como alternativa secundaria; Supabase controla su rate limit y la app muestra mensajes humanos.
-- Recuperacion de contrasena usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
+- Magic link fue retirado de la UI para que el email quede reservado a recuperación de contraseña.
+- Registro pide email, nombre de usuario, contraseña y repetición de contraseña; el nombre queda guardado en metadata de Auth para prellenar onboarding.
+- Recuperación de contraseña usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
+- Para preview cerrado sin costo se recomienda desactivar `Confirm email` en Supabase Auth > Providers > Email; antes de un lanzamiento público abierto debe revaluarse junto con SMTP propio.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
@@ -71,6 +73,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Las cancelaciones de participaciones aceptadas dependen de RPC security definer para mantener consistencia entre `posts`, `match_records` y `match_participants`.
 - Los recordatorios de resultado no usan scheduler externo en el MVP; se crean al cargar/refrescar snapshot, por lo que no existen hasta que el creador vuelve a abrir o refrescar la app.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
+- Desactivar `Confirm email` reduce fricción y evita rate limit en registro, pero implica aceptar cuentas sin verificación de correo durante el preview cerrado.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -219,6 +222,16 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `npm run qa:supabase` pasa con `test@padelito.test` y `test2@padelito.test`;
   - verificacion puntual confirma columna `notifications.related_match_id` y RPCs de cancelacion disponibles;
   - navegador integrado cargo `http://127.0.0.1:5173/` sin errores de consola.
+- Auditoría Auth/textos:
+  - formulario de registro actualizado a email, nombre de usuario, contraseña y repetición de contraseña;
+  - magic link retirado de la UI y del contrato expuesto por el hook principal;
+  - recuperación de contraseña queda como único flujo visible que envía email;
+  - traductor de errores Auth/Supabase ampliado para evitar alerts crudos en inglés;
+  - textos visibles y `aria-label` revisados para corregir errores de acentos obvios;
+  - `npm run build` pasa;
+  - `npm run lint` pasa;
+  - `npm run qa:supabase` pasa con usuarios de prueba;
+  - navegador integrado no pudo mostrar el dashboard de Supabase Auth porque la página quedó sin DOM visible; queda pendiente desactivar `Confirm email` desde Authentication > Providers > Email.
 
 ## Git
 
@@ -246,6 +259,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit reset score: `62812ee Ajustar historial y reset de score`.
 - Commit UX perfil: `0c07089 Refinar perfil y experiencia mobile`.
 - Commit permisos perfil: `61f614b Corregir permisos al guardar perfil`.
+- Commit auth/textos: `Ajustar registro y textos de auth`.
 
 ## Regla de idioma
 
@@ -259,6 +273,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
+- Desactivar `Confirm email` en Supabase Auth > Providers > Email para probar registro directo sin correo.
 - Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
 - Preparar deploy Cloudflare Pages.

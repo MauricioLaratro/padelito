@@ -264,7 +264,7 @@ export function DirectInvitationModal({
         </div>
 
         <Button className="mt-5 w-full" icon={Send} type="submit" variant="primary">
-          Enviar invitacion
+          Enviar invitación
         </Button>
       </form>
     </div>

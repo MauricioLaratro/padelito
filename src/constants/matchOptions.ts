@@ -17,8 +17,8 @@ export const matchParticipantSideLabels: Record<MatchParticipantSide, string> = 
 };
 
 export const matchWinnerSideLabels: Record<MatchWinnerSide, string> = {
-  team_a: "Gano Equipo A",
-  team_b: "Gano Equipo B",
+  team_a: "Ganó Equipo A",
+  team_b: "Ganó Equipo B",
   draw: "Empate",
 };
 

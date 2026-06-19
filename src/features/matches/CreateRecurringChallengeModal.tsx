@@ -37,7 +37,7 @@ export function CreateRecurringChallengeModal({
   onChallengeCreate,
   onClose,
 }: CreateRecurringChallengeModalProps) {
-  const [title, setTitle] = useState("Desafio semanal");
+  const [title, setTitle] = useState("Desafío semanal");
   const [frequency, setFrequency] =
     useState<RecurringChallengeFrequency>("weekly");
   const [usualDayOfWeek, setUsualDayOfWeek] = useState(4);
@@ -141,9 +141,9 @@ export function CreateRecurringChallengeModal({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
-              Desafio
+              Desafío
             </p>
-            <h2 className="mt-1 text-2xl font-black">Nuevo desafio</h2>
+            <h2 className="mt-1 text-2xl font-black">Nuevo desafío</h2>
           </div>
           <button
             aria-label="Cerrar"
@@ -181,7 +181,7 @@ export function CreateRecurringChallengeModal({
           <div className="grid grid-cols-2 gap-3">
             <FormField
               fieldType="select"
-              label="Dia"
+              label="Día"
               onChange={(changeEvent) =>
                 setUsualDayOfWeek(Number.parseInt(changeEvent.target.value, 10))
               }
@@ -265,14 +265,14 @@ export function CreateRecurringChallengeModal({
               ))
             ) : (
               <p className="text-sm text-text-secondary">
-                Segui jugadores para agregarlos al desafio.
+                Seguí jugadores para agregarlos al desafío.
               </p>
             )}
           </section>
         </div>
 
         <Button className="mt-5 w-full" type="submit" variant="primary">
-          Guardar desafio
+          Guardar desafío
         </Button>
       </form>
     </div>

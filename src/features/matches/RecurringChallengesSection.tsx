@@ -61,7 +61,7 @@ export function RecurringChallengesSection({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
-            Desafios
+            Desafíos
           </p>
           <h2 className="text-xl font-black">Recurrentes</h2>
         </div>
@@ -88,7 +88,7 @@ export function RecurringChallengesSection({
           ))
         ) : (
           <p className="text-sm text-text-secondary">
-            Todavia no hay desafios recurrentes.
+            Todavía no hay desafíos recurrentes.
           </p>
         )}
       </div>

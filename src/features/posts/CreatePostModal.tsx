@@ -137,7 +137,7 @@ export function CreatePostModal({
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               Publicar
             </p>
-            <h2 className="mt-1 text-2xl font-black">Nueva publicacion</h2>
+            <h2 className="mt-1 text-2xl font-black">Nueva publicación</h2>
           </div>
           <button
             aria-label="Cerrar"
@@ -219,14 +219,14 @@ export function CreatePostModal({
           {postType === "event" ? (
             <>
               <FormField
-                label="Titulo"
+                label="Título"
                 onChange={(changeEvent) => setEventTitle(changeEvent.target.value)}
                 required
                 value={eventTitle}
               />
               <FormField
                 fieldType="textarea"
-                label="Descripcion"
+                label="Descripción"
                 onChange={(changeEvent) =>
                   setEventDescription(changeEvent.target.value)
                 }
@@ -250,7 +250,7 @@ export function CreatePostModal({
                 value={eventWhatsappUrl}
               />
               <FormField
-                label="Inscripcion opcional"
+                label="Inscripción opcional"
                 onChange={(changeEvent) =>
                   setEventRegistrationUrl(changeEvent.target.value)
                 }
@@ -270,7 +270,7 @@ export function CreatePostModal({
             <>
               <FormField
                 fieldType="select"
-                label="Categoria"
+                label="Categoría"
                 onChange={(changeEvent) =>
                   setSelectedLevel(changeEvent.target.value as PlayerLevel)
                 }
@@ -287,7 +287,7 @@ export function CreatePostModal({
               </FormField>
               <FormField
                 fieldType="select"
-                label="Posicion"
+                label="Posición"
                 onChange={(changeEvent) =>
                   setSelectedPosition(changeEvent.target.value as PlayerPosition)
                 }

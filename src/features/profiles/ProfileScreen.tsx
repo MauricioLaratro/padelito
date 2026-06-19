@@ -115,7 +115,7 @@ export function ProfileScreen({
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               {currentProfile.profileType === "player"
                 ? "Jugador"
-                : "Organizacion"}
+                : "Organización"}
             </p>
             <h1 className="truncate text-2xl font-black">
               {currentProfile.displayName}
@@ -152,10 +152,10 @@ export function ProfileScreen({
             Editar perfil
           </Button>
           <Button icon={BellRing} onClick={onQuickAccessReset} variant="primary">
-            Agregar acceso rapido
+            Agregar acceso rápido
           </Button>
           <Button icon={LogOut} onClick={onSignOut} variant="secondary">
-            Cerrar sesion
+            Cerrar sesión
           </Button>
         </div>
       </article>
