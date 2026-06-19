@@ -150,16 +150,21 @@ export function AuthScreen({
       <section className="w-full rounded-lg border border-border-subtle bg-surface-primary p-5 shadow-floating">
         <img
           alt="Padelito"
-          className="mb-7 h-auto w-56"
+          className="mb-6 h-auto w-56"
           src="/logo-padelito.svg"
         />
 
-        <h1 className="text-2xl font-black leading-tight">
-          {isPasswordRecoveryMode ? "Nueva contraseña" : "Entrar a Padelito"}
-        </h1>
+        {isPasswordRecoveryMode ? (
+          <h1 className="text-2xl font-black leading-tight">
+            Nueva contraseña
+          </h1>
+        ) : null}
 
         {isEmailAuthEnabled ? (
-          <form className="mt-5 grid gap-3" onSubmit={handlePasswordSubmit}>
+          <form
+            className={`${isPasswordRecoveryMode ? "mt-5" : "mt-0"} grid gap-3`}
+            onSubmit={handlePasswordSubmit}
+          >
             {!isPasswordRecoveryMode ? (
               <div className="grid grid-cols-2 rounded-full border border-border-subtle bg-surface-secondary p-1">
                 <button
