@@ -4,7 +4,7 @@ Este archivo debe ser actualizado durante el desarrollo.
 
 ## Estado actual
 
-MVP local testeable disponible, publicado en GitHub y con Supabase conectado localmente. Auth real ahora soporta login cotidiano con email/contraseña, registro con nombre de usuario y doble contraseña, recuperación de contraseña por email y sesión persistente. El módulo de partidos ya cubre historial, resultados, estadísticas, búsqueda de jugadores y desafíos recurrentes.
+MVP local testeable disponible, publicado en GitHub, conectado a Supabase y desplegado en Cloudflare Pages. Auth real ahora soporta login cotidiano con email/contraseña, registro con nombre de usuario y doble contraseña, recuperación de contraseña por email y sesión persistente. El módulo de partidos ya cubre historial, resultados, estadísticas, búsqueda de jugadores y desafíos recurrentes.
 
 - App React/Vite levantada en `http://localhost:5173` durante esta sesion.
 - Preview estatico de respaldo disponible en `http://localhost:4173`.
@@ -17,7 +17,7 @@ MVP local testeable disponible, publicado en GitHub y con Supabase conectado loc
 - Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos, enlace entre feed social y partidos, y desafios recurrentes.
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
 - Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
-- Cloudflare Pages creado en plan gratuito con proyecto `padelito` y dominio `https://padelito-29z.pages.dev`, pendiente de primer deploy.
+- Cloudflare Pages creado en plan gratuito con proyecto `padelito`; primer deploy productivo verificado en `https://padelito-29z.pages.dev`.
 
 ## Comprension del producto
 
@@ -76,8 +76,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Los recordatorios de resultado no usan scheduler externo en el MVP; se crean al cargar/refrescar snapshot, por lo que no existen hasta que el creador vuelve a abrir o refrescar la app.
 - Notificaciones web tienen restricciones diferentes entre iPhone y Android.
 - Desactivar `Confirm email` reduce fricción y evita rate limit en registro, pero implica aceptar cuentas sin verificación de correo durante el preview cerrado.
-- El deploy directo de Pages desde esta maquina requiere `CLOUDFLARE_API_TOKEN`; la API MCP pudo crear/configurar el proyecto, pero no subir archivos locales sin ese token.
-- La conexion Pages GitHub devolvio error interno de instalacion Git de Cloudflare, por lo que requiere reconexion manual de la app GitHub de Pages o token local para deploy directo.
+- Cloudflare Pages queda atado a la rama `codex/base-mvp-local`; si se cambia de rama principal antes del dominio propio, hay que actualizar la production branch.
+- El dominio gratuito `pages.dev` sirve para preview, pero el lanzamiento publico final necesita dominio propio, SMTP propio y revision de URLs permitidas en Supabase Auth.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -235,7 +235,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `npm run build` pasa;
   - `npm run lint` pasa;
   - `npm run qa:supabase` pasa con usuarios de prueba;
-  - navegador integrado no pudo mostrar el dashboard de Supabase Auth porque la página quedó sin DOM visible; queda pendiente desactivar `Confirm email` desde Authentication > Providers > Email.
+  - el usuario desactivo `Confirm email` en Supabase Auth para permitir registro directo durante el preview cerrado.
 - Cloudflare Pages:
   - proyecto Pages `padelito` creado por API en la cuenta Cloudflare;
   - dominio gratuito asignado: `https://padelito-29z.pages.dev`;
@@ -243,8 +243,11 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` configuradas en preview y produccion;
   - `wrangler.jsonc` agregado para deploy directo desde `dist`;
   - `npm run build` y `npm run lint` pasan antes del intento de deploy;
-  - deploy directo con `wrangler pages deploy` quedo bloqueado por falta de `CLOUDFLARE_API_TOKEN`;
-  - intento de conectar GitHub por API fallo con error interno de la instalacion Cloudflare Pages Git.
+  - fuente GitHub reconectada en Cloudflare Pages: `MauricioLaratro/padelito`;
+  - primer deployment productivo creado por API: `ec22e408-caad-4e9d-bf39-a4a52a502f96`;
+  - build y deploy de Cloudflare Pages finalizaron en `success`;
+  - `https://padelito-29z.pages.dev` responde `200`;
+  - assets productivos verificados: JS y CSS responden `200`.
 
 ## Git
 
@@ -274,6 +277,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit permisos perfil: `61f614b Corregir permisos al guardar perfil`.
 - Commit auth/textos: `Ajustar registro y textos de auth`.
 - Commit deploy Cloudflare: `Preparar despliegue gratuito en Cloudflare`.
+- Commit documentacion deploy: `Documentar despliegue productivo en Cloudflare`.
 
 ## Regla de idioma
 
@@ -286,10 +290,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
 - Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
+- Probar manualmente registro, login, logout y recuperacion desde `https://padelito-29z.pages.dev`.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
-- Desactivar `Confirm email` en Supabase Auth > Providers > Email para probar registro directo sin correo.
-- Agregar `https://padelito-29z.pages.dev` como URL permitida en Supabase Auth.
-- Definir `CLOUDFLARE_API_TOKEN` local o reconectar GitHub en Cloudflare Pages para ejecutar el primer deploy.
 - Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.
-- Preparar deploy Cloudflare Pages.

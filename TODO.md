@@ -115,7 +115,7 @@
 - [x] Crear proyecto Cloudflare Pages `padelito`.
 - [x] Configurar variables publicas de Supabase en Cloudflare Pages.
 - [x] Agregar `wrangler.jsonc` para deploy Pages directo.
-- [ ] Deploy Cloudflare Pages.
+- [x] Deploy Cloudflare Pages.
 
 ## Etapa 9 - MVP+ Partidos e historial
 - [x] Crear modelo de partido completo con participantes sin limite fijo.
@@ -145,10 +145,11 @@
 - [x] Validar que el reset de score no pueda editarse directo por REST.
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
 - [x] Auditar textos visibles y alerts para evitar inglés y errores sin acentos.
-- [ ] Desactivar `Confirm email` en Supabase Auth > Providers > Email para registro directo sin correo.
-- [ ] Agregar `https://padelito-29z.pages.dev` en Supabase Auth > URL Configuration.
-- [ ] Reconectar Pages Git en Cloudflare o definir `CLOUDFLARE_API_TOKEN` local para subir `dist`.
+- [x] Desactivar `Confirm email` en Supabase Auth > Providers > Email para registro directo sin correo.
+- [x] Agregar `https://padelito-29z.pages.dev` en Supabase Auth > URL Configuration.
+- [x] Reconectar Pages Git en Cloudflare o definir `CLOUDFLARE_API_TOKEN` local para subir `dist`.
 - [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
-- [ ] Preparar deploy Cloudflare Pages.
+- [x] Preparar deploy Cloudflare Pages.
+- [ ] Probar manualmente registro, login, logout y recuperacion desde `https://padelito-29z.pages.dev`.
