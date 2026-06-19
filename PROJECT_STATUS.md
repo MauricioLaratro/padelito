@@ -17,7 +17,7 @@ MVP local testeable disponible, publicado en GitHub, conectado a Supabase y desp
 - Migraciones incrementales aplicadas en Supabase Cloud para invitaciones vinculadas, cupos `0-24`, RPC de respuestas, contacto privado post-aceptacion, historial estructurado de partidos, enlace entre feed social y partidos, y desafios recurrentes.
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
 - Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
-- Cloudflare Pages creado en plan gratuito con proyecto `padelito`; primer deploy productivo verificado en `https://padelito-29z.pages.dev`.
+- Cloudflare Pages creado en plan gratuito con proyecto beta `padelito-posadas`; deploy productivo verificado en `https://padelito-posadas.pages.dev`.
 
 ## Comprension del producto
 
@@ -39,7 +39,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Registro pide email, nombre de usuario, contraseña y repetición de contraseña; el nombre queda guardado en metadata de Auth para prellenar onboarding.
 - Recuperación de contraseña usa `resetPasswordForEmail` y completa el cambio con `updateUser` cuando vuelve el enlace.
 - Para preview cerrado sin costo se recomienda desactivar `Confirm email` en Supabase Auth > Providers > Email; antes de un lanzamiento público abierto debe revaluarse junto con SMTP propio.
-- Para que recuperacion de contrasena funcione en Pages, Supabase Auth debe permitir `https://padelito-29z.pages.dev` en URL Configuration.
+- Para que recuperacion de contrasena funcione en Pages, Supabase Auth debe permitir `https://padelito-posadas.pages.dev` en URL Configuration.
 - La app usa un contrato de repositorio compartido para alternar modo local y modo Supabase sin cambiar componentes.
 - No se crean `.gitkeep` vacios; las carpetas se crean cuando tienen archivos reales.
 - Partidos completos, participantes variables, resultados y estadisticas simples ya viven como modulo separado del feed.
@@ -237,16 +237,17 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `npm run qa:supabase` pasa con usuarios de prueba;
   - el usuario desactivo `Confirm email` en Supabase Auth para permitir registro directo durante el preview cerrado.
 - Cloudflare Pages:
-  - proyecto Pages `padelito` creado por API en la cuenta Cloudflare;
-  - dominio gratuito asignado: `https://padelito-29z.pages.dev`;
+  - proyecto Pages beta `padelito-posadas` creado por API en la cuenta Cloudflare;
+  - dominio gratuito asignado: `https://padelito-posadas.pages.dev`;
+  - proyecto anterior renombrado a `padelito-respaldo`, conservado temporalmente con `https://padelito-29z.pages.dev` y con deploys automaticos desactivados;
   - rama de produccion configurada: `codex/base-mvp-local`;
   - variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` configuradas en preview y produccion;
   - `wrangler.jsonc` fue retirado porque ocultaba las variables `VITE_SUPABASE_*` del build de Pages;
   - `npm run build` y `npm run lint` pasan antes del intento de deploy;
   - fuente GitHub reconectada en Cloudflare Pages: `MauricioLaratro/padelito`;
-  - ultimo deployment productivo verificado: `2fd985c1-da3b-4749-8b0e-5be61ebd9388`;
+  - ultimo deployment productivo verificado: `68c0a851-dd11-4aa0-b6ed-8a08db1cadc1`;
   - build y deploy de Cloudflare Pages finalizaron en `success`;
-  - `https://padelito-29z.pages.dev` responde `200`;
+  - `https://padelito-posadas.pages.dev` responde `200`;
   - assets productivos verificados: JS y CSS responden `200`.
   - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
   - cache PWA actualizado a `padelito-static-v3` y navegacion cambiada a network-first para evitar que `/` e `index.html` queden congelados en builds viejos.
@@ -295,7 +296,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
 - Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
-- Probar manualmente registro, login, logout y recuperacion desde `https://padelito-29z.pages.dev`.
+- Agregar `https://padelito-posadas.pages.dev` en Supabase Auth > URL Configuration para recuperacion de contrasena.
+- Probar manualmente registro, login, logout y recuperacion desde `https://padelito-posadas.pages.dev`.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.
 - Separar historial operativo antiguo en un menu secundario si el perfil vuelve a crecer demasiado.
 - Configurar SMTP propio en Supabase Auth cuando haya proveedor y credenciales.

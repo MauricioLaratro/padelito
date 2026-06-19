@@ -198,8 +198,11 @@ origin/codex/base-mvp-local
 
 Cloudflare Pages:
 
-- project name: `padelito`
-- URL publica gratuita: `https://padelito-29z.pages.dev`
+- project name beta: `padelito-posadas`
+- URL publica gratuita: `https://padelito-posadas.pages.dev`
+- project name de respaldo temporal: `padelito-respaldo`
+- URL de respaldo temporal: `https://padelito-29z.pages.dev`
+- deploys automaticos del respaldo: desactivados
 - build command: `npm run build`
 - output directory: `dist`
 - production branch: `codex/base-mvp-local`
@@ -221,8 +224,8 @@ Estado:
 - Variables publicas de Supabase configuradas para preview y produccion.
 - Conexion GitHub reconectada desde Cloudflare Pages.
 - Primer deploy productivo creado por API.
-- Deployment verificado: `2fd985c1-da3b-4749-8b0e-5be61ebd9388`.
-- `https://padelito-29z.pages.dev` responde `200`.
+- Deployment verificado: `68c0a851-dd11-4aa0-b6ed-8a08db1cadc1`.
+- `https://padelito-posadas.pages.dev` responde `200`.
 - Assets productivos JS/CSS responden `200`.
 - Se elimino `wrangler.jsonc` porque Cloudflare Pages lo tomaba como fuente de configuracion del build y no inyectaba las variables `VITE_SUPABASE_*` configuradas en el dashboard.
 - El service worker usa cache `padelito-static-v3` y no cachea `/` ni `index.html` como cache-first para evitar pantallas viejas despues de un deploy.
@@ -237,4 +240,4 @@ Deploy manual alternativo desde esta maquina:
 Auth en el dominio Pages:
 
 1. Supabase Dashboard > Authentication > Providers > Email: `Confirm email` desactivado para preview cerrado.
-2. Supabase Dashboard > Authentication > URL Configuration: `https://padelito-29z.pages.dev` agregado como URL permitida.
+2. Supabase Dashboard > Authentication > URL Configuration: agregar `https://padelito-posadas.pages.dev` como URL permitida.

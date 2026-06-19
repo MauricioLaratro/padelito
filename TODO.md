@@ -113,7 +113,7 @@
 - [x] Usar avatar reutilizable en perfil, feed y busqueda de jugadores.
 - [ ] Pulir UX.
 - [ ] Probar visualmente pantallas privadas con dos sesiones reales.
-- [x] Crear proyecto Cloudflare Pages `padelito`.
+- [x] Crear proyecto Cloudflare Pages beta `padelito-posadas`.
 - [x] Configurar variables publicas de Supabase en Cloudflare Pages.
 - [x] Retirar `wrangler.jsonc` para que Pages use las variables configuradas en el dashboard.
 - [x] Deploy Cloudflare Pages.
@@ -147,10 +147,10 @@
 - [x] Revisar limites de email de Supabase y documentar SMTP de produccion.
 - [x] Auditar textos visibles y alerts para evitar inglés y errores sin acentos.
 - [x] Desactivar `Confirm email` en Supabase Auth > Providers > Email para registro directo sin correo.
-- [x] Agregar `https://padelito-29z.pages.dev` en Supabase Auth > URL Configuration.
+- [ ] Agregar `https://padelito-posadas.pages.dev` en Supabase Auth > URL Configuration.
 - [x] Reconectar Pages Git en Cloudflare o definir `CLOUDFLARE_API_TOKEN` local para subir `dist`.
 - [ ] Configurar SMTP propio en Supabase cuando exista proveedor/dominio.
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [x] Preparar deploy Cloudflare Pages.
-- [ ] Probar manualmente registro, login, logout y recuperacion desde `https://padelito-29z.pages.dev`.
+- [ ] Probar manualmente registro, login, logout y recuperacion desde `https://padelito-posadas.pages.dev`.
