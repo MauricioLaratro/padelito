@@ -241,13 +241,14 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - dominio gratuito asignado: `https://padelito-29z.pages.dev`;
   - rama de produccion configurada: `codex/base-mvp-local`;
   - variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` configuradas en preview y produccion;
-  - `wrangler.jsonc` agregado para deploy directo desde `dist`;
+  - `wrangler.jsonc` fue retirado porque ocultaba las variables `VITE_SUPABASE_*` del build de Pages;
   - `npm run build` y `npm run lint` pasan antes del intento de deploy;
   - fuente GitHub reconectada en Cloudflare Pages: `MauricioLaratro/padelito`;
   - primer deployment productivo creado por API: `ec22e408-caad-4e9d-bf39-a4a52a502f96`;
   - build y deploy de Cloudflare Pages finalizaron en `success`;
   - `https://padelito-29z.pages.dev` responde `200`;
   - assets productivos verificados: JS y CSS responden `200`.
+  - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
 
 ## Git
 

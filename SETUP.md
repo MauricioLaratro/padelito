@@ -208,13 +208,7 @@ Cloudflare Pages:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
 
-Archivo local de configuracion:
-
-```txt
-wrangler.jsonc
-```
-
-Deploy directo desde esta maquina:
+Deploy directo alternativo desde esta maquina:
 
 ```powershell
 $env:CLOUDFLARE_API_TOKEN="token-con-permiso-pages"
@@ -230,6 +224,7 @@ Estado:
 - Deployment verificado: `ec22e408-caad-4e9d-bf39-a4a52a502f96`.
 - `https://padelito-29z.pages.dev` responde `200`.
 - Assets productivos JS/CSS responden `200`.
+- Se elimino `wrangler.jsonc` porque Cloudflare Pages lo tomaba como fuente de configuracion del build y no inyectaba las variables `VITE_SUPABASE_*` configuradas en el dashboard.
 
 Deploy manual alternativo desde esta maquina:
 

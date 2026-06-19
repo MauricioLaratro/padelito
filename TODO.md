@@ -114,7 +114,7 @@
 - [ ] Probar visualmente pantallas privadas con dos sesiones reales.
 - [x] Crear proyecto Cloudflare Pages `padelito`.
 - [x] Configurar variables publicas de Supabase en Cloudflare Pages.
-- [x] Agregar `wrangler.jsonc` para deploy Pages directo.
+- [x] Retirar `wrangler.jsonc` para que Pages use las variables configuradas en el dashboard.
 - [x] Deploy Cloudflare Pages.
 
 ## Etapa 9 - MVP+ Partidos e historial
