@@ -215,7 +215,7 @@ Pendiente arquitectonico:
 La app usa snapshot completo como contrato entre repositorios y UI. Para evitar estados viejos despues de acciones cruzadas:
 
 - las escrituras remotas pasan por `runRemoteAction` y recargan snapshot al finalizar;
-- feed, jugadores, notificaciones y perfil usan `PullToRefresh`;
+- feed, jugadores, notificaciones y perfil refrescan snapshot al cambiar de panel o tocar el panel activo;
 - el foco del navegador y el cambio de vista recargan snapshot cuando hay sesion Supabase completa;
 - la bandeja de notificaciones permite eliminar avisos propios sin borrar entidades historicas;
 - solicitudes e invitaciones aceptadas se cancelan por RPC para liberar cupo y remover participante;

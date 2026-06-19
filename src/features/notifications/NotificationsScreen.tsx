@@ -16,7 +16,6 @@ import { useRef, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
-import { PullToRefresh } from "../../components/common/PullToRefresh";
 import {
   invitationStatusLabels,
   requestStatusLabels,
@@ -42,7 +41,6 @@ interface NotificationsScreenProps {
     requestId: string,
     status: "accepted" | "rejected",
   ) => void;
-  onDataRefresh: () => void;
   onNotificationDelete: (notificationId: string) => void;
   onNotificationsRead: () => void;
   onPrivateContactOpen: (profileId: string) => void;
@@ -62,7 +60,6 @@ export function NotificationsScreen({
   onDirectInvitationStatusChange,
   onJoinRequestCancel,
   onJoinRequestStatusChange,
-  onDataRefresh,
   onNotificationDelete,
   onNotificationsRead,
   onPrivateContactOpen,
@@ -80,10 +77,7 @@ export function NotificationsScreen({
     );
 
   return (
-    <PullToRefresh
-      className="grid gap-3 px-4 pb-28 pt-4"
-      onRefresh={onDataRefresh}
-    >
+    <section className="grid gap-3 px-4 pb-28 pt-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
@@ -173,7 +167,7 @@ export function NotificationsScreen({
           title="Sin notificaciones"
         />
       )}
-    </PullToRefresh>
+    </section>
   );
 }
 

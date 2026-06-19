@@ -55,7 +55,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El formulario de perfil se reutiliza entre onboarding y edicion para evitar duplicar reglas.
 - El avatar de perfil se maneja con componente reutilizable, recorte cuadrado client-side y persistencia en el bucket `avatars`.
 - El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
-- Feed, jugadores, notificaciones y perfil comparten un componente reutilizable de pull-to-refresh que recarga el snapshot remoto.
+- Feed, jugadores, notificaciones y perfil refrescan datos al cambiar de panel o tocar el panel activo.
 - La bandeja de notificaciones es operativa: se puede marcar todo como leido o eliminar avisos propios con gesto hacia la derecha.
 - Solicitudes e invitaciones aceptadas pueden cancelarse desde ambos lados del vinculo y liberan cupo/participante cuando corresponde.
 - Los recordatorios de resultado se materializan al refrescar/abrir la app cuando un partido propio programado ya termino.
@@ -118,7 +118,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - cancelar desde perfil revierte el feed a `Solicitar unirme`;
   - build y lint siguen correctos.
 - Feed:
-  - pull-to-refresh mobile preparado en el tope del feed;
+  - refresco mobile preparado inicialmente en el tope del feed;
   - refresca estado local en modo demo;
   - recarga snapshot remoto en modo Supabase.
 - GitHub:
@@ -217,7 +217,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `notifications.related_match_id` instalado para enlazar recordatorios y resultados con partidos;
   - RPCs `cancel_match_join_request(uuid)` y `cancel_direct_match_invitation(uuid)` instaladas y verificadas;
   - RPC `answer_direct_match_invitation` actualizada para descontar cupo aunque la invitacion venga vinculada por `related_match_id`;
-  - feed, jugadores, notificaciones y perfil usan pull-to-refresh compartido;
+  - feed, jugadores, notificaciones y perfil actualizan datos desde la navegacion principal;
   - notificaciones propias pueden eliminarse con swipe hacia la derecha o boton contextual;
   - perfil permite eliminar publicaciones canceladas, solicitudes cerradas e invitaciones cerradas;
   - perfil permite cancelar participaciones aceptadas desde organizador o jugador;

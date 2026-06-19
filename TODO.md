@@ -65,9 +65,9 @@
 - [x] Feed Siguiendo local.
 - [x] Filtros MVP locales.
 - [x] Filtros por fecha, categoria, posicion y estilo de juego.
-- [x] Pull-to-refresh mobile preparado para refetch futuro.
-- [x] Pull-to-refresh conectado a snapshot Supabase en modo remoto.
-- [x] Pull-to-refresh compartido en inicio, jugadores, notificaciones y perfil.
+- [x] Refresh mobile preparado para refetch futuro.
+- [x] Refresh conectado a snapshot Supabase en modo remoto.
+- [x] Refresh por navegacion en inicio, jugadores, notificaciones y perfil.
 
 ## Etapa 6 - Publicaciones
 - [x] Crear Busco jugador local.

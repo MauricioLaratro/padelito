@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { ProfileAvatar } from "../../components/common/ProfileAvatar";
-import { PullToRefresh } from "../../components/common/PullToRefresh";
 import {
   organizationKindLabels,
   playerLevelLabels,
@@ -38,7 +37,6 @@ interface ProfileScreenProps {
   ) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestDelete: (requestId: string) => void;
-  onDataRefresh: () => void;
   onMatchCancel: (matchId: string) => void;
   onMatchCreate: (matchInput: CreateMatchInput) => void;
   onMatchResultRecord: (matchResult: MatchResult) => void;
@@ -73,7 +71,6 @@ export function ProfileScreen({
   onJoinRequestCancel,
   onJoinRequestDelete,
   onJoinRequestStatusChange,
-  onDataRefresh,
   onMatchCancel,
   onMatchCreate,
   onMatchResultRecord,
@@ -98,10 +95,7 @@ export function ProfileScreen({
   ).length;
 
   return (
-    <PullToRefresh
-      className="grid gap-3 px-4 pb-28 pt-4"
-      onRefresh={onDataRefresh}
-    >
+    <section className="grid gap-3 px-4 pb-28 pt-4">
       <article className="rounded-lg border border-border-subtle bg-surface-primary p-4 shadow-floating">
         <div className="flex items-start gap-3">
           <ProfileAvatar
@@ -197,6 +191,6 @@ export function ProfileScreen({
           onProfileSave={onProfileSave}
         />
       ) : null}
-    </PullToRefresh>
+    </section>
   );
 }

@@ -4,7 +4,6 @@ import { PostCard } from "../../components/cards/PostCard";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
-import { PullToRefresh } from "../../components/common/PullToRefresh";
 import { FormField } from "../../components/forms/FormField";
 import { postTypeOptions } from "../../constants/postOptions";
 import {
@@ -34,7 +33,6 @@ interface FeedScreenProps {
   onInvitationStart: (profileId: string) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
-  onFeedRefresh: () => void;
   onPostCancel: (postId: string) => void;
   onPostCreateStart: () => void;
   onProfileOpen: (profileId: string) => void;
@@ -55,7 +53,6 @@ export function FeedScreen({
   onInvitationStart,
   onJoinRequestCancel,
   onJoinRequestCreate,
-  onFeedRefresh,
   onPostCancel,
   onPostCreateStart,
   onProfileOpen,
@@ -141,10 +138,7 @@ export function FeedScreen({
   }
 
   return (
-    <PullToRefresh
-      className="grid min-w-0 gap-3 px-4 pb-28 pt-4"
-      onRefresh={onFeedRefresh}
-    >
+    <section className="grid min-w-0 gap-3 px-4 pb-28 pt-4">
       <div className="min-w-0 rounded-lg border border-border-subtle bg-surface-primary p-3">
         <div className="flex items-center gap-2">
           <Button
@@ -294,7 +288,7 @@ export function FeedScreen({
           title="Sin publicaciones"
         />
       )}
-    </PullToRefresh>
+    </section>
   );
 }
 

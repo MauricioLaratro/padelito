@@ -153,7 +153,7 @@ export function usePadelitoMvp() {
   /**
    * Carga snapshot remoto de Supabase.
    * Se construye para mantener la UI actual basada en estado completo.
-   * Lo usan auth, pull-to-refresh y acciones remotas.
+   * Lo usan auth, navegacion refrescable y acciones remotas.
    * Sirve para sincronizar feeds, perfil y actividad despues de cada cambio.
    */
   const loadRemoteSnapshot = useCallback(async () => {
@@ -1142,7 +1142,7 @@ export function usePadelitoMvp() {
 
   /**
    * Refresca datos visibles de la app.
-   * Se construye para soportar pull-to-refresh en varias pantallas.
+   * Se construye para refrescar datos al navegar o tocar el panel activo.
    * Lo usan feed, notificaciones y perfil.
    * Sirve para sincronizar cambios hechos desde otras sesiones.
    */

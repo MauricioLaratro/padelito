@@ -1,5 +1,5 @@
 import { Bell, Home, Plus, Search, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConfirmationDialog } from "../components/common/ConfirmationDialog";
 import { IconButton } from "../components/common/IconButton";
 import { ScreenShell } from "../components/layout/ScreenShell";
@@ -34,18 +34,37 @@ interface ConfirmationRequest {
  */
 export function App() {
   const padelitoMvp = usePadelitoMvp();
+  const {
+    activeFeedTab,
+    activeMainView,
+    handleDataRefresh,
+    isPasswordRecoveryMode,
+    sessionProfile,
+  } = padelitoMvp;
   const [confirmationRequest, setConfirmationRequest] =
     useState<ConfirmationRequest | null>(null);
+  const navigationRefreshKeyRef = useRef(`${activeMainView}:${activeFeedTab}`);
 
   useEffect(() => {
     // Reinicia posicion visual al cambiar pantallas para que tabs flotantes no tapen el primer contenido.
     window.scrollTo(0, 0);
   }, [
-    padelitoMvp.activeFeedTab,
-    padelitoMvp.activeMainView,
-    padelitoMvp.isPasswordRecoveryMode,
-    padelitoMvp.sessionProfile?.isOnboardingComplete,
+    activeFeedTab,
+    activeMainView,
+    isPasswordRecoveryMode,
+    sessionProfile?.isOnboardingComplete,
   ]);
+
+  useEffect(() => {
+    const nextNavigationRefreshKey = `${activeMainView}:${activeFeedTab}`;
+
+    if (navigationRefreshKeyRef.current === nextNavigationRefreshKey) {
+      return;
+    }
+
+    navigationRefreshKeyRef.current = nextNavigationRefreshKey;
+    handleDataRefresh();
+  }, [activeFeedTab, activeMainView, handleDataRefresh]);
 
   if (!padelitoMvp.sessionProfile || padelitoMvp.isPasswordRecoveryMode) {
     return (
@@ -333,12 +352,52 @@ export function App() {
     });
   }
 
+  /**
+   * Navega entre paneles y refresca si el usuario toca el panel activo.
+   * Se construye para reemplazar el pull-to-refresh que compite con el navegador.
+   * Lo usa la navegacion principal.
+   * Sirve para actualizar al entrar a un panel o tocar el panel activo.
+   */
+  function handleMainViewSelect(nextMainView: typeof padelitoMvp.activeMainView) {
+    const isCurrentMainView = padelitoMvp.activeMainView === nextMainView;
+
+    if (nextMainView === "players") {
+      padelitoMvp.setSelectedPublicProfileId(null);
+    }
+
+    if (!isCurrentMainView) {
+      padelitoMvp.setActiveMainView(nextMainView);
+      return;
+    }
+
+    window.scrollTo({ behavior: "smooth", top: 0 });
+    padelitoMvp.handleDataRefresh();
+  }
+
+  /**
+   * Cambia el feed visible y refresca si el usuario toca el tab activo.
+   * Se construye para que tocar Comunidad/Siguiendo tambien refresque si ya esta activo.
+   * Lo usa la navegacion flotante del feed.
+   * Sirve para mantener datos frescos sin gesto de arrastre.
+   */
+  function handleFeedTabSelect(nextFeedTab: typeof padelitoMvp.activeFeedTab) {
+    const isCurrentFeedTab = padelitoMvp.activeFeedTab === nextFeedTab;
+
+    if (!isCurrentFeedTab) {
+      padelitoMvp.setActiveFeedTab(nextFeedTab);
+      return;
+    }
+
+    window.scrollTo({ behavior: "smooth", top: 0 });
+    padelitoMvp.handleDataRefresh();
+  }
+
   return (
     <ScreenShell>
       {padelitoMvp.activeMainView === "feed" ? (
         <FloatingFeedTabs
           activeTab={padelitoMvp.activeFeedTab}
-          onTabChange={padelitoMvp.setActiveFeedTab}
+          onTabChange={handleFeedTabSelect}
         />
       ) : null}
 
@@ -353,23 +412,20 @@ export function App() {
             icon={Home}
             isActive={padelitoMvp.activeMainView === "feed"}
             label="Feed"
-            onClick={() => padelitoMvp.setActiveMainView("feed")}
+            onClick={() => handleMainViewSelect("feed")}
           />
           <IconButton
             icon={Search}
             isActive={padelitoMvp.activeMainView === "players"}
             label="Jugadores"
-            onClick={() => {
-              padelitoMvp.setSelectedPublicProfileId(null);
-              padelitoMvp.setActiveMainView("players");
-            }}
+            onClick={() => handleMainViewSelect("players")}
           />
           <div className="relative">
             <IconButton
               icon={Bell}
               isActive={padelitoMvp.activeMainView === "notifications"}
               label="Notificaciones"
-              onClick={() => padelitoMvp.setActiveMainView("notifications")}
+              onClick={() => handleMainViewSelect("notifications")}
             />
             {padelitoMvp.unreadNotificationsCount > 0 ? (
               <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-accent-lime text-[10px] font-black text-background-primary">
@@ -381,7 +437,7 @@ export function App() {
             icon={UserRound}
             isActive={padelitoMvp.activeMainView === "profile"}
             label="Perfil"
-            onClick={() => padelitoMvp.setActiveMainView("profile")}
+            onClick={() => handleMainViewSelect("profile")}
           />
         </nav>
       </header>
@@ -413,7 +469,6 @@ export function App() {
             onInvitationStart={padelitoMvp.setInvitedProfileId}
             onJoinRequestCancel={confirmJoinRequestCancel}
             onJoinRequestCreate={padelitoMvp.handleJoinRequestCreate}
-            onFeedRefresh={padelitoMvp.handleDataRefresh}
             onPostCancel={confirmPostCancel}
             onPostCreateStart={() => padelitoMvp.setIsCreatePostOpen(true)}
             onProfileOpen={padelitoMvp.handlePublicProfileOpen}
@@ -426,7 +481,6 @@ export function App() {
         <PlayerSearchScreen
           currentProfileId={currentSessionProfile.profileId}
           database={padelitoMvp.database}
-          onDataRefresh={padelitoMvp.handleDataRefresh}
           onFollowToggle={padelitoMvp.handleFollowToggle}
           onInvitationStart={padelitoMvp.setInvitedProfileId}
           onProfileSelect={padelitoMvp.setSelectedPublicProfileId}
@@ -442,7 +496,6 @@ export function App() {
           onDirectInvitationStatusChange={
             handleDirectInvitationStatusChange
           }
-          onDataRefresh={padelitoMvp.handleDataRefresh}
           onJoinRequestCancel={confirmJoinRequestCancel}
           onJoinRequestStatusChange={handleJoinRequestStatusChange}
           onNotificationDelete={padelitoMvp.handleNotificationDelete}
@@ -461,7 +514,6 @@ export function App() {
           }
           onDirectInvitationCancel={confirmDirectInvitationCancel}
           onDirectInvitationDelete={confirmDirectInvitationDelete}
-          onDataRefresh={padelitoMvp.handleDataRefresh}
           onJoinRequestCancel={confirmJoinRequestCancel}
           onJoinRequestDelete={confirmJoinRequestDelete}
           onJoinRequestStatusChange={handleJoinRequestStatusChange}
