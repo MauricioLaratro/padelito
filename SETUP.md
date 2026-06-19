@@ -221,11 +221,12 @@ Estado:
 - Variables publicas de Supabase configuradas para preview y produccion.
 - Conexion GitHub reconectada desde Cloudflare Pages.
 - Primer deploy productivo creado por API.
-- Deployment verificado: `ec22e408-caad-4e9d-bf39-a4a52a502f96`.
+- Deployment verificado: `2fd985c1-da3b-4749-8b0e-5be61ebd9388`.
 - `https://padelito-29z.pages.dev` responde `200`.
 - Assets productivos JS/CSS responden `200`.
 - Se elimino `wrangler.jsonc` porque Cloudflare Pages lo tomaba como fuente de configuracion del build y no inyectaba las variables `VITE_SUPABASE_*` configuradas en el dashboard.
 - El service worker usa cache `padelito-static-v3` y no cachea `/` ni `index.html` como cache-first para evitar pantallas viejas despues de un deploy.
+- El JS productivo fue verificado con URL y publishable key de Supabase embebidas por Vite.
 
 Deploy manual alternativo desde esta maquina:
 

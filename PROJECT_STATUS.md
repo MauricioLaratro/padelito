@@ -244,12 +244,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - `wrangler.jsonc` fue retirado porque ocultaba las variables `VITE_SUPABASE_*` del build de Pages;
   - `npm run build` y `npm run lint` pasan antes del intento de deploy;
   - fuente GitHub reconectada en Cloudflare Pages: `MauricioLaratro/padelito`;
-  - primer deployment productivo creado por API: `ec22e408-caad-4e9d-bf39-a4a52a502f96`;
+  - ultimo deployment productivo verificado: `2fd985c1-da3b-4749-8b0e-5be61ebd9388`;
   - build y deploy de Cloudflare Pages finalizaron en `success`;
   - `https://padelito-29z.pages.dev` responde `200`;
   - assets productivos verificados: JS y CSS responden `200`.
   - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
   - cache PWA actualizado a `padelito-static-v3` y navegacion cambiada a network-first para evitar que `/` e `index.html` queden congelados en builds viejos.
+  - JS productivo `index-DKxvSvYL.js` verificado con variables `VITE_SUPABASE_*` inyectadas.
 
 ## Git
 
@@ -280,6 +281,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit auth/textos: `Ajustar registro y textos de auth`.
 - Commit deploy Cloudflare: `Preparar despliegue gratuito en Cloudflare`.
 - Commit documentacion deploy: `Documentar despliegue productivo en Cloudflare`.
+- Commit variables Cloudflare: `Corregir variables de Supabase en Cloudflare`.
+- Commit cache PWA: `Corregir cache de la PWA en produccion`.
 
 ## Regla de idioma
 
