@@ -55,6 +55,7 @@
 - [x] Validar login magic link con email real.
 - [x] Validar creacion de perfil real en Supabase.
 - [x] Cerrar sesion desde perfil sin borrar datos persistidos.
+- [x] Cerrar sesion aunque Supabase devuelva sesion vencida durante el primer intento.
 - [x] Edicion de perfil.
 - [x] Foto de perfil circular con carga/cambio desde edicion.
 - [x] WhatsApp argentino con prefijo fijo `+549` y normalizacion de numeros pegados.
@@ -154,3 +155,4 @@
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [x] Preparar deploy Cloudflare Pages.
 - [ ] Probar manualmente registro, login, logout y recuperacion desde `https://padelito-posadas.pages.dev`.
+- [ ] Reprobar manualmente logout con sesion vencida en `https://padelito-posadas.pages.dev`.

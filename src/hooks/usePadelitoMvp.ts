@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FeedTabIdentifier } from "../domain/enums/postEnums";
 import type { RecurringChallengeStatus } from "../domain/enums/recurringChallengeEnums";
 import type { MatchResult } from "../domain/models/matchModels";
@@ -109,6 +109,8 @@ export function usePadelitoMvp() {
     null,
   );
   const [isRemoteSnapshotLoading, setIsRemoteSnapshotLoading] = useState(false);
+  const isSignOutInProgressRef = useRef(false);
+  const remoteSnapshotRequestIdRef = useRef(0);
 
   const supabaseRepository = useMemo(() => {
     if (!supabaseBrowserClient) {
@@ -157,20 +159,39 @@ export function usePadelitoMvp() {
    * Sirve para sincronizar feeds, perfil y actividad despues de cada cambio.
    */
   const loadRemoteSnapshot = useCallback(async () => {
-    if (!supabaseRepository) {
+    if (!supabaseRepository || isSignOutInProgressRef.current) {
       return;
     }
 
+    const currentRequestId = remoteSnapshotRequestIdRef.current + 1;
+    remoteSnapshotRequestIdRef.current = currentRequestId;
     setIsRemoteSnapshotLoading(true);
 
     try {
       const snapshot = await supabaseRepository.loadApplicationSnapshot();
+
+      if (
+        isSignOutInProgressRef.current ||
+        currentRequestId !== remoteSnapshotRequestIdRef.current
+      ) {
+        return;
+      }
+
       setRemoteDatabase(snapshot);
       setRemoteErrorMessage(null);
     } catch (error) {
+      if (
+        isSignOutInProgressRef.current ||
+        currentRequestId !== remoteSnapshotRequestIdRef.current
+      ) {
+        return;
+      }
+
       setRemoteErrorMessage(getReadableErrorMessage(error));
     } finally {
-      setIsRemoteSnapshotLoading(false);
+      if (currentRequestId === remoteSnapshotRequestIdRef.current) {
+        setIsRemoteSnapshotLoading(false);
+      }
     }
   }, [supabaseRepository]);
 
@@ -493,6 +514,8 @@ export function usePadelitoMvp() {
    * Sirve para volver a AuthScreen sin borrar perfil ni actividad persistida.
    */
   async function handleSignOut() {
+    isSignOutInProgressRef.current = true;
+    remoteSnapshotRequestIdRef.current += 1;
     setAuthErrorMessage(null);
     setAuthStatusMessage(null);
     setRemoteErrorMessage(null);
@@ -500,23 +523,28 @@ export function usePadelitoMvp() {
     setActiveMainView("feed");
     setIsCreatePostOpen(false);
     setInvitedProfileId(null);
+    setSelectedPublicProfileId(null);
 
-    if (isSupabaseMode && supabaseBrowserClient) {
-      const { error } = await supabaseBrowserClient.auth.signOut();
+    try {
+      if (isSupabaseMode && supabaseBrowserClient) {
+        const { error } = await supabaseBrowserClient.auth.signOut();
 
-      if (error) {
-        setRemoteErrorMessage(getReadableAuthErrorMessage(error));
+        if (error) {
+          await supabaseBrowserClient.auth.signOut({ scope: "local" });
+        }
+
+        setRemoteDatabase(createEmptyRepositorySnapshot());
         return;
       }
 
-      setRemoteDatabase(createEmptyRepositorySnapshot());
-      return;
+      setLocalDatabase((currentDatabase) => ({
+        ...currentDatabase,
+        sessionProfileId: undefined,
+      }));
+    } finally {
+      setIsRemoteSnapshotLoading(false);
+      isSignOutInProgressRef.current = false;
     }
-
-    setLocalDatabase((currentDatabase) => ({
-      ...currentDatabase,
-      sessionProfileId: undefined,
-    }));
   }
 
   /**
@@ -1147,6 +1175,10 @@ export function usePadelitoMvp() {
    * Sirve para sincronizar cambios hechos desde otras sesiones.
    */
   function handleDataRefresh() {
+    if (isSignOutInProgressRef.current) {
+      return;
+    }
+
     setLastFeedRefreshAt(createCurrentIsoDate());
 
     if (isSupabaseMode) {

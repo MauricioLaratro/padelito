@@ -56,6 +56,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El avatar de perfil se maneja con componente reutilizable, recorte cuadrado client-side y persistencia en el bucket `avatars`.
 - El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
 - Feed, jugadores, notificaciones y perfil refrescan datos al cambiar de panel o tocar el panel activo.
+- El cierre de sesion invalida refrescos remotos en curso y limpia estado local aunque Supabase devuelva sesion vencida.
 - La bandeja de notificaciones es operativa: se puede marcar todo como leido o eliminar avisos propios con gesto hacia la derecha.
 - Solicitudes e invitaciones aceptadas pueden cancelarse desde ambos lados del vinculo y liberan cupo/participante cuando corresponde.
 - Los recordatorios de resultado se materializan al refrescar/abrir la app cuando un partido propio programado ya termino.
@@ -92,6 +93,11 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - `http://localhost:5174` usado como puerto de desarrollo fresco para evitar cache vieja del service worker.
 - `npm run build` pasa.
 - `npm run lint` pasa.
+- Cierre de sesion:
+  - se corrigio la carrera entre refresco automatico por navegacion y logout;
+  - si Supabase informa sesion vencida durante logout, la app limpia la sesion local y vuelve al formulario sin requerir segundo intento;
+  - `npm run lint` pasa;
+  - `npm run build` pasa.
 - Browser integrado confirmo:
   - titulo `Padelito Preview`;
   - cards `Busco jugador`, `Estoy disponible`, `Americano nocturno`;
