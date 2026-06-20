@@ -27,6 +27,7 @@ import type {
 } from "../../domain/models/postModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
+import { NotificationPermissionCard } from "./NotificationPermissionCard";
 
 interface NotificationsScreenProps {
   currentProfileId: string;
@@ -89,6 +90,8 @@ export function NotificationsScreen({
           Marcar leídas
         </Button>
       </div>
+
+      <NotificationPermissionCard />
 
       {visibleNotifications.length > 0 ? (
         visibleNotifications.map((notification) => (

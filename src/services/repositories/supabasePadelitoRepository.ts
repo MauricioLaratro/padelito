@@ -353,6 +353,36 @@ export function createSupabasePadelitoRepository(
   }
 
   /**
+   * Sube imagen de evento a Supabase Storage.
+   * Se construye para evitar pedir URLs manuales al publicar eventos.
+   * Lo usa el flujo de creacion de publicaciones.
+   * Sirve para persistir imagenes visibles en cards de evento.
+   */
+  async function uploadEventImage(
+    postId: string,
+    eventImageFile: File,
+  ): Promise<string> {
+    const eventImagePath = `${postId}/event-${Date.now()}.jpg`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from("event-images")
+      .upload(eventImagePath, eventImageFile, {
+        cacheControl: "3600",
+        contentType: eventImageFile.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw createSupabaseError("subir imagen de evento", uploadError);
+    }
+
+    const { data } = supabaseClient.storage
+      .from("event-images")
+      .getPublicUrl(eventImagePath);
+
+    return data.publicUrl;
+  }
+
+  /**
    * Crea una publicacion en Supabase.
    * Se construye para persistir el formulario de nueva publicacion.
    * Lo usara CreatePostModal.
@@ -1365,6 +1395,7 @@ export function createSupabasePadelitoRepository(
     createMatch,
     createMatchJoinRequest,
     createPost,
+    uploadEventImage,
     createRecurringChallenge,
     deleteDirectMatchInvitation,
     deleteMatchJoinRequest,

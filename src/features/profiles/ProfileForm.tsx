@@ -64,7 +64,7 @@ export function ProfileForm({
   const [preferredPosition, setPreferredPosition] =
     useState<PlayerPosition>(
       currentProfile.profileType === "player"
-        ? currentProfile.preferredPosition
+        ? normalizeEditablePlayerPosition(currentProfile.preferredPosition)
         : "drive",
     );
   const [preferredPlayStyle, setPreferredPlayStyle] = useState<PlayStyle>(
@@ -361,4 +361,14 @@ export function ProfileForm({
       </div>
     </form>
   );
+}
+
+/**
+ * Normaliza posiciones antiguas para edicion.
+ * Se construye porque `Indiferente` dejo de ser opcion visible.
+ * Lo usa ProfileForm al iniciar estado.
+ * Sirve para mantener perfiles existentes editables.
+ */
+function normalizeEditablePlayerPosition(playerPosition: PlayerPosition) {
+  return playerPosition === "any" ? "both" : playerPosition;
 }

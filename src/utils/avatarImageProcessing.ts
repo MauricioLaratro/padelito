@@ -3,8 +3,15 @@ interface ProcessedAvatarImage {
   previewUrl: string;
 }
 
+interface ProcessedEventImage {
+  file: File;
+  previewUrl: string;
+}
+
 const avatarOutputSize = 512;
 const avatarOutputQuality = 0.86;
+const eventImageMaximumWidth = 1280;
+const eventImageOutputQuality = 0.84;
 
 /**
  * Procesa una foto de perfil antes de guardarla.
@@ -80,12 +87,73 @@ export function readFileAsDataUrl(file: File): Promise<string> {
 }
 
 /**
+ * Procesa una imagen de evento antes de guardarla.
+ * Se construye para subir archivos livianos sin deformar la foto.
+ * Lo usa CreatePostModal.
+ * Sirve para reemplazar URLs manuales por seleccion desde el carrete.
+ */
+export async function createProcessedEventImage(
+  sourceFile: File,
+): Promise<ProcessedEventImage> {
+  const imageBitmap = await createImageBitmap(sourceFile);
+  const outputScale = Math.min(1, eventImageMaximumWidth / imageBitmap.width);
+  const outputWidth = Math.max(1, Math.round(imageBitmap.width * outputScale));
+  const outputHeight = Math.max(1, Math.round(imageBitmap.height * outputScale));
+  const canvas = document.createElement("canvas");
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+
+  const canvasContext = canvas.getContext("2d");
+
+  if (!canvasContext) {
+    throw new Error("No se pudo preparar la imagen del evento.");
+  }
+
+  canvasContext.drawImage(
+    imageBitmap,
+    0,
+    0,
+    imageBitmap.width,
+    imageBitmap.height,
+    0,
+    0,
+    outputWidth,
+    outputHeight,
+  );
+
+  const eventImageBlob = await createCanvasBlob(
+    canvas,
+    "image/jpeg",
+    eventImageOutputQuality,
+  );
+  const eventImageFile = new File(
+    [eventImageBlob],
+    createSafeImageFileName(sourceFile, "evento"),
+    {
+      lastModified: Date.now(),
+      type: eventImageBlob.type,
+    },
+  );
+
+  imageBitmap.close();
+
+  return {
+    file: eventImageFile,
+    previewUrl: canvas.toDataURL("image/jpeg", eventImageOutputQuality),
+  };
+}
+
+/**
  * Convierte canvas a blob JPEG.
  * Se construye para normalizar formato antes de subir a storage.
  * Lo usa createProcessedAvatarImage.
  * Sirve para controlar peso y compatibilidad.
  */
-function createCanvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+function createCanvasBlob(
+  canvas: HTMLCanvasElement,
+  outputType = "image/jpeg",
+  outputQuality = avatarOutputQuality,
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (avatarBlob) => {
@@ -96,8 +164,8 @@ function createCanvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 
         reject(new Error("No se pudo generar la imagen de perfil."));
       },
-      "image/jpeg",
-      avatarOutputQuality,
+      outputType,
+      outputQuality,
     );
   });
 }
@@ -109,12 +177,22 @@ function createCanvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
  * Sirve para subir archivos seguros y consistentes.
  */
 function createAvatarFileName(sourceFile: File) {
+  return createSafeImageFileName(sourceFile, "avatar");
+}
+
+/**
+ * Crea nombres seguros para imagenes procesadas.
+ * Se construye para compartir limpieza entre avatar y eventos.
+ * Lo usan los procesadores de imagen.
+ * Sirve para evitar nombres originales problematicos en Storage.
+ */
+function createSafeImageFileName(sourceFile: File, fallbackName: string) {
   const safeBaseName =
     sourceFile.name
       .replace(/\.[^.]+$/, "")
       .replace(/[^a-z0-9]+/gi, "-")
       .replace(/^-|-$/g, "")
-      .toLowerCase() || "avatar";
+      .toLowerCase() || fallbackName;
 
   return `${safeBaseName}.jpg`;
 }

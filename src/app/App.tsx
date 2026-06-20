@@ -44,6 +44,8 @@ export function App() {
   const [confirmationRequest, setConfirmationRequest] =
     useState<ConfirmationRequest | null>(null);
   const navigationRefreshKeyRef = useRef(`${activeMainView}:${activeFeedTab}`);
+  const knownNotificationIdsRef = useRef<Set<string>>(new Set());
+  const hasInitializedNotificationIdsRef = useRef(false);
 
   useEffect(() => {
     // Reinicia posicion visual al cambiar pantallas para que tabs flotantes no tapen el primer contenido.
@@ -65,6 +67,51 @@ export function App() {
     navigationRefreshKeyRef.current = nextNavigationRefreshKey;
     handleDataRefresh();
   }, [activeFeedTab, activeMainView, handleDataRefresh]);
+
+  useEffect(() => {
+    if (!sessionProfile || !("Notification" in window)) {
+      return;
+    }
+
+    const ownNotifications = padelitoMvp.database.notifications.filter(
+      (notification) =>
+        notification.recipientProfileId === sessionProfile.profileId,
+    );
+
+    if (!hasInitializedNotificationIdsRef.current) {
+      knownNotificationIdsRef.current = new Set(
+        ownNotifications.map((notification) => notification.notificationId),
+      );
+      hasInitializedNotificationIdsRef.current = true;
+      return;
+    }
+
+    if (Notification.permission !== "granted") {
+      ownNotifications.forEach((notification) =>
+        knownNotificationIdsRef.current.add(notification.notificationId),
+      );
+      return;
+    }
+
+    const newUnreadNotifications = ownNotifications.filter(
+      (notification) =>
+        !notification.readAt &&
+        !knownNotificationIdsRef.current.has(notification.notificationId),
+    );
+
+    ownNotifications.forEach((notification) =>
+      knownNotificationIdsRef.current.add(notification.notificationId),
+    );
+
+    if (newUnreadNotifications.length === 0) {
+      return;
+    }
+
+    void showLocalNotification(
+      newUnreadNotifications[0].title,
+      newUnreadNotifications[0].body,
+    );
+  }, [padelitoMvp.database.notifications, sessionProfile]);
 
   if (!padelitoMvp.sessionProfile || padelitoMvp.isPasswordRecoveryMode) {
     return (
@@ -573,4 +620,35 @@ export function App() {
       />
     </ScreenShell>
   );
+}
+
+/**
+ * Muestra un aviso local usando el service worker disponible.
+ * Se construye para aprovechar permisos del navegador sin backend push todavia.
+ * Lo usa App cuando detecta notificaciones internas nuevas.
+ * Sirve para avisar mientras la app esta abierta o se refresca.
+ */
+async function showLocalNotification(title: string, body: string) {
+  if (!("serviceWorker" in navigator)) {
+    new Notification(title, {
+      body,
+      icon: "/app-icon.svg",
+      tag: "padelito-internal-notification",
+    });
+    return;
+  }
+
+  const serviceWorkerRegistration = await navigator.serviceWorker.ready.catch(
+    () => null,
+  );
+
+  if (!serviceWorkerRegistration) {
+    return;
+  }
+
+  await serviceWorkerRegistration.showNotification(title, {
+    body,
+    icon: "/app-icon.svg",
+    tag: "padelito-internal-notification",
+  });
 }

@@ -103,7 +103,11 @@
 
 ## Etapa 8 - PWA, QA y deploy
 - [x] Onboarding de acceso rapido local.
+- [x] Persistir ocultamiento del acceso rapido aunque refresque Supabase.
+- [x] Mostrar guia iPhone para agregar PWA a inicio cuando no hay prompt nativo.
 - [x] Preparar arquitectura para notificaciones push.
+- [x] Pedir permiso de notificaciones desde el panel de avisos sin invadir el feed.
+- [ ] Implementar push remoto real con VAPID, suscripciones y backend de envio.
 - [x] Corregir overflow horizontal mobile.
 - [x] Evitar service worker en desarrollo para no romper HMR.
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.
@@ -112,6 +116,9 @@
 - [x] Ocultar modo demo cuando Supabase esta configurado.
 - [x] Compactar acceso rapido y filtros para mostrar contenido real antes en mobile.
 - [x] Usar avatar reutilizable en perfil, feed y busqueda de jugadores.
+- [x] Ampliar foto de perfil propia y publica al tocar el avatar.
+- [x] Crear eventos con imagen seleccionada desde el dispositivo.
+- [x] Reemplazar etiquetas visibles `Ambos`/`Indiferente` por opciones claras.
 - [ ] Pulir UX.
 - [ ] Probar visualmente pantallas privadas con dos sesiones reales.
 - [x] Crear proyecto Cloudflare Pages beta `padelito-posadas`.
@@ -154,6 +161,7 @@
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [x] Preparar deploy Cloudflare Pages.
+- [x] Aplicar semilla beta en Supabase con usuarios y publicaciones realistas de Posadas.
 - [x] Probar login y logout desde `https://padelito-posadas.pages.dev` con `test@padelito.test`.
 - [ ] Probar manualmente registro con una cuenta nueva real de beta desde `https://padelito-posadas.pages.dev`.
 - [ ] Probar manualmente recuperacion desde `https://padelito-posadas.pages.dev`, considerando el limite de email de Supabase sin SMTP propio.

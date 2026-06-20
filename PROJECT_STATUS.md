@@ -60,10 +60,16 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
 - Feed, jugadores, notificaciones y perfil refrescan datos al cambiar de panel o tocar el panel activo.
 - El cierre de sesion invalida refrescos remotos en curso y limpia estado local aunque Supabase devuelva sesion vencida.
+- El acceso rapido guarda el descarte en localStorage y se oculta cuando la PWA ya esta abierta como app instalada.
+- En iPhone, el acceso rapido abre una guia visual para agregar a inicio cuando no existe prompt nativo.
 - La bandeja de notificaciones es operativa: se puede marcar todo como leido o eliminar avisos propios con gesto hacia la derecha.
+- La pantalla de notificaciones puede pedir permiso del navegador y mostrar avisos locales cuando la app detecta notificaciones internas nuevas.
 - Solicitudes e invitaciones aceptadas pueden cancelarse desde ambos lados del vinculo y liberan cupo/participante cuando corresponde.
 - Los recordatorios de resultado se materializan al refrescar/abrir la app cuando un partido propio programado ya termino.
 - Cuando el creador registra resultado, los participantes reciben una notificacion informativa.
+- La foto de perfil se puede abrir en grande desde el perfil propio y perfiles publicos.
+- Las publicaciones de evento usan seleccion de imagen desde el dispositivo y subida a `event-images`, no URL manual.
+- Las opciones visibles de posicion y estilo usan `Drive/reves` y `Recreativo/competitivo` en lugar de `Ambos` o `Indiferente`.
 
 ## Riesgos tecnicos
 
@@ -83,6 +89,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Cloudflare Pages queda atado a la rama `codex/base-mvp-local`; si se cambia de rama principal antes del dominio propio, hay que actualizar la production branch.
 - El dominio gratuito `pages.dev` sirve para preview, pero el lanzamiento publico final necesita dominio propio, SMTP propio y revision de URLs permitidas en Supabase Auth.
 - Mientras no haya dominio propio, los emails de Auth no pueden salir como `no-reply@padelito-posadas.pages.dev` porque `pages.dev` no es un dominio controlado por Padelito.
+- Las notificaciones push remotas de fondo todavia requieren backend de envio, VAPID keys y persistencia de suscripciones; por ahora solo hay permiso y avisos locales al detectar cambios con la app abierta/refrescada.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -107,6 +114,16 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - login productivo con `test@padelito.test` funciona;
   - perfil productivo carga sin errores de consola de la app;
   - logout productivo vuelve al formulario en el primer intento.
+- Iteracion UX beta:
+  - acceso rapido deja de reaparecer tras ocultarlo o usar app instalada;
+  - boton de acceso rapido intenta prompt nativo o muestra guia iPhone;
+  - eventos permiten elegir imagen local y subirla a Storage;
+  - foto de perfil se puede ampliar desde perfil propio y publico;
+  - opciones visibles de posicion/estilo refinadas;
+  - seed Supabase del feed beta aplicado con `Adria R.`, `Juani Artigas`, `Luciana P.` y `mauriciolaratro`;
+  - `npm run lint` pasa;
+  - `npm run build` pasa;
+  - `npm run qa:supabase` pasa con usuarios de prueba.
 - Cierre de sesion:
   - se corrigio la carrera entre refresco automatico por navegacion y logout;
   - si Supabase informa sesion vencida durante logout, la app limpia la sesion local y vuelve al formulario sin requerir segundo intento;
@@ -306,6 +323,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit cache PWA: `Corregir cache de la PWA en produccion`.
 - Commit dominio beta: `Documentar dominio beta de Posadas`.
 - Commit logout vencido: `Corregir cierre de sesion vencida`.
+- Commit logo/acceso: `Actualizar logo y limpiar acceso`.
 
 ## Regla de idioma
 
@@ -318,6 +336,10 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
 - Probar manualmente swipe-to-delete de notificaciones en celular.
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
+- Probar en iPhone la guia de agregar a inicio y confirmar que no reaparece al abrir desde el icono instalado.
+- Probar permisos de notificaciones en iPhone instalado y Android/Chrome.
+- Definir e implementar push remoto real con VAPID + backend cuando se apruebe ese alcance.
+- Probar creacion de evento con imagen real desde carrete y validar Storage `event-images`.
 - Probar manualmente registro desde `https://padelito-posadas.pages.dev` con cuenta nueva real de beta.
 - Probar manualmente recuperacion de contrasena desde `https://padelito-posadas.pages.dev`, sabiendo que sin SMTP propio rige el limite del proveedor integrado de Supabase.
 - Pulir UX con screenshots mobile despues de cerrar flujos principales.

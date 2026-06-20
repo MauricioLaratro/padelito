@@ -8,6 +8,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AvatarPreviewOverlay } from "../../components/common/AvatarPreviewOverlay";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
@@ -153,6 +154,7 @@ function PublicPlayerProfileCard({
   onInvitationStart,
   profile,
 }: PublicPlayerProfileCardProps) {
+  const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
   const isFollowed = isProfileFollowed(
     database,
     currentProfileId,
@@ -163,12 +165,28 @@ function PublicPlayerProfileCard({
     <article className="rounded-lg border border-accent-lime/45 bg-surface-primary p-4 shadow-floating">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <ProfileAvatar
-            avatarUrl={profile.avatarUrl}
-            displayName={profile.displayName}
-            profileType={profile.profileType}
-            size="lg"
-          />
+          {profile.avatarUrl ? (
+            <button
+              aria-label="Ver foto de perfil"
+              className="rounded-full"
+              onClick={() => setIsAvatarPreviewOpen(true)}
+              type="button"
+            >
+              <ProfileAvatar
+                avatarUrl={profile.avatarUrl}
+                displayName={profile.displayName}
+                profileType={profile.profileType}
+                size="lg"
+              />
+            </button>
+          ) : (
+            <ProfileAvatar
+              avatarUrl={profile.avatarUrl}
+              displayName={profile.displayName}
+              profileType={profile.profileType}
+              size="lg"
+            />
+          )}
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               Perfil
@@ -201,6 +219,14 @@ function PublicPlayerProfileCard({
           Invitar
         </Button>
       </div>
+
+      {isAvatarPreviewOpen && profile.avatarUrl ? (
+        <AvatarPreviewOverlay
+          avatarUrl={profile.avatarUrl}
+          displayName={profile.displayName}
+          onClose={() => setIsAvatarPreviewOpen(false)}
+        />
+      ) : null}
     </article>
   );
 }

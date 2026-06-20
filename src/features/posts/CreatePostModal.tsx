@@ -1,5 +1,5 @@
-import { X } from "lucide-react";
-import type { FormEvent } from "react";
+import { ImagePlus, X } from "lucide-react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
 import { Button } from "../../components/common/Button";
 import { FormField } from "../../components/forms/FormField";
@@ -23,11 +23,12 @@ import type { Post } from "../../domain/models/postModels";
 import type { Profile } from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
+import { createProcessedEventImage } from "../../utils/avatarImageProcessing";
 
 interface CreatePostModalProps {
   authorProfile: Profile;
   onClose: () => void;
-  onPostCreate: (post: Post) => void;
+  onPostCreate: (post: Post, eventImageFile?: File) => void;
 }
 
 /**
@@ -59,7 +60,10 @@ export function CreatePostModal({
   const [confirmedPlayersText, setConfirmedPlayersText] = useState("");
   const [eventTitle, setEventTitle] = useState("");
   const [eventDescription, setEventDescription] = useState("");
-  const [eventImageUrl, setEventImageUrl] = useState("");
+  const [eventImageFile, setEventImageFile] = useState<File | undefined>();
+  const [eventImagePreviewUrl, setEventImagePreviewUrl] = useState("");
+  const [eventImageError, setEventImageError] = useState<string | null>(null);
+  const [isEventImageProcessing, setIsEventImageProcessing] = useState(false);
   const [eventWhatsappUrl, setEventWhatsappUrl] = useState("");
   const [eventRegistrationUrl, setEventRegistrationUrl] = useState("");
   const [eventGoogleMapsUrl, setEventGoogleMapsUrl] = useState("");
@@ -106,11 +110,11 @@ export function CreatePostModal({
         postType,
         title: eventTitle,
         description: eventDescription,
-        imageUrl: eventImageUrl,
+        imageUrl: eventImagePreviewUrl,
         whatsappUrl: eventWhatsappUrl,
         registrationUrl: eventRegistrationUrl,
         googleMapsUrl: eventGoogleMapsUrl,
-      });
+      }, eventImageFile);
       return;
     }
 
@@ -124,6 +128,38 @@ export function CreatePostModal({
       missingPlayersCount,
       confirmedPlayersText,
     });
+  }
+
+  /**
+   * Procesa la imagen elegida para un evento.
+   * Se construye para usar el carrete del usuario sin depender de URLs.
+   * Lo usa el input de imagen del formulario.
+   * Sirve para previsualizar y subir un archivo optimizado.
+   */
+  async function handleEventImageChange(
+    changeEvent: ChangeEvent<HTMLInputElement>,
+  ) {
+    const selectedFile = changeEvent.target.files?.[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    setIsEventImageProcessing(true);
+    setEventImageError(null);
+
+    try {
+      const processedEventImage = await createProcessedEventImage(selectedFile);
+      setEventImageFile(processedEventImage.file);
+      setEventImagePreviewUrl(processedEventImage.previewUrl);
+    } catch {
+      setEventImageFile(undefined);
+      setEventImagePreviewUrl("");
+      setEventImageError("No se pudo preparar la imagen.");
+    } finally {
+      setIsEventImageProcessing(false);
+      changeEvent.target.value = "";
+    }
   }
 
   return (
@@ -233,14 +269,34 @@ export function CreatePostModal({
                 required
                 value={eventDescription}
               />
-              <FormField
-                label="Imagen opcional"
-                onChange={(changeEvent) =>
-                  setEventImageUrl(changeEvent.target.value)
-                }
-                placeholder="https://..."
-                value={eventImageUrl}
-              />
+              <div className="rounded-lg border border-border-subtle bg-surface-secondary p-3">
+                <p className="text-xs font-bold text-text-secondary">
+                  Imagen opcional
+                </p>
+                {eventImagePreviewUrl ? (
+                  <img
+                    alt="Vista previa del evento"
+                    className="mt-3 aspect-video w-full rounded-lg object-cover"
+                    src={eventImagePreviewUrl}
+                  />
+                ) : null}
+                <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-border-subtle bg-surface-primary px-4 text-sm font-black text-text-primary transition hover:border-accent-lime/40">
+                  <ImagePlus aria-hidden="true" size={17} />
+                  {eventImagePreviewUrl ? "Cambiar imagen" : "Elegir imagen"}
+                  <input
+                    accept="image/*"
+                    className="sr-only"
+                    disabled={isEventImageProcessing}
+                    onChange={handleEventImageChange}
+                    type="file"
+                  />
+                </label>
+                {eventImageError ? (
+                  <p className="mt-2 text-xs font-bold text-feedback-danger">
+                    {eventImageError}
+                  </p>
+                ) : null}
+              </div>
               <FormField
                 label="WhatsApp opcional"
                 onChange={(changeEvent) =>

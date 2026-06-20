@@ -19,14 +19,14 @@ export const playerLevelLabels: Record<PlayerLevel, string> = {
 export const playerPositionLabels: Record<PlayerPosition, string> = {
   drive: "Drive",
   backhand: "Revés",
-  both: "Ambos",
-  any: "Indiferente",
+  both: "Drive/revés",
+  any: "Drive/revés",
 };
 
 export const playStyleLabels: Record<PlayStyle, string> = {
   recreational: "Recreativo",
   competitive: "Competitivo",
-  both: "Ambos",
+  both: "Recreativo/competitivo",
 };
 
 export const organizationKindLabels: Record<OrganizationKind, string> = {
@@ -42,12 +42,14 @@ export const playerLevelOptions = Object.entries(playerLevelLabels).map(
   }),
 );
 
-export const playerPositionOptions = Object.entries(playerPositionLabels).map(
-  ([optionValue, optionLabel]) => ({
-    value: optionValue as PlayerPosition,
-    label: optionLabel,
-  }),
-);
+export const playerPositionOptions = [
+  "drive",
+  "backhand",
+  "both",
+].map((optionValue) => ({
+  value: optionValue as PlayerPosition,
+  label: playerPositionLabels[optionValue as PlayerPosition],
+}));
 
 export const playStyleOptions = Object.entries(playStyleLabels).map(
   ([optionValue, optionLabel]) => ({

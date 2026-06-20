@@ -80,6 +80,8 @@ export function usePadelitoMvp() {
       "padelito-local-database-v1",
       createInitialLocalDatabase,
     );
+  const [isQuickAccessPromptDismissed, setIsQuickAccessPromptDismissed] =
+    useLocalStorageState("padelito-quick-access-dismissed-v1", () => false);
   const [remoteDatabase, setRemoteDatabase] = useState<PadelitoLocalDatabase>(
     createEmptyRepositorySnapshot,
   );
@@ -122,9 +124,23 @@ export function usePadelitoMvp() {
 
   const isSupabaseMode =
     backendMode === "supabase" && Boolean(supabaseRepository);
-  const database = normalizeDatabaseSnapshot(
-    isSupabaseMode ? remoteDatabase : localDatabase,
-  );
+  const database = useMemo(() => {
+    const normalizedDatabase = normalizeDatabaseSnapshot(
+      isSupabaseMode ? remoteDatabase : localDatabase,
+    );
+
+    return {
+      ...normalizedDatabase,
+      quickAccessPromptDismissed:
+        normalizedDatabase.quickAccessPromptDismissed ||
+        isQuickAccessPromptDismissed,
+    };
+  }, [
+    isQuickAccessPromptDismissed,
+    isSupabaseMode,
+    localDatabase,
+    remoteDatabase,
+  ]);
 
   const sessionProfile = getSessionProfile(database);
 
@@ -598,18 +614,53 @@ export function usePadelitoMvp() {
    * Lo usa CreatePostModal.
    * Sirve para agregar posts a feeds y actividad.
    */
-  function handlePostCreate(post: Post) {
+  function handlePostCreate(post: Post, eventImageFile?: File) {
     if (isSupabaseMode && supabaseRepository) {
-      void runRemoteAction(() => supabaseRepository.createPost(post)).then(
-        (wasSaved) => {
-          if (!wasSaved) {
-            return;
-          }
+      void runRemoteAction(async () => {
+        const imageUrl =
+          post.postType === "event" && eventImageFile
+            ? await supabaseRepository.uploadEventImage(
+                post.postId,
+                eventImageFile,
+              )
+            : post.postType === "event"
+              ? post.imageUrl
+              : undefined;
 
+        await supabaseRepository.createPost(
+          post.postType === "event"
+            ? {
+                ...post,
+                imageUrl,
+              }
+            : post,
+        );
+      }).then((wasSaved) => {
+        if (!wasSaved) {
+          return;
+        }
+
+        setIsCreatePostOpen(false);
+        setActiveMainView("feed");
+      });
+      return;
+    }
+
+    if (post.postType === "event" && eventImageFile) {
+      void readFileAsDataUrl(eventImageFile)
+        .then((imageUrl) => {
+          setLocalDatabase((currentDatabase) =>
+            createPost(currentDatabase, {
+              ...post,
+              imageUrl,
+            }),
+          );
           setIsCreatePostOpen(false);
           setActiveMainView("feed");
-        },
-      );
+        })
+        .catch((error) => {
+          setRemoteErrorMessage(getReadableErrorMessage(error));
+        });
       return;
     }
 
@@ -1259,6 +1310,8 @@ export function usePadelitoMvp() {
    * Sirve para guardar la decision local.
    */
   function handleQuickAccessDismiss() {
+    setIsQuickAccessPromptDismissed(true);
+
     if (isSupabaseMode) {
       setRemoteDatabase((currentDatabase) =>
         dismissQuickAccessPrompt(currentDatabase),
@@ -1278,6 +1331,8 @@ export function usePadelitoMvp() {
    * Sirve para que el usuario active el acceso rapido despues del onboarding.
    */
   function handleQuickAccessShow() {
+    setIsQuickAccessPromptDismissed(false);
+
     if (isSupabaseMode) {
       setRemoteDatabase((currentDatabase) => ({
         ...currentDatabase,

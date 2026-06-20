@@ -1,5 +1,6 @@
 import { BellRing, LogOut, Pencil, UserPlus, UsersRound } from "lucide-react";
 import { useState } from "react";
+import { AvatarPreviewOverlay } from "../../components/common/AvatarPreviewOverlay";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { ProfileAvatar } from "../../components/common/ProfileAvatar";
@@ -85,6 +86,7 @@ export function ProfileScreen({
   onSignOut,
 }: ProfileScreenProps) {
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
+  const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
   const followersCount = database.follows.filter(
     (followRelation) =>
       followRelation.followedProfileId === currentProfile.profileId,
@@ -98,13 +100,30 @@ export function ProfileScreen({
     <section className="grid gap-3 px-4 pb-28 pt-4">
       <article className="rounded-lg border border-border-subtle bg-surface-primary p-4 shadow-floating">
         <div className="flex items-start gap-3">
-          <ProfileAvatar
-            avatarUrl={currentProfile.avatarUrl}
-            className="bg-accent-lime text-background-primary"
-            displayName={currentProfile.displayName}
-            profileType={currentProfile.profileType}
-            size="lg"
-          />
+          {currentProfile.avatarUrl ? (
+            <button
+              aria-label="Ver foto de perfil"
+              className="rounded-full"
+              onClick={() => setIsAvatarPreviewOpen(true)}
+              type="button"
+            >
+              <ProfileAvatar
+                avatarUrl={currentProfile.avatarUrl}
+                className="bg-accent-lime text-background-primary"
+                displayName={currentProfile.displayName}
+                profileType={currentProfile.profileType}
+                size="lg"
+              />
+            </button>
+          ) : (
+            <ProfileAvatar
+              avatarUrl={currentProfile.avatarUrl}
+              className="bg-accent-lime text-background-primary"
+              displayName={currentProfile.displayName}
+              profileType={currentProfile.profileType}
+              size="lg"
+            />
+          )}
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
               {currentProfile.profileType === "player"
@@ -189,6 +208,14 @@ export function ProfileScreen({
           currentProfile={currentProfile}
           onClose={() => setIsProfileEditOpen(false)}
           onProfileSave={onProfileSave}
+        />
+      ) : null}
+
+      {isAvatarPreviewOpen && currentProfile.avatarUrl ? (
+        <AvatarPreviewOverlay
+          avatarUrl={currentProfile.avatarUrl}
+          displayName={currentProfile.displayName}
+          onClose={() => setIsAvatarPreviewOpen(false)}
         />
       ) : null}
     </section>
