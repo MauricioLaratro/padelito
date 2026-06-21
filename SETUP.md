@@ -114,7 +114,8 @@ Estado de esta instancia:
 - Desafios recurrentes: `recurring_challenges`, `recurring_challenge_participants`, `match_records.recurring_challenge_id` y `can_read_recurring_challenge(uuid, uuid)` instalados.
 - Reset de score propio: `profiles.match_stats_reset_at`, `reset_own_match_stats()` y trigger anti-edicion directa instalados.
 - Actividad operativa: `notifications.related_match_id`, `cancel_match_join_request(uuid)`, `cancel_direct_match_invitation(uuid)` y actualizacion de `answer_direct_match_invitation` instalados.
-- Push remoto: pendiente aplicar `supabase/migrations/202606200001_push_subscriptions.sql` en Supabase Cloud para crear `push_subscriptions` y `get_push_delivery_payload(uuid)`.
+- Push remoto: `supabase/migrations/202606200001_push_subscriptions.sql` aplicado en Supabase Cloud; `push_subscriptions` y `get_push_delivery_payload(uuid)` verificados por REST.
+- Notificaciones push: `supabase/migrations/202606210001_allow_actor_notification_reads.sql` aplicado para que el emisor pueda recuperar el `id` de notificaciones que genero.
 
 ## Push remoto
 
@@ -152,7 +153,9 @@ Estado de esta instancia:
 - Subdominio `workers.dev` habilitado.
 - Secret `VAPID_PRIVATE_KEY` cargada en Cloudflare.
 - Pages tiene `VITE_PUSH_WORKER_URL` y `VITE_PUSH_PUBLIC_KEY`.
-- Supabase aun debe recibir la migracion `202606200001_push_subscriptions.sql`.
+- Supabase ya recibio la migracion `202606200001_push_subscriptions.sql`.
+- Supabase ya recibio la migracion `202606210001_allow_actor_notification_reads.sql`.
+- Se verifico por REST que una notificacion creada por un emisor autenticado puede devolver `id` y luego borrarse desde el receptor.
 
 Para que funcione con la app cerrada:
 

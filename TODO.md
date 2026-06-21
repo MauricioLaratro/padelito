@@ -111,7 +111,8 @@
 - [x] Implementar backend Cloudflare Worker gratuito para push remoto con VAPID.
 - [x] Configurar variables de push en Cloudflare Pages.
 - [x] Crear migracion de suscripciones push y RPC de entrega.
-- [ ] Aplicar migracion `202606200001_push_subscriptions.sql` en Supabase Cloud.
+- [x] Aplicar migracion `202606200001_push_subscriptions.sql` en Supabase Cloud.
+- [x] Permitir que el emisor recupere el `id` de notificaciones creadas para disparar push remoto.
 - [ ] Probar push remoto real en PWA instalada con app cerrada.
 - [x] Corregir overflow horizontal mobile.
 - [x] Evitar service worker en desarrollo para no romper HMR.

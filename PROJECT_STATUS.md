@@ -20,6 +20,7 @@ MVP local testeable disponible, publicado en GitHub, conectado a Supabase y desp
 - Cloudflare Pages creado en plan gratuito con proyecto beta `padelito-posadas`; deploy productivo verificado en `https://padelito-posadas.pages.dev`.
 - Cloudflare Worker gratuito `padelito-push` creado y disponible en `https://padelito-push.mauriciolaratro.workers.dev` para envio Web Push.
 - Cloudflare Pages ya tiene configuradas las variables `VITE_PUSH_WORKER_URL` y `VITE_PUSH_PUBLIC_KEY`.
+- Supabase permite que el emisor lea las notificaciones que genero para recuperar el `id` requerido por el Worker de push remoto.
 - La beta se mantiene en `pages.dev` hasta adquirir dominio propio; el SMTP propio queda diferido porque requiere un dominio verificable.
 
 ## Comprension del producto
@@ -93,7 +94,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Cloudflare Pages queda atado a la rama `codex/base-mvp-local`; si se cambia de rama principal antes del dominio propio, hay que actualizar la production branch.
 - El dominio gratuito `pages.dev` sirve para preview, pero el lanzamiento publico final necesita dominio propio, SMTP propio y revision de URLs permitidas en Supabase Auth.
 - Mientras no haya dominio propio, los emails de Auth no pueden salir como `no-reply@padelito-posadas.pages.dev` porque `pages.dev` no es un dominio controlado por Padelito.
-- Las notificaciones push remotas ya tienen cliente, service worker, Worker de Cloudflare y variables de Pages; falta aplicar la migracion `202606200001_push_subscriptions.sql` en Supabase Cloud para habilitar suscripciones y entrega real con app cerrada.
+- Las notificaciones push remotas ya tienen cliente, service worker, Worker de Cloudflare, variables de Pages y migracion `202606200001_push_subscriptions.sql` aplicada en Supabase Cloud; queda pendiente prueba real en PWA instalada con app cerrada.
+- La lectura de notificaciones creadas por el actor debe mantenerse acotada a `actor_profile_id = auth.uid()` para no ampliar de mas la bandeja privada de otros usuarios.
 - Web Push en iPhone requiere PWA instalada desde Safari/navegador predeterminado y permiso concedido desde la app instalada; no debe prometerse soporte desde Chrome iOS.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
@@ -134,6 +136,13 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - si Supabase informa sesion vencida durante logout, la app limpia la sesion local y vuelve al formulario sin requerir segundo intento;
   - `npm run lint` pasa;
   - `npm run build` pasa.
+- Push remoto:
+  - migracion `202606200001_push_subscriptions.sql` aplicada en Supabase Cloud;
+  - migracion `202606210001_allow_actor_notification_reads.sql` aplicada en Supabase Cloud;
+  - verificacion REST confirmo que `test@padelito.test` puede crear una notificacion para `test2@padelito.test` con `select=id`;
+  - la notificacion temporal de prueba se borro correctamente como receptor;
+  - `npm run qa:supabase` pasa con usuarios de prueba;
+  - queda pendiente la prueba real de push con PWA instalada y app cerrada.
 - Browser integrado confirmo:
   - titulo `Padelito Preview`;
   - cards `Busco jugador`, `Estoy disponible`, `Americano nocturno`;
@@ -329,6 +338,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit dominio beta: `Documentar dominio beta de Posadas`.
 - Commit logout vencido: `Corregir cierre de sesion vencida`.
 - Commit logo/acceso: `Actualizar logo y limpiar acceso`.
+- Commit push/permisos: `Corregir permisos de notificaciones push`.
 
 ## Regla de idioma
 
@@ -343,7 +353,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar manualmente carga/cambio de foto de perfil con imagen real desde el navegador.
 - Probar en iPhone la guia de agregar a inicio y confirmar que no reaparece al abrir desde el icono instalado.
 - Probar permisos de notificaciones en iPhone instalado y Android/Chrome.
-- Definir e implementar push remoto real con VAPID + backend cuando se apruebe ese alcance.
+- Probar push remoto real con PWA instalada y app cerrada.
 - Probar creacion de evento con imagen real desde carrete y validar Storage `event-images`.
 - Probar manualmente registro desde `https://padelito-posadas.pages.dev` con cuenta nueva real de beta.
 - Probar manualmente recuperacion de contrasena desde `https://padelito-posadas.pages.dev`, sabiendo que sin SMTP propio rige el limite del proveedor integrado de Supabase.
