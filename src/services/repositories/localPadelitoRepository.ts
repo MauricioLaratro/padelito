@@ -748,13 +748,28 @@ export function createDirectMatchInvitation(
     return database;
   }
 
+  const resolvedRelatedPostId = relatedPost?.postId ?? relatedMatch?.sourcePostId;
+  const resolvedRelatedMatchId = relatedMatch?.matchId;
+
+  if (
+    hasOpenDirectMatchInvitation(
+      database.directMatchInvitations,
+      inviterProfileId,
+      invitationInput.invitedProfileId,
+      resolvedRelatedPostId,
+      resolvedRelatedMatchId,
+    )
+  ) {
+    return database;
+  }
+
   const currentTimestamp = createCurrentIsoDate();
   const invitation: DirectMatchInvitation = {
     invitationId: createEntityIdentifier("invitation"),
     inviterProfileId,
     invitedProfileId: invitationInput.invitedProfileId,
-    relatedPostId: relatedPost?.postId ?? relatedMatch?.sourcePostId,
-    relatedMatchId: relatedMatch?.matchId,
+    relatedPostId: resolvedRelatedPostId,
+    relatedMatchId: resolvedRelatedMatchId,
     scheduledDate:
       relatedMatch?.scheduledDate ??
       relatedPost?.scheduledDate ??
@@ -793,6 +808,30 @@ export function createDirectMatchInvitation(
     ],
     notifications: [...database.notifications, notification],
   };
+}
+
+/**
+ * Detecta invitaciones abiertas repetidas.
+ * Se construye para que el envio sea idempotente ante doble toque.
+ * Lo usa createDirectMatchInvitation.
+ * Sirve para no duplicar invitaciones ni notificaciones sobre el mismo destino.
+ */
+function hasOpenDirectMatchInvitation(
+  directMatchInvitations: DirectMatchInvitation[],
+  inviterProfileId: string,
+  invitedProfileId: string,
+  relatedPostId: string | undefined,
+  relatedMatchId: string | undefined,
+) {
+  return directMatchInvitations.some(
+    (directMatchInvitation) =>
+      directMatchInvitation.inviterProfileId === inviterProfileId &&
+      directMatchInvitation.invitedProfileId === invitedProfileId &&
+      (directMatchInvitation.status === "pending" ||
+        directMatchInvitation.status === "accepted") &&
+      directMatchInvitation.relatedPostId === relatedPostId &&
+      directMatchInvitation.relatedMatchId === relatedMatchId,
+  );
 }
 
 /**

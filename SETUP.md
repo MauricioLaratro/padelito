@@ -114,6 +114,7 @@ Estado de esta instancia:
 - Desafios recurrentes: `recurring_challenges`, `recurring_challenge_participants`, `match_records.recurring_challenge_id` y `can_read_recurring_challenge(uuid, uuid)` instalados.
 - Reset de score propio: `profiles.match_stats_reset_at`, `reset_own_match_stats()` y trigger anti-edicion directa instalados.
 - Actividad operativa: `notifications.related_match_id`, `cancel_match_join_request(uuid)`, `cancel_direct_match_invitation(uuid)` y actualizacion de `answer_direct_match_invitation` instalados.
+- Invitaciones directas: `supabase/migrations/202606210002_prevent_duplicate_open_invitations.sql` aplicado; bloquea duplicados abiertos sobre el mismo destino.
 - Push remoto: `supabase/migrations/202606200001_push_subscriptions.sql` aplicado en Supabase Cloud; `push_subscriptions` y `get_push_delivery_payload(uuid)` verificados por REST.
 - Notificaciones push: `supabase/migrations/202606210001_allow_actor_notification_reads.sql` aplicado para que el emisor pueda recuperar el `id` de notificaciones que genero.
 

@@ -94,6 +94,8 @@
 - [x] Eliminar publicaciones canceladas, solicitudes cerradas e invitaciones cerradas desde perfil.
 - [x] Cards contextuales de invitaciones enviadas y recibidas en perfil.
 - [x] Cancelar invitaciones enviadas pendientes.
+- [x] Evitar invitaciones directas duplicadas sobre el mismo partido o publicacion.
+- [x] Mostrar estado y cancelacion de invitacion en publicaciones de jugadores disponibles.
 - [x] Buscar jugadores por nombre.
 - [x] Ver perfil publico de otro jugador como vista completa, no como card incrustada en busqueda.
 - [x] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.

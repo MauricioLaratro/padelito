@@ -233,6 +233,11 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - cupos faltantes permiten `0-24` en UI, dominio y migracion;
   - publicaciones propias activas pueden cancelarse desde feed y perfil;
   - invitaciones enviadas pendientes pueden cancelarse desde perfil;
+  - publicaciones `Estoy disponible` muestran invitacion pendiente o aceptada desde el feed;
+  - el CTA de disponibilidad cambia a `Cancelar invitacion` cuando ya hay invitacion pendiente;
+  - migracion `202606210002_prevent_duplicate_open_invitations.sql` aplicada en Supabase Cloud;
+  - indice unico parcial bloquea invitaciones abiertas duplicadas para el mismo emisor, invitado y destino;
+  - prueba REST temporal confirmo primera invitacion `201`, duplicada `409` y limpieza `204`;
   - busqueda de jugadores y perfil publico implementados con follow e invitacion;
   - modo demo queda oculto cuando Supabase esta configurado;
   - edicion de perfil implementada desde Perfil con formulario reutilizable;
@@ -339,6 +344,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit logout vencido: `Corregir cierre de sesion vencida`.
 - Commit logo/acceso: `Actualizar logo y limpiar acceso`.
 - Commit push/permisos: `Corregir permisos de notificaciones push`.
+- Commit invitaciones/feed: `Corregir duplicados de invitaciones en feed`.
 
 ## Regla de idioma
 

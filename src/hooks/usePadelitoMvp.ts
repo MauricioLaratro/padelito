@@ -111,6 +111,9 @@ export function usePadelitoMvp() {
   const [remoteErrorMessage, setRemoteErrorMessage] = useState<string | null>(
     null,
   );
+  const [remoteStatusMessage, setRemoteStatusMessage] = useState<string | null>(
+    null,
+  );
   const [isRemoteSnapshotLoading, setIsRemoteSnapshotLoading] = useState(false);
   const isSignOutInProgressRef = useRef(false);
   const remoteSnapshotRequestIdRef = useRef(0);
@@ -348,6 +351,7 @@ export function usePadelitoMvp() {
 
     try {
       setRemoteErrorMessage(null);
+      setRemoteStatusMessage(null);
       await action();
       await loadRemoteSnapshot();
       return true;
@@ -1038,6 +1042,7 @@ export function usePadelitoMvp() {
       ).then((wasSaved) => {
         if (wasSaved) {
           setInvitedProfileId(null);
+          setRemoteStatusMessage("Invitación enviada.");
         }
       });
       return;
@@ -1051,6 +1056,8 @@ export function usePadelitoMvp() {
       ),
     );
     setInvitedProfileId(null);
+    setRemoteErrorMessage(null);
+    setRemoteStatusMessage("Invitación enviada.");
   }
 
   /**
@@ -1095,7 +1102,11 @@ export function usePadelitoMvp() {
           invitationId,
           sessionProfile.profileId,
         ),
-      );
+      ).then((wasSaved) => {
+        if (wasSaved) {
+          setRemoteStatusMessage("Invitación cancelada.");
+        }
+      });
       return;
     }
 
@@ -1106,6 +1117,8 @@ export function usePadelitoMvp() {
         sessionProfile.profileId,
       ),
     );
+    setRemoteErrorMessage(null);
+    setRemoteStatusMessage("Invitación cancelada.");
   }
 
   /**
@@ -1367,6 +1380,7 @@ export function usePadelitoMvp() {
     isRemoteSnapshotLoading,
     lastFeedRefreshAt,
     remoteErrorMessage,
+    remoteStatusMessage,
     selectedPublicProfileId,
     sessionProfile,
     unreadNotificationsCount,

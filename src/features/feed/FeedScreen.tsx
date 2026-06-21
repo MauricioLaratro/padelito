@@ -17,7 +17,10 @@ import type {
   PlayerPosition,
   PlayStyle,
 } from "../../domain/enums/profileEnums";
-import type { Post } from "../../domain/models/postModels";
+import type {
+  DirectMatchInvitation,
+  Post,
+} from "../../domain/models/postModels";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 
 type FeedDateFilterIdentifier = "all" | "today" | "week";
@@ -25,11 +28,13 @@ type FeedDateFilterIdentifier = "all" | "today" | "week";
 interface FeedScreenProps {
   currentProfileId: string;
   database: PadelitoLocalDatabase;
+  directMatchInvitations: DirectMatchInvitation[];
   onEventInteractionToggle: (
     postId: string,
     interactionType: "interested" | "attending",
   ) => void;
   onFollowToggle: (profileId: string) => void;
+  onInvitationCancel: (invitationId: string) => void;
   onInvitationStart: (profileId: string) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
@@ -48,8 +53,10 @@ interface FeedScreenProps {
 export function FeedScreen({
   currentProfileId,
   database,
+  directMatchInvitations,
   onEventInteractionToggle,
   onFollowToggle,
+  onInvitationCancel,
   onInvitationStart,
   onJoinRequestCancel,
   onJoinRequestCreate,
@@ -264,11 +271,13 @@ export function FeedScreen({
         filteredPosts.map((post) => (
           <PostCard
             currentProfileId={currentProfileId}
+            directMatchInvitations={directMatchInvitations}
             followRelations={database.follows}
             joinRequests={database.matchJoinRequests}
             key={post.postId}
             onEventInteractionToggle={onEventInteractionToggle}
             onFollowToggle={onFollowToggle}
+            onInvitationCancel={onInvitationCancel}
             onInvitationStart={onInvitationStart}
             onJoinRequestCancel={onJoinRequestCancel}
             onJoinRequestCreate={onJoinRequestCreate}

@@ -1,4 +1,5 @@
 import type {
+  DirectMatchInvitation,
   MatchJoinRequest,
   Post,
   PostInteraction,
@@ -10,6 +11,7 @@ import { LookingForPlayerCard } from "./LookingForPlayerCard";
 
 interface PostCardProps {
   currentProfileId: string;
+  directMatchInvitations: DirectMatchInvitation[];
   followRelations: FollowRelation[];
   joinRequests: MatchJoinRequest[];
   onEventInteractionToggle: (
@@ -17,6 +19,7 @@ interface PostCardProps {
     interactionType: "interested" | "attending",
   ) => void;
   onFollowToggle: (profileId: string) => void;
+  onInvitationCancel: (invitationId: string) => void;
   onInvitationStart: (profileId: string) => void;
   onJoinRequestCancel: (requestId: string) => void;
   onJoinRequestCreate: (postId: string) => void;
@@ -35,10 +38,12 @@ interface PostCardProps {
  */
 export function PostCard({
   currentProfileId,
+  directMatchInvitations,
   followRelations,
   joinRequests,
   onEventInteractionToggle,
   onFollowToggle,
+  onInvitationCancel,
   onInvitationStart,
   onJoinRequestCancel,
   onJoinRequestCreate,
@@ -78,7 +83,9 @@ export function PostCard({
       <AvailableToPlayCard
         authorProfile={authorProfile}
         currentProfileId={currentProfileId}
+        directMatchInvitations={directMatchInvitations}
         followRelations={followRelations}
+        onInvitationCancel={onInvitationCancel}
         onFollowToggle={onFollowToggle}
         onInvitationStart={onInvitationStart}
         onPostCancel={onPostCancel}

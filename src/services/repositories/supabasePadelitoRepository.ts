@@ -936,7 +936,22 @@ export function createSupabasePadelitoRepository(
       note: invitationInput.note,
       status: "pending",
     };
+    const existingOpenInvitation = await findOpenDirectMatchInvitation(
+      inviterProfileId,
+      invitationToCreate.invitedProfileId,
+      invitationToCreate.relatedPostId,
+      invitationToCreate.relatedMatchId,
+    );
+
+    if (existingOpenInvitation) {
+      return;
+    }
+
     const savedInvitation = await insertDirectMatchInvitation(invitationToCreate);
+
+    if (!savedInvitation) {
+      return;
+    }
 
     await createNotification({
       recipientProfileId: invitationInput.invitedProfileId,
@@ -1264,7 +1279,7 @@ export function createSupabasePadelitoRepository(
       DirectMatchInvitation,
       "invitationId" | "createdAt" | "updatedAt"
     >,
-  ): Promise<SupabaseDirectMatchInvitationRow> {
+  ): Promise<SupabaseDirectMatchInvitationRow | null> {
     const insertInput: SupabaseDirectMatchInvitationInsert =
       mapDirectMatchInvitationToSupabaseInsert(directMatchInvitation);
 
@@ -1281,6 +1296,10 @@ export function createSupabasePadelitoRepository(
 
     if (!error) {
       throw new Error("Supabase no devolvió datos al insertar la invitación directa.");
+    }
+
+    if (isDuplicateRecordError(error)) {
+      return null;
     }
 
     if (!isMissingSchemaFeatureError(error)) {
@@ -1303,6 +1322,38 @@ export function createSupabasePadelitoRepository(
         .returns<SupabaseDirectMatchInvitationRow[]>()
         .single(),
       "insertar invitación directa sin partido vinculado",
+    );
+  }
+
+  /**
+   * Busca una invitacion abierta para el mismo destino.
+   * Se construye para hacer idempotente el envio directo.
+   * Lo usa createDirectMatchInvitation antes de insertar.
+   * Sirve para no duplicar invitaciones ni avisos ante doble toque.
+   */
+  async function findOpenDirectMatchInvitation(
+    inviterProfileId: string,
+    invitedProfileId: string,
+    relatedPostId: string | undefined,
+    relatedMatchId: string | undefined,
+  ): Promise<SupabaseDirectMatchInvitationRow | null> {
+    const invitationRows = await readRows<SupabaseDirectMatchInvitationRow>(
+      supabaseClient
+        .from("direct_match_invitations")
+        .select("*")
+        .eq("inviter_profile_id", inviterProfileId)
+        .eq("invited_profile_id", invitedProfileId)
+        .in("status", ["pending", "accepted"])
+        .returns<SupabaseDirectMatchInvitationRow[]>(),
+      "buscar invitaciones abiertas",
+    );
+
+    return (
+      invitationRows.find(
+        (invitationRow) =>
+          (invitationRow.related_post_id ?? undefined) === relatedPostId &&
+          (invitationRow.related_match_id ?? undefined) === relatedMatchId,
+      ) ?? null
     );
   }
 
@@ -1688,6 +1739,21 @@ function isMissingSchemaFeatureError(error: SupabaseRepositoryError) {
     normalizedMessage.includes("answer_direct_match_invitation") ||
     normalizedMessage.includes("cancel_match_join_request") ||
     normalizedMessage.includes("cancel_direct_match_invitation")
+  );
+}
+
+/**
+ * Detecta duplicados protegidos por indices unicos.
+ * Se construye para convertir doble toque en accion idempotente.
+ * Lo usa insertDirectMatchInvitation.
+ * Sirve para evitar errores visibles cuando la base ya tiene el registro abierto.
+ */
+function isDuplicateRecordError(error: SupabaseRepositoryError) {
+  const normalizedMessage = error.message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("duplicate key") ||
+    normalizedMessage.includes("already exists")
   );
 }
 

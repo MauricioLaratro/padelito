@@ -518,6 +518,13 @@ export function App() {
           </p>
         </div>
       ) : null}
+      {padelitoMvp.remoteStatusMessage ? (
+        <div className="px-4 pt-3">
+          <p className="mt-2 rounded-lg border border-feedback-success/40 bg-feedback-success/10 p-3 text-sm leading-6 text-feedback-success">
+            {padelitoMvp.remoteStatusMessage}
+          </p>
+        </div>
+      ) : null}
 
       {padelitoMvp.activeMainView === "feed" ? (
         <div className="grid min-w-0 gap-3">
@@ -531,10 +538,12 @@ export function App() {
           <FeedScreen
             currentProfileId={currentSessionProfile.profileId}
             database={padelitoMvp.database}
+            directMatchInvitations={padelitoMvp.database.directMatchInvitations}
             onEventInteractionToggle={
               padelitoMvp.handleEventInteractionToggle
             }
             onFollowToggle={padelitoMvp.handleFollowToggle}
+            onInvitationCancel={confirmDirectInvitationCancel}
             onInvitationStart={padelitoMvp.setInvitedProfileId}
             onJoinRequestCancel={confirmJoinRequestCancel}
             onJoinRequestCreate={padelitoMvp.handleJoinRequestCreate}
