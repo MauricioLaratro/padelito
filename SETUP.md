@@ -211,6 +211,8 @@ Referencias:
 - Para validar solicitudes, invitaciones y perfiles cruzados, crear usuarios temporales desde el dashboard de Supabase o desde el flujo real de registro.
 - En esta sesion se validaron desde la app real: crear partido, agregar participante seguido, registrar resultado, editar resultado, cancelar partido programado, publicar partido incompleto, invitar a un jugador a un partido estructurado, crear desafio recurrente, registrar partido con marcador acumulado dentro del desafio, archivar desafio, reactivar desafio y abrir confirmacion de reset de score sin mutar datos.
 - Tambien se valido por smoke test remoto que las RPC de cancelacion existen y que `notifications.related_match_id` es legible bajo RLS.
+- Inicio oculta automaticamente publicaciones vencidas segun fecha/hora local.
+- Feed, notificaciones, actividad de perfil, historial y desafios cargan cards en tandas bajo demanda; esto reduce listas largas renderizadas de golpe sin borrar datos historicos.
 
 ## Marca y cache PWA
 

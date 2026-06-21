@@ -14,6 +14,7 @@ import type {
 } from "../../domain/models/profileModels";
 import { createCurrentIsoDate } from "../../utils/dateFormatters";
 import { createEntityIdentifier } from "../../utils/identifierGenerator";
+import { isPostCurrentForFeed } from "../../utils/scheduleVisibility";
 import type { PadelitoLocalDatabase } from "./localPadelitoDatabase";
 import type {
   CreateInvitationInput,
@@ -137,6 +138,7 @@ export function getVisiblePostsForFeed(
   database: PadelitoLocalDatabase,
   viewerProfileId: string,
   feedTabIdentifier: "community" | "following",
+  currentDate: Date = new Date(),
 ) {
   const followedProfileIds = database.follows
     .filter(
@@ -146,6 +148,7 @@ export function getVisiblePostsForFeed(
 
   return database.posts
     .filter((post) => post.isActive)
+    .filter((post) => isPostCurrentForFeed(post, currentDate))
     .filter((post) => {
       if (feedTabIdentifier === "community") {
         return post.visibility === "public";

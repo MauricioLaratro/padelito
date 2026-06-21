@@ -4,6 +4,7 @@ import { PostCard } from "../../components/cards/PostCard";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
+import { IncrementalLoadMarker } from "../../components/common/IncrementalLoadMarker";
 import { FormField } from "../../components/forms/FormField";
 import { postTypeOptions } from "../../constants/postOptions";
 import {
@@ -21,6 +22,7 @@ import type {
   DirectMatchInvitation,
   Post,
 } from "../../domain/models/postModels";
+import { useIncrementalItems } from "../../hooks/useIncrementalItems";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 
 type FeedDateFilterIdentifier = "all" | "today" | "week";
@@ -128,6 +130,11 @@ export function FeedScreen({
     selectedPostType,
     visiblePosts,
   ]);
+  const feedIncrementalItems = useIncrementalItems({
+    batchSize: 6,
+    initialVisibleCount: 8,
+    items: filteredPosts,
+  });
 
   /**
    * Limpia filtros del feed.
@@ -268,26 +275,35 @@ export function FeedScreen({
       </div>
 
       {filteredPosts.length > 0 ? (
-        filteredPosts.map((post) => (
-          <PostCard
-            currentProfileId={currentProfileId}
-            directMatchInvitations={directMatchInvitations}
-            followRelations={database.follows}
-            joinRequests={database.matchJoinRequests}
-            key={post.postId}
-            onEventInteractionToggle={onEventInteractionToggle}
-            onFollowToggle={onFollowToggle}
-            onInvitationCancel={onInvitationCancel}
-            onInvitationStart={onInvitationStart}
-            onJoinRequestCancel={onJoinRequestCancel}
-            onJoinRequestCreate={onJoinRequestCreate}
-            onPostCancel={onPostCancel}
-            post={post}
-            postInteractions={database.postInteractions}
-            onProfileOpen={onProfileOpen}
-            profiles={database.profiles}
+        <>
+          {feedIncrementalItems.visibleItems.map((post) => (
+            <PostCard
+              currentProfileId={currentProfileId}
+              directMatchInvitations={directMatchInvitations}
+              followRelations={database.follows}
+              joinRequests={database.matchJoinRequests}
+              key={post.postId}
+              onEventInteractionToggle={onEventInteractionToggle}
+              onFollowToggle={onFollowToggle}
+              onInvitationCancel={onInvitationCancel}
+              onInvitationStart={onInvitationStart}
+              onJoinRequestCancel={onJoinRequestCancel}
+              onJoinRequestCreate={onJoinRequestCreate}
+              onPostCancel={onPostCancel}
+              post={post}
+              postInteractions={database.postInteractions}
+              onProfileOpen={onProfileOpen}
+              profiles={database.profiles}
+            />
+          ))}
+          <IncrementalLoadMarker
+            hasMoreItems={feedIncrementalItems.hasMoreItems}
+            loadMoreMarkerRef={feedIncrementalItems.loadMoreMarkerRef}
+            onLoadMore={feedIncrementalItems.loadMoreItems}
+            totalItemCount={feedIncrementalItems.totalItemCount}
+            visibleItemCount={feedIncrementalItems.visibleItemCount}
           />
-        ))
+        </>
       ) : (
         <EmptyState
           actionLabel="Crear publicación"

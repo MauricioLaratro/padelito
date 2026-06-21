@@ -12,10 +12,11 @@ import {
   X,
 } from "lucide-react";
 import type { ReactNode, TouchEvent } from "react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
+import { IncrementalLoadMarker } from "../../components/common/IncrementalLoadMarker";
 import {
   invitationStatusLabels,
   requestStatusLabels,
@@ -25,6 +26,7 @@ import type {
   DirectMatchInvitation,
   MatchJoinRequest,
 } from "../../domain/models/postModels";
+import { useIncrementalItems } from "../../hooks/useIncrementalItems";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 import { NotificationPermissionCard } from "./NotificationPermissionCard";
@@ -69,13 +71,22 @@ export function NotificationsScreen({
   const [selectedNotificationId, setSelectedNotificationId] = useState<
     string | null
   >(null);
-  const visibleNotifications = notifications
-    .filter(
-      (notification) => notification.recipientProfileId === currentProfileId,
-    )
-    .sort((firstNotification, secondNotification) =>
-      secondNotification.createdAt.localeCompare(firstNotification.createdAt),
-    );
+  const visibleNotifications = useMemo(
+    () =>
+      notifications
+        .filter(
+          (notification) => notification.recipientProfileId === currentProfileId,
+        )
+        .sort((firstNotification, secondNotification) =>
+          secondNotification.createdAt.localeCompare(firstNotification.createdAt),
+        ),
+    [currentProfileId, notifications],
+  );
+  const notificationIncrementalItems = useIncrementalItems({
+    batchSize: 8,
+    initialVisibleCount: 10,
+    items: visibleNotifications,
+  });
 
   return (
     <section className="grid gap-3 px-4 pb-28 pt-4">
@@ -94,75 +105,84 @@ export function NotificationsScreen({
       <NotificationPermissionCard />
 
       {visibleNotifications.length > 0 ? (
-        visibleNotifications.map((notification) => (
-          <SwipeableNotificationCard
-            key={notification.notificationId}
-            notification={notification}
-            onDelete={onNotificationDelete}
-          >
-            <button
-              className="flex w-full items-start gap-3 text-left"
-              onClick={() =>
-                setSelectedNotificationId((currentNotificationId) =>
-                  currentNotificationId === notification.notificationId
-                    ? null
-                    : notification.notificationId,
-                )
-              }
-              type="button"
+        <>
+          {notificationIncrementalItems.visibleItems.map((notification) => (
+            <SwipeableNotificationCard
+              key={notification.notificationId}
+              notification={notification}
+              onDelete={onNotificationDelete}
             >
-              <span
-                className={`mt-1 grid size-9 shrink-0 place-items-center rounded-full ${
-                  notification.readAt
-                    ? "bg-surface-secondary text-text-secondary"
-                    : "bg-accent-lime text-background-primary"
-                }`}
+              <button
+                className="flex w-full items-start gap-3 text-left"
+                onClick={() =>
+                  setSelectedNotificationId((currentNotificationId) =>
+                    currentNotificationId === notification.notificationId
+                      ? null
+                      : notification.notificationId,
+                  )
+                }
+                type="button"
               >
-                <Bell aria-hidden="true" size={17} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-base font-black">{notification.title}</h2>
-                <p className="mt-1 text-sm leading-6 text-text-secondary">
-                  {notification.body}
-                </p>
-              </div>
-              <ChevronRight
-                aria-hidden="true"
-                className={`mt-2 shrink-0 text-text-secondary transition ${
-                  selectedNotificationId === notification.notificationId
-                    ? "rotate-90"
-                    : ""
-                }`}
-                size={18}
-              />
-            </button>
-
-            {selectedNotificationId === notification.notificationId ? (
-              <>
-                <NotificationDetail
-                  currentProfileId={currentProfileId}
-                  database={database}
-                  notification={notification}
-                  onDirectInvitationStatusChange={
-                    onDirectInvitationStatusChange
-                  }
-                  onJoinRequestCancel={onJoinRequestCancel}
-                  onJoinRequestStatusChange={onJoinRequestStatusChange}
-                  onPrivateContactOpen={onPrivateContactOpen}
-                  onProfileOpen={onProfileOpen}
-                />
-                <Button
-                  className="mt-3"
-                  icon={Trash2}
-                  onClick={() => onNotificationDelete(notification.notificationId)}
-                  variant="secondary"
+                <span
+                  className={`mt-1 grid size-9 shrink-0 place-items-center rounded-full ${
+                    notification.readAt
+                      ? "bg-surface-secondary text-text-secondary"
+                      : "bg-accent-lime text-background-primary"
+                  }`}
                 >
-                  Eliminar
-                </Button>
-              </>
-            ) : null}
-          </SwipeableNotificationCard>
-        ))
+                  <Bell aria-hidden="true" size={17} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base font-black">{notification.title}</h2>
+                  <p className="mt-1 text-sm leading-6 text-text-secondary">
+                    {notification.body}
+                  </p>
+                </div>
+                <ChevronRight
+                  aria-hidden="true"
+                  className={`mt-2 shrink-0 text-text-secondary transition ${
+                    selectedNotificationId === notification.notificationId
+                      ? "rotate-90"
+                      : ""
+                  }`}
+                  size={18}
+                />
+              </button>
+
+              {selectedNotificationId === notification.notificationId ? (
+                <>
+                  <NotificationDetail
+                    currentProfileId={currentProfileId}
+                    database={database}
+                    notification={notification}
+                    onDirectInvitationStatusChange={
+                      onDirectInvitationStatusChange
+                    }
+                    onJoinRequestCancel={onJoinRequestCancel}
+                    onJoinRequestStatusChange={onJoinRequestStatusChange}
+                    onPrivateContactOpen={onPrivateContactOpen}
+                    onProfileOpen={onProfileOpen}
+                  />
+                  <Button
+                    className="mt-3"
+                    icon={Trash2}
+                    onClick={() => onNotificationDelete(notification.notificationId)}
+                    variant="secondary"
+                  >
+                    Eliminar
+                  </Button>
+                </>
+              ) : null}
+            </SwipeableNotificationCard>
+          ))}
+          <IncrementalLoadMarker
+            hasMoreItems={notificationIncrementalItems.hasMoreItems}
+            loadMoreMarkerRef={notificationIncrementalItems.loadMoreMarkerRef}
+            onLoadMore={notificationIncrementalItems.loadMoreItems}
+            totalItemCount={notificationIncrementalItems.totalItemCount}
+            visibleItemCount={notificationIncrementalItems.visibleItemCount}
+          />
+        </>
       ) : (
         <EmptyState
           description="Cuando alguien te siga, se postule o responda una invitación, aparece acá."

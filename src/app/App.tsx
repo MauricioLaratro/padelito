@@ -20,6 +20,10 @@ import type { LookingForPlayerPost } from "../domain/models/postModels";
 import type { PlayerProfile } from "../domain/models/profileModels";
 import type { RecurringChallengeStatus } from "../domain/enums/recurringChallengeEnums";
 import { synchronizeRemotePushSubscription } from "../services/push/pushNotificationClient";
+import {
+  isMatchCurrentForInvitation,
+  isPostCurrentForFeed,
+} from "../utils/scheduleVisibility";
 
 interface ConfirmationRequest {
   body: string;
@@ -167,13 +171,15 @@ export function App() {
       post.authorProfileId === currentSessionProfile.profileId &&
       post.postType === "looking_for_player" &&
       post.isActive &&
+      isPostCurrentForFeed(post) &&
       post.missingPlayersCount > 0,
   );
   const availableInvitationMatches = padelitoMvp.database.matchRecords.filter(
     (matchRecord) => {
       if (
         matchRecord.ownerProfileId !== currentSessionProfile.profileId ||
-        matchRecord.status !== "scheduled"
+        matchRecord.status !== "scheduled" ||
+        !isMatchCurrentForInvitation(matchRecord)
       ) {
         return false;
       }
@@ -188,6 +194,7 @@ export function App() {
         !sourcePost ||
         (sourcePost.postType === "looking_for_player" &&
           sourcePost.isActive &&
+          isPostCurrentForFeed(sourcePost) &&
           sourcePost.missingPlayersCount > 0)
       );
     },

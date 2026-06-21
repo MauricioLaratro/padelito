@@ -6,9 +6,10 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
+import { IncrementalLoadMarker } from "../../components/common/IncrementalLoadMarker";
 import {
   recurringChallengeFrequencyLabels,
   recurringChallengeSideLabels,
@@ -17,6 +18,7 @@ import {
 import type { RecurringChallengeStatus } from "../../domain/enums/recurringChallengeEnums";
 import type { RecurringChallenge } from "../../domain/models/recurringChallengeModels";
 import type { Profile } from "../../domain/models/profileModels";
+import { useIncrementalItems } from "../../hooks/useIncrementalItems";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import type { CreateRecurringChallengeInput } from "../../services/repositories/padelitoRepository";
 import { CreateRecurringChallengeModal } from "./CreateRecurringChallengeModal";
@@ -46,15 +48,32 @@ export function RecurringChallengesSection({
   onRecurringChallengeStatusUpdate,
 }: RecurringChallengesSectionProps) {
   const [isCreateChallengeOpen, setIsCreateChallengeOpen] = useState(false);
-  const visibleChallenges = database.recurringChallenges.filter(
-    (challenge) =>
-      challenge.ownerProfileId === currentProfile.profileId ||
-      database.recurringChallengeParticipants.some(
-        (challengeParticipant) =>
-          challengeParticipant.challengeId === challenge.challengeId &&
-          challengeParticipant.profileId === currentProfile.profileId,
-      ),
+  const visibleChallenges = useMemo(
+    () =>
+      database.recurringChallenges
+        .filter(
+          (challenge) =>
+            challenge.ownerProfileId === currentProfile.profileId ||
+            database.recurringChallengeParticipants.some(
+              (challengeParticipant) =>
+                challengeParticipant.challengeId === challenge.challengeId &&
+                challengeParticipant.profileId === currentProfile.profileId,
+            ),
+        )
+        .sort((firstChallenge, secondChallenge) =>
+          secondChallenge.updatedAt.localeCompare(firstChallenge.updatedAt),
+        ),
+    [
+      currentProfile.profileId,
+      database.recurringChallengeParticipants,
+      database.recurringChallenges,
+    ],
   );
+  const challengeIncrementalItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: visibleChallenges,
+  });
 
   return (
     <section className="rounded-lg border border-border-subtle bg-surface-primary p-4">
@@ -77,15 +96,24 @@ export function RecurringChallengesSection({
 
       <div className="mt-4 grid gap-3">
         {visibleChallenges.length > 0 ? (
-          visibleChallenges.map((challenge) => (
-            <RecurringChallengeCard
-              challenge={challenge}
-              currentProfileId={currentProfile.profileId}
-              database={database}
-              key={challenge.challengeId}
-              onStatusUpdate={onRecurringChallengeStatusUpdate}
+          <>
+            {challengeIncrementalItems.visibleItems.map((challenge) => (
+              <RecurringChallengeCard
+                challenge={challenge}
+                currentProfileId={currentProfile.profileId}
+                database={database}
+                key={challenge.challengeId}
+                onStatusUpdate={onRecurringChallengeStatusUpdate}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={challengeIncrementalItems.hasMoreItems}
+              loadMoreMarkerRef={challengeIncrementalItems.loadMoreMarkerRef}
+              onLoadMore={challengeIncrementalItems.loadMoreItems}
+              totalItemCount={challengeIncrementalItems.totalItemCount}
+              visibleItemCount={challengeIncrementalItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">
             Todavía no hay desafíos recurrentes.

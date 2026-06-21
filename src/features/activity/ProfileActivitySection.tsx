@@ -11,8 +11,10 @@ import {
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
+import { IncrementalLoadMarker } from "../../components/common/IncrementalLoadMarker";
 import {
   eventInteractionLabels,
   invitationStatusLabels,
@@ -24,6 +26,7 @@ import type {
   DirectMatchInvitation,
   MatchJoinRequest,
 } from "../../domain/models/postModels";
+import { useIncrementalItems } from "../../hooks/useIncrementalItems";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 
@@ -66,27 +69,93 @@ export function ProfileActivitySection({
   onPostCancel,
   onPostDelete,
 }: ProfileActivitySectionProps) {
-  const ownPosts = database.posts.filter(
-    (post) => post.authorProfileId === currentProfileId,
+  const ownPosts = useMemo(
+    () =>
+      database.posts
+        .filter((post) => post.authorProfileId === currentProfileId)
+        .sort((firstPost, secondPost) =>
+          secondPost.createdAt.localeCompare(firstPost.createdAt),
+        ),
+    [currentProfileId, database.posts],
   );
-  const sentRequests = database.matchJoinRequests.filter(
-    (matchJoinRequest) =>
-      matchJoinRequest.requesterProfileId === currentProfileId,
+  const sentRequests = useMemo(
+    () =>
+      database.matchJoinRequests
+        .filter(
+          (matchJoinRequest) =>
+            matchJoinRequest.requesterProfileId === currentProfileId,
+        )
+        .sort(compareRequestsByRecentActivity),
+    [currentProfileId, database.matchJoinRequests],
   );
-  const receivedRequests = database.matchJoinRequests.filter(
-    (matchJoinRequest) => matchJoinRequest.ownerProfileId === currentProfileId,
+  const receivedRequests = useMemo(
+    () =>
+      database.matchJoinRequests
+        .filter(
+          (matchJoinRequest) => matchJoinRequest.ownerProfileId === currentProfileId,
+        )
+        .sort(compareRequestsByRecentActivity),
+    [currentProfileId, database.matchJoinRequests],
   );
-  const sentInvitations = database.directMatchInvitations.filter(
-    (directMatchInvitation) =>
-      directMatchInvitation.inviterProfileId === currentProfileId,
+  const sentInvitations = useMemo(
+    () =>
+      database.directMatchInvitations
+        .filter(
+          (directMatchInvitation) =>
+            directMatchInvitation.inviterProfileId === currentProfileId,
+        )
+        .sort(compareInvitationsByRecentActivity),
+    [currentProfileId, database.directMatchInvitations],
   );
-  const receivedInvitations = database.directMatchInvitations.filter(
-    (directMatchInvitation) =>
-      directMatchInvitation.invitedProfileId === currentProfileId,
+  const receivedInvitations = useMemo(
+    () =>
+      database.directMatchInvitations
+        .filter(
+          (directMatchInvitation) =>
+            directMatchInvitation.invitedProfileId === currentProfileId,
+        )
+        .sort(compareInvitationsByRecentActivity),
+    [currentProfileId, database.directMatchInvitations],
   );
-  const eventInteractions = database.postInteractions.filter(
-    (postInteraction) => postInteraction.profileId === currentProfileId,
+  const eventInteractions = useMemo(
+    () =>
+      database.postInteractions
+        .filter((postInteraction) => postInteraction.profileId === currentProfileId)
+        .sort((firstInteraction, secondInteraction) =>
+          secondInteraction.createdAt.localeCompare(firstInteraction.createdAt),
+        ),
+    [currentProfileId, database.postInteractions],
   );
+  const ownPostItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: ownPosts,
+  });
+  const sentRequestItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: sentRequests,
+  });
+  const receivedRequestItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: receivedRequests,
+  });
+  const sentInvitationItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: sentInvitations,
+  });
+  const receivedInvitationItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: receivedInvitations,
+  });
+  const eventInteractionItems = useIncrementalItems({
+    batchSize: 4,
+    initialVisibleCount: 3,
+    items: eventInteractions,
+  });
 
   return (
     <div className="grid gap-3">
@@ -99,14 +168,23 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Publicaciones propias">
         {ownPosts.length > 0 ? (
-          ownPosts.map((post) => (
-            <OwnPostActivityCard
-              key={post.postId}
-              onPostCancel={onPostCancel}
-              onPostDelete={onPostDelete}
-              post={post}
+          <>
+            {ownPostItems.visibleItems.map((post) => (
+              <OwnPostActivityCard
+                key={post.postId}
+                onPostCancel={onPostCancel}
+                onPostDelete={onPostDelete}
+                post={post}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={ownPostItems.hasMoreItems}
+              loadMoreMarkerRef={ownPostItems.loadMoreMarkerRef}
+              onLoadMore={ownPostItems.loadMoreItems}
+              totalItemCount={ownPostItems.totalItemCount}
+              visibleItemCount={ownPostItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin publicaciones.</p>
         )}
@@ -114,18 +192,27 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Solicitudes enviadas">
         {sentRequests.length > 0 ? (
-          sentRequests.map((matchJoinRequest) => (
-            <RequestActivityCard
-              database={database}
-              key={matchJoinRequest.requestId}
-              mode="sent"
-              onJoinRequestCancel={onJoinRequestCancel}
-              onJoinRequestDelete={onJoinRequestDelete}
-              onJoinRequestStatusChange={onJoinRequestStatusChange}
-              onPrivateContactOpen={onPrivateContactOpen}
-              request={matchJoinRequest}
+          <>
+            {sentRequestItems.visibleItems.map((matchJoinRequest) => (
+              <RequestActivityCard
+                database={database}
+                key={matchJoinRequest.requestId}
+                mode="sent"
+                onJoinRequestCancel={onJoinRequestCancel}
+                onJoinRequestDelete={onJoinRequestDelete}
+                onJoinRequestStatusChange={onJoinRequestStatusChange}
+                onPrivateContactOpen={onPrivateContactOpen}
+                request={matchJoinRequest}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={sentRequestItems.hasMoreItems}
+              loadMoreMarkerRef={sentRequestItems.loadMoreMarkerRef}
+              onLoadMore={sentRequestItems.loadMoreItems}
+              totalItemCount={sentRequestItems.totalItemCount}
+              visibleItemCount={sentRequestItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin solicitudes enviadas.</p>
         )}
@@ -133,18 +220,27 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Solicitudes recibidas">
         {receivedRequests.length > 0 ? (
-          receivedRequests.map((matchJoinRequest) => (
-            <RequestActivityCard
-              database={database}
-              key={matchJoinRequest.requestId}
-              mode="received"
-              onJoinRequestCancel={onJoinRequestCancel}
-              onJoinRequestDelete={onJoinRequestDelete}
-              onJoinRequestStatusChange={onJoinRequestStatusChange}
-              onPrivateContactOpen={onPrivateContactOpen}
-              request={matchJoinRequest}
+          <>
+            {receivedRequestItems.visibleItems.map((matchJoinRequest) => (
+              <RequestActivityCard
+                database={database}
+                key={matchJoinRequest.requestId}
+                mode="received"
+                onJoinRequestCancel={onJoinRequestCancel}
+                onJoinRequestDelete={onJoinRequestDelete}
+                onJoinRequestStatusChange={onJoinRequestStatusChange}
+                onPrivateContactOpen={onPrivateContactOpen}
+                request={matchJoinRequest}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={receivedRequestItems.hasMoreItems}
+              loadMoreMarkerRef={receivedRequestItems.loadMoreMarkerRef}
+              onLoadMore={receivedRequestItems.loadMoreItems}
+              totalItemCount={receivedRequestItems.totalItemCount}
+              visibleItemCount={receivedRequestItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin solicitudes recibidas.</p>
         )}
@@ -152,18 +248,27 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Invitaciones enviadas">
         {sentInvitations.length > 0 ? (
-          sentInvitations.map((directMatchInvitation) => (
-            <InvitationActivityCard
-              database={database}
-              key={directMatchInvitation.invitationId}
-              invitation={directMatchInvitation}
-              mode="sent"
-              onDirectInvitationCancel={onDirectInvitationCancel}
-              onDirectInvitationDelete={onDirectInvitationDelete}
-              onDirectInvitationStatusChange={onDirectInvitationStatusChange}
-              onPrivateContactOpen={onPrivateContactOpen}
+          <>
+            {sentInvitationItems.visibleItems.map((directMatchInvitation) => (
+              <InvitationActivityCard
+                database={database}
+                key={directMatchInvitation.invitationId}
+                invitation={directMatchInvitation}
+                mode="sent"
+                onDirectInvitationCancel={onDirectInvitationCancel}
+                onDirectInvitationDelete={onDirectInvitationDelete}
+                onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+                onPrivateContactOpen={onPrivateContactOpen}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={sentInvitationItems.hasMoreItems}
+              loadMoreMarkerRef={sentInvitationItems.loadMoreMarkerRef}
+              onLoadMore={sentInvitationItems.loadMoreItems}
+              totalItemCount={sentInvitationItems.totalItemCount}
+              visibleItemCount={sentInvitationItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin invitaciones enviadas.</p>
         )}
@@ -171,18 +276,27 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Invitaciones recibidas">
         {receivedInvitations.length > 0 ? (
-          receivedInvitations.map((directMatchInvitation) => (
-            <InvitationActivityCard
-              database={database}
-              key={directMatchInvitation.invitationId}
-              invitation={directMatchInvitation}
-              mode="received"
-              onDirectInvitationCancel={onDirectInvitationCancel}
-              onDirectInvitationDelete={onDirectInvitationDelete}
-              onDirectInvitationStatusChange={onDirectInvitationStatusChange}
-              onPrivateContactOpen={onPrivateContactOpen}
+          <>
+            {receivedInvitationItems.visibleItems.map((directMatchInvitation) => (
+              <InvitationActivityCard
+                database={database}
+                key={directMatchInvitation.invitationId}
+                invitation={directMatchInvitation}
+                mode="received"
+                onDirectInvitationCancel={onDirectInvitationCancel}
+                onDirectInvitationDelete={onDirectInvitationDelete}
+                onDirectInvitationStatusChange={onDirectInvitationStatusChange}
+                onPrivateContactOpen={onPrivateContactOpen}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={receivedInvitationItems.hasMoreItems}
+              loadMoreMarkerRef={receivedInvitationItems.loadMoreMarkerRef}
+              onLoadMore={receivedInvitationItems.loadMoreItems}
+              totalItemCount={receivedInvitationItems.totalItemCount}
+              visibleItemCount={receivedInvitationItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin invitaciones recibidas.</p>
         )}
@@ -190,13 +304,22 @@ export function ProfileActivitySection({
 
       <ActivityCard title="Eventos guardados">
         {eventInteractions.length > 0 ? (
-          eventInteractions.map((postInteraction) => (
-            <ActivityRow
-              key={postInteraction.interactionId}
-              meta={eventInteractionLabels[postInteraction.interactionType]}
-              title="Evento marcado"
+          <>
+            {eventInteractionItems.visibleItems.map((postInteraction) => (
+              <ActivityRow
+                key={postInteraction.interactionId}
+                meta={eventInteractionLabels[postInteraction.interactionType]}
+                title="Evento marcado"
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={eventInteractionItems.hasMoreItems}
+              loadMoreMarkerRef={eventInteractionItems.loadMoreMarkerRef}
+              onLoadMore={eventInteractionItems.loadMoreItems}
+              totalItemCount={eventInteractionItems.totalItemCount}
+              visibleItemCount={eventInteractionItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">Sin eventos marcados.</p>
         )}
@@ -628,4 +751,30 @@ function ActivityRow({ meta, title }: ActivityRowProps) {
       <Chip icon={meta === "Pendiente" ? Clock : Send}>{meta}</Chip>
     </div>
   );
+}
+
+/**
+ * Ordena solicitudes por la ultima actividad.
+ * Se construye para que el perfil priorice lo reciente.
+ * Lo usa ProfileActivitySection.
+ * Sirve para mandar lo antiguo a las tandas siguientes.
+ */
+function compareRequestsByRecentActivity(
+  firstRequest: MatchJoinRequest,
+  secondRequest: MatchJoinRequest,
+) {
+  return secondRequest.updatedAt.localeCompare(firstRequest.updatedAt);
+}
+
+/**
+ * Ordena invitaciones por la ultima actividad.
+ * Se construye para que aceptaciones, rechazos y cancelaciones recientes suban.
+ * Lo usa ProfileActivitySection.
+ * Sirve para evitar que el usuario busque cambios entre cards antiguas.
+ */
+function compareInvitationsByRecentActivity(
+  firstInvitation: DirectMatchInvitation,
+  secondInvitation: DirectMatchInvitation,
+) {
+  return secondInvitation.updatedAt.localeCompare(firstInvitation.updatedAt);
 }

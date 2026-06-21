@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from "react";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
+import { IncrementalLoadMarker } from "../../components/common/IncrementalLoadMarker";
 import {
   matchParticipantSideLabels,
   matchStatusLabels,
@@ -20,6 +21,7 @@ import type { MatchRecord, MatchResult } from "../../domain/models/matchModels";
 import type { Profile } from "../../domain/models/profileModels";
 import type { CreateMatchInput } from "../../services/repositories/padelitoRepository";
 import type { PadelitoLocalDatabase } from "../../services/repositories/localPadelitoDatabase";
+import { useIncrementalItems } from "../../hooks/useIncrementalItems";
 import { formatScheduledDateTime } from "../../utils/dateFormatters";
 import { CreateMatchModal } from "./CreateMatchModal";
 import { MatchResultModal } from "./MatchResultModal";
@@ -61,17 +63,26 @@ export function MatchHistorySection({
       ),
     [currentProfile.profileId, database.matchParticipants],
   );
-  const visibleMatches = database.matchRecords
-    .filter(
-      (matchRecord) =>
-        matchRecord.ownerProfileId === currentProfile.profileId ||
-        profileMatchIds.has(matchRecord.matchId),
-    )
-    .sort((firstMatch, secondMatch) =>
-      `${secondMatch.scheduledDate}${secondMatch.scheduledStartTime}`.localeCompare(
-        `${firstMatch.scheduledDate}${firstMatch.scheduledStartTime}`,
-      ),
-    );
+  const visibleMatches = useMemo(
+    () =>
+      database.matchRecords
+        .filter(
+          (matchRecord) =>
+            matchRecord.ownerProfileId === currentProfile.profileId ||
+            profileMatchIds.has(matchRecord.matchId),
+        )
+        .sort((firstMatch, secondMatch) =>
+          `${secondMatch.scheduledDate}${secondMatch.scheduledStartTime}`.localeCompare(
+            `${firstMatch.scheduledDate}${firstMatch.scheduledStartTime}`,
+          ),
+        ),
+    [currentProfile.profileId, database.matchRecords, profileMatchIds],
+  );
+  const matchIncrementalItems = useIncrementalItems({
+    batchSize: 5,
+    initialVisibleCount: 5,
+    items: visibleMatches,
+  });
   const selectedResultMatch = resultMatchId
     ? visibleMatches.find((matchRecord) => matchRecord.matchId === resultMatchId)
     : null;
@@ -131,16 +142,25 @@ export function MatchHistorySection({
 
       <div className="mt-4 grid gap-3">
         {visibleMatches.length > 0 ? (
-          visibleMatches.map((matchRecord) => (
-            <MatchHistoryCard
-              currentProfileId={currentProfile.profileId}
-              database={database}
-              key={matchRecord.matchId}
-              matchRecord={matchRecord}
-              onMatchCancel={onMatchCancel}
-              onResultOpen={setResultMatchId}
+          <>
+            {matchIncrementalItems.visibleItems.map((matchRecord) => (
+              <MatchHistoryCard
+                currentProfileId={currentProfile.profileId}
+                database={database}
+                key={matchRecord.matchId}
+                matchRecord={matchRecord}
+                onMatchCancel={onMatchCancel}
+                onResultOpen={setResultMatchId}
+              />
+            ))}
+            <IncrementalLoadMarker
+              hasMoreItems={matchIncrementalItems.hasMoreItems}
+              loadMoreMarkerRef={matchIncrementalItems.loadMoreMarkerRef}
+              onLoadMore={matchIncrementalItems.loadMoreItems}
+              totalItemCount={matchIncrementalItems.totalItemCount}
+              visibleItemCount={matchIncrementalItems.visibleItemCount}
             />
-          ))
+          </>
         ) : (
           <p className="text-sm text-text-secondary">
             Todavía no hay partidos registrados.

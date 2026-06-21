@@ -98,6 +98,9 @@ export function usePadelitoMvp() {
   const [lastFeedRefreshAt, setLastFeedRefreshAt] = useState(
     createCurrentIsoDate(),
   );
+  const [currentVisibilityMinuteKey, setCurrentVisibilityMinuteKey] = useState(
+    createCurrentVisibilityMinuteKey,
+  );
   const [authStatusMessage, setAuthStatusMessage] = useState<string | null>(
     null,
   );
@@ -153,12 +156,15 @@ export function usePadelitoMvp() {
       return [];
     }
 
+    void currentVisibilityMinuteKey;
+
     return getVisiblePostsForFeed(
       database,
       sessionProfile.profileId,
       activeFeedTab,
+      new Date(),
     );
-  }, [activeFeedTab, database, sessionProfile]);
+  }, [activeFeedTab, currentVisibilityMinuteKey, database, sessionProfile]);
 
   const unreadNotificationsCount = useMemo(() => {
     if (!sessionProfile) {
@@ -336,6 +342,16 @@ export function usePadelitoMvp() {
     sessionProfile?.isOnboardingComplete,
     sessionProfile?.profileId,
   ]);
+
+  useEffect(() => {
+    const visibilityInterval = window.setInterval(() => {
+      setCurrentVisibilityMinuteKey(createCurrentVisibilityMinuteKey());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(visibilityInterval);
+    };
+  }, []);
 
   /**
    * Ejecuta una accion remota y refresca snapshot.
@@ -1517,4 +1533,14 @@ function normalizeDatabaseSnapshot(database: PadelitoLocalDatabase) {
       partialDatabase.recurringChallengeParticipants ?? [],
     recurringChallenges: partialDatabase.recurringChallenges ?? [],
   };
+}
+
+/**
+ * Crea una clave por minuto para reevaluar vigencia temporal.
+ * Se construye para retirar publicaciones vencidas sin refresco manual.
+ * Lo usa usePadelitoMvp.
+ * Sirve para que Inicio no conserve partidos o eventos ya pasados.
+ */
+function createCurrentVisibilityMinuteKey() {
+  return new Date().toISOString().slice(0, 16);
 }

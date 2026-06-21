@@ -76,6 +76,7 @@ src/
       Chip.tsx
       EmptyState.tsx
       IconButton.tsx
+      IncrementalLoadMarker.tsx
       ProfileAvatar.tsx
     forms/
       FormField.tsx
@@ -104,6 +105,7 @@ src/
       profileModels.ts
       recurringChallengeModels.ts
   hooks/
+    useIncrementalItems.ts
     useLocalStorageState.ts
     usePadelitoMvp.ts
   features/
@@ -153,6 +155,7 @@ src/
     contactFormatters.ts
     dateFormatters.ts
     identifierGenerator.ts
+    scheduleVisibility.ts
 ```
 
 ## Backend contract implementado
@@ -225,6 +228,8 @@ La app usa snapshot completo como contrato entre repositorios y UI. Para evitar 
 - las escrituras remotas pasan por `runRemoteAction` y recargan snapshot al finalizar;
 - feed, jugadores, notificaciones y perfil refrescan snapshot al cambiar de panel o tocar el panel activo;
 - el foco del navegador y el cambio de vista recargan snapshot cuando hay sesion Supabase completa;
+- Inicio filtra publicaciones vencidas con `scheduleVisibility` para no mostrar partidos, eventos o disponibilidades ya terminadas;
+- `useIncrementalItems` y `IncrementalLoadMarker` cargan cards en tandas para feed, notificaciones, actividad de perfil, historial y desafios;
 - la bandeja de notificaciones permite eliminar avisos propios sin borrar entidades historicas;
 - solicitudes e invitaciones aceptadas se cancelan por RPC para liberar cupo y remover participante;
 - los recordatorios de resultado se crean al cargar/refrescar snapshot cuando un partido propio ya termino y no tiene resultado.

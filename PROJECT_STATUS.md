@@ -62,6 +62,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El avatar de perfil se maneja con componente reutilizable, recorte cuadrado client-side y persistencia en el bucket `avatars`.
 - El WhatsApp del perfil usa prefijo argentino fijo `+549` y guarda el numero normalizado sin duplicar prefijos.
 - Feed, jugadores, notificaciones y perfil refrescan datos al cambiar de panel o tocar el panel activo.
+- Inicio filtra publicaciones vencidas en cliente usando fecha y hora de finalizacion; el historial operativo no se borra.
+- Feed, notificaciones, actividad de perfil, historial y desafios recurrentes renderizan cards en tandas bajo demanda para evitar listas largas cargadas de golpe.
 - El cierre de sesion invalida refrescos remotos en curso y limpia estado local aunque Supabase devuelva sesion vencida.
 - El acceso rapido guarda el descarte en localStorage y se oculta cuando la PWA ya esta abierta como app instalada.
 - En iPhone, el acceso rapido abre una guia visual para agregar a inicio cuando no existe prompt nativo.
@@ -97,6 +99,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Las notificaciones push remotas ya tienen cliente, service worker, Worker de Cloudflare, variables de Pages y migracion `202606200001_push_subscriptions.sql` aplicada en Supabase Cloud; queda pendiente prueba real en PWA instalada con app cerrada.
 - La lectura de notificaciones creadas por el actor debe mantenerse acotada a `actor_profile_id = auth.uid()` para no ampliar de mas la bandeja privada de otros usuarios.
 - Web Push en iPhone requiere PWA instalada desde Safari/navegador predeterminado y permiso concedido desde la app instalada; no debe prometerse soporte desde Chrome iOS.
+- La carga incremental actual limita renderizado y scroll visual, pero el snapshot remoto sigue trayendo el conjunto visible completo; si el volumen crece, se debe mover a paginacion real por repositorio/Supabase.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.
@@ -246,6 +249,14 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - feed suma filtros por fecha, categoria, posicion y estilo de juego;
   - `npm run build` pasa;
   - `npm run lint` pasa.
+- Carga incremental y vencimientos:
+  - Inicio oculta automaticamente publicaciones cuyo horario ya termino;
+  - partidos propios vencidos dejan de aparecer como opcion para invitar;
+  - feed carga 8 cards iniciales y luego tandas de 6 al llegar al final visible;
+  - notificaciones cargan 10 avisos iniciales y luego tandas de 8;
+  - actividad de perfil, historial de partidos y desafios recurrentes cargan cards en tandas;
+  - `npm run lint` pasa;
+  - `npm run build` pasa.
 - Cierre MVP automatizado:
   - confirmaciones UI agregadas para cancelar publicaciones, solicitudes, invitaciones, partidos, rechazos y archivo de desafios;
   - confirmacion visual validada en navegador integrado sin ejecutar la accion destructiva;
@@ -345,6 +356,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit logo/acceso: `Actualizar logo y limpiar acceso`.
 - Commit push/permisos: `Corregir permisos de notificaciones push`.
 - Commit invitaciones/feed: `Corregir duplicados de invitaciones en feed`.
+- Commit listas/vencimientos: `Limitar listas y ocultar publicaciones vencidas`.
 
 ## Regla de idioma
 
@@ -360,6 +372,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Probar en iPhone la guia de agregar a inicio y confirmar que no reaparece al abrir desde el icono instalado.
 - Probar permisos de notificaciones en iPhone instalado y Android/Chrome.
 - Probar push remoto real con PWA instalada y app cerrada.
+- Probar con mayor volumen de publicaciones/notificaciones que la carga incremental resulte natural en mobile.
 - Probar creacion de evento con imagen real desde carrete y validar Storage `event-images`.
 - Probar manualmente registro desde `https://padelito-posadas.pages.dev` con cuenta nueva real de beta.
 - Probar manualmente recuperacion de contrasena desde `https://padelito-posadas.pages.dev`, sabiendo que sin SMTP propio rige el limite del proveedor integrado de Supabase.

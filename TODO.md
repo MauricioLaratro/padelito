@@ -69,6 +69,8 @@
 - [x] Refresh mobile preparado para refetch futuro.
 - [x] Refresh conectado a snapshot Supabase en modo remoto.
 - [x] Refresh por navegacion en inicio, jugadores, notificaciones y perfil.
+- [x] Ocultar automaticamente del inicio publicaciones con fecha/hora vencida.
+- [x] Cargar publicaciones del inicio en tandas bajo demanda al llegar al final visible.
 
 ## Etapa 6 - Publicaciones
 - [x] Crear Busco jugador local.
@@ -167,6 +169,7 @@
 - [x] Reconectar Pages Git en Cloudflare o definir `CLOUDFLARE_API_TOKEN` local para subir `dist`.
 - [ ] Configurar SMTP propio en Supabase cuando exista dominio propio verificable y proveedor.
 - [ ] Separar historial operativo antiguo en menu secundario si el perfil queda demasiado largo.
+- [x] Cargar actividad de perfil, notificaciones, historial y desafios en tandas para evitar listas infinitas.
 - [ ] Revisar estados vacios, errores y acciones destructivas restantes del flujo completo.
 - [x] Preparar deploy Cloudflare Pages.
 - [x] Aplicar semilla beta en Supabase con usuarios y publicaciones realistas de Posadas.
