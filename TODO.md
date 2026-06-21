@@ -95,7 +95,7 @@
 - [x] Cards contextuales de invitaciones enviadas y recibidas en perfil.
 - [x] Cancelar invitaciones enviadas pendientes.
 - [x] Buscar jugadores por nombre.
-- [x] Ver perfil publico de otro jugador.
+- [x] Ver perfil publico de otro jugador como vista completa, no como card incrustada en busqueda.
 - [x] Seguir/dejar de seguir desde perfil publico o resultado de busqueda.
 - [x] Crear invitacion privada desde perfil de jugador sin publicarla en el feed.
 - [x] Abrir perfil desde notificaciones contextuales.
@@ -105,9 +105,14 @@
 - [x] Onboarding de acceso rapido local.
 - [x] Persistir ocultamiento del acceso rapido aunque refresque Supabase.
 - [x] Mostrar guia iPhone para agregar PWA a inicio cuando no hay prompt nativo.
+- [x] Aclarar que en iPhone la PWA debe agregarse desde Safari/navegador predeterminado, no Chrome.
 - [x] Preparar arquitectura para notificaciones push.
 - [x] Pedir permiso de notificaciones desde el panel de avisos sin invadir el feed.
-- [ ] Implementar push remoto real con VAPID, suscripciones y backend de envio.
+- [x] Implementar backend Cloudflare Worker gratuito para push remoto con VAPID.
+- [x] Configurar variables de push en Cloudflare Pages.
+- [x] Crear migracion de suscripciones push y RPC de entrega.
+- [ ] Aplicar migracion `202606200001_push_subscriptions.sql` en Supabase Cloud.
+- [ ] Probar push remoto real en PWA instalada con app cerrada.
 - [x] Corregir overflow horizontal mobile.
 - [x] Evitar service worker en desarrollo para no romper HMR.
 - [x] Reiniciar scroll al cambiar vistas para evitar contenido tapado por tabs.

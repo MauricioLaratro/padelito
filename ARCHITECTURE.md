@@ -126,6 +126,7 @@ src/
       QuickAccessOnboardingStep.tsx
     players/
       PlayerSearchScreen.tsx
+      PublicPlayerProfileScreen.tsx
     posts/
       CreatePostModal.tsx
       DirectInvitationModal.tsx
@@ -134,6 +135,8 @@ src/
       ProfileForm.tsx
       ProfileScreen.tsx
   services/
+    push/
+      pushNotificationClient.ts
     repositories/
       localPadelitoDatabase.ts
       localPadelitoRepository.ts
@@ -169,6 +172,11 @@ supabase/
     202606110002_recurring_challenges.sql
     202606180001_profile_match_stats_reset.sql
     202606180002_activity_refresh_and_cancellations.sql
+    202606200001_push_subscriptions.sql
+workers/
+  push-notifications/
+    worker.mjs
+    wrangler.jsonc
 ```
 
 ## Modulo Partidos e Historial implementado
@@ -222,6 +230,21 @@ La app usa snapshot completo como contrato entre repositorios y UI. Para evitar 
 - los recordatorios de resultado se crean al cargar/refrescar snapshot cuando un partido propio ya termino y no tiene resultado.
 
 Esta decision evita introducir realtime/scheduler antes de validar uso real. Si el MVP necesita actualizacion instantanea entre dispositivos, el siguiente paso natural es Supabase Realtime sobre posts, solicitudes, invitaciones y notificaciones.
+
+Push remoto:
+
+- el cliente registra suscripciones Web Push con `PushManager` solo cuando el usuario concedio permiso;
+- `pushNotificationClient` sincroniza la suscripcion contra el Worker `padelito-push`;
+- el Worker valida el JWT de Supabase antes de guardar suscripciones o disparar envios;
+- la RPC `get_push_delivery_payload(uuid)` limita destinatarios a notificaciones donde el usuario autenticado es actor o destinatario;
+- el push no envia payload sensible: despierta el service worker y muestra un aviso generico;
+- la migracion `202606200001_push_subscriptions.sql` debe estar aplicada para que el circuito funcione en produccion.
+
+## Perfiles publicos
+
+Los perfiles de otros jugadores viven como una vista principal `publicProfile`, separada de la busqueda.
+
+Esto evita que tocar un avatar o nombre inserte una card dentro del listado y produzca overflow. La busqueda solo lista jugadores; feed, notificaciones y busqueda abren la vista completa con datos publicos, score visible, follow, invitacion y contacto privado controlado por RPC.
 
 ## Decision reversible actual
 

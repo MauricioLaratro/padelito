@@ -114,6 +114,53 @@ Estado de esta instancia:
 - Desafios recurrentes: `recurring_challenges`, `recurring_challenge_participants`, `match_records.recurring_challenge_id` y `can_read_recurring_challenge(uuid, uuid)` instalados.
 - Reset de score propio: `profiles.match_stats_reset_at`, `reset_own_match_stats()` y trigger anti-edicion directa instalados.
 - Actividad operativa: `notifications.related_match_id`, `cancel_match_join_request(uuid)`, `cancel_direct_match_invitation(uuid)` y actualizacion de `answer_direct_match_invitation` instalados.
+- Push remoto: pendiente aplicar `supabase/migrations/202606200001_push_subscriptions.sql` en Supabase Cloud para crear `push_subscriptions` y `get_push_delivery_payload(uuid)`.
+
+## Push remoto
+
+La app ya tiene cliente Web Push, service worker y Worker gratuito de Cloudflare.
+
+Cloudflare Worker:
+
+```txt
+https://padelito-push.mauriciolaratro.workers.dev
+```
+
+Variables requeridas en Cloudflare Pages:
+
+```env
+VITE_PUSH_WORKER_URL=
+VITE_PUSH_PUBLIC_KEY=
+```
+
+Variables/bindings del Worker:
+
+```txt
+ALLOWED_ORIGINS
+SUPABASE_ANON_KEY
+SUPABASE_URL
+VAPID_PUBLIC_KEY
+VAPID_SUBJECT
+VAPID_PRIVATE_KEY
+```
+
+`VAPID_PRIVATE_KEY` debe existir solo como secret de Cloudflare Worker. No versionarla.
+
+Estado de esta instancia:
+
+- Worker `padelito-push` creado.
+- Subdominio `workers.dev` habilitado.
+- Secret `VAPID_PRIVATE_KEY` cargada en Cloudflare.
+- Pages tiene `VITE_PUSH_WORKER_URL` y `VITE_PUSH_PUBLIC_KEY`.
+- Supabase aun debe recibir la migracion `202606200001_push_subscriptions.sql`.
+
+Para que funcione con la app cerrada:
+
+1. Aplicar la migracion de push en Supabase.
+2. Publicar el build de Pages con las variables de push.
+3. Abrir la PWA instalada, entrar a Notificaciones y tocar `Activar`.
+4. En iPhone, instalar desde Safari o navegador predeterminado del iPhone; no desde Chrome.
+5. Probar una invitacion entre dos usuarios y cerrar la app del destinatario.
 
 ## Emails de Auth para produccion
 
@@ -210,6 +257,8 @@ Cloudflare Pages:
 - variables configuradas en Cloudflare Pages:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_PUSH_WORKER_URL`
+  - `VITE_PUSH_PUBLIC_KEY`
 
 Deploy directo alternativo desde esta maquina:
 

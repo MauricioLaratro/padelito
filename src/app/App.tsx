@@ -14,9 +14,12 @@ import { CreatePostModal } from "../features/posts/CreatePostModal";
 import { DirectInvitationModal } from "../features/posts/DirectInvitationModal";
 import { ProfileScreen } from "../features/profiles/ProfileScreen";
 import { PlayerSearchScreen } from "../features/players/PlayerSearchScreen";
+import { PublicPlayerProfileScreen } from "../features/players/PublicPlayerProfileScreen";
 import { usePadelitoMvp } from "../hooks/usePadelitoMvp";
 import type { LookingForPlayerPost } from "../domain/models/postModels";
+import type { PlayerProfile } from "../domain/models/profileModels";
 import type { RecurringChallengeStatus } from "../domain/enums/recurringChallengeEnums";
+import { synchronizeRemotePushSubscription } from "../services/push/pushNotificationClient";
 
 interface ConfirmationRequest {
   body: string;
@@ -113,6 +116,18 @@ export function App() {
     );
   }, [padelitoMvp.database.notifications, sessionProfile]);
 
+  useEffect(() => {
+    if (
+      !sessionProfile ||
+      !("Notification" in window) ||
+      Notification.permission !== "granted"
+    ) {
+      return;
+    }
+
+    void synchronizeRemotePushSubscription();
+  }, [sessionProfile]);
+
   if (!padelitoMvp.sessionProfile || padelitoMvp.isPasswordRecoveryMode) {
     return (
       <AuthScreen
@@ -177,6 +192,13 @@ export function App() {
       );
     },
   );
+  const selectedPublicPlayerProfile = padelitoMvp.selectedPublicProfileId
+    ? padelitoMvp.database.profiles.find(
+        (profile): profile is PlayerProfile =>
+          profile.profileType === "player" &&
+          profile.profileId === padelitoMvp.selectedPublicProfileId,
+      )
+    : null;
 
   /**
    * Abre confirmacion para una accion sensible.
@@ -408,7 +430,7 @@ export function App() {
   function handleMainViewSelect(nextMainView: typeof padelitoMvp.activeMainView) {
     const isCurrentMainView = padelitoMvp.activeMainView === nextMainView;
 
-    if (nextMainView === "players") {
+    if (nextMainView !== "publicProfile") {
       padelitoMvp.setSelectedPublicProfileId(null);
     }
 
@@ -530,8 +552,23 @@ export function App() {
           database={padelitoMvp.database}
           onFollowToggle={padelitoMvp.handleFollowToggle}
           onInvitationStart={padelitoMvp.setInvitedProfileId}
-          onProfileSelect={padelitoMvp.setSelectedPublicProfileId}
-          selectedProfileId={padelitoMvp.selectedPublicProfileId}
+          onProfileOpen={padelitoMvp.handlePublicProfileOpen}
+        />
+      ) : null}
+
+      {padelitoMvp.activeMainView === "publicProfile" &&
+      selectedPublicPlayerProfile ? (
+        <PublicPlayerProfileScreen
+          currentProfileId={currentSessionProfile.profileId}
+          database={padelitoMvp.database}
+          onBack={() => {
+            padelitoMvp.setSelectedPublicProfileId(null);
+            padelitoMvp.setActiveMainView("players");
+          }}
+          onFollowToggle={padelitoMvp.handleFollowToggle}
+          onInvitationStart={padelitoMvp.setInvitedProfileId}
+          onPrivateContactOpen={padelitoMvp.handlePrivateContactOpen}
+          profile={selectedPublicPlayerProfile}
         />
       ) : null}
 

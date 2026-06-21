@@ -1,4 +1,4 @@
-const staticCacheName = "padelito-static-v5";
+const staticCacheName = "padelito-static-v6";
 const staticAssetUrls = ["/manifest.webmanifest", "/app-icon.svg", "/logo-padelito.svg"];
 
 self.addEventListener("install", (installEvent) => {
@@ -63,3 +63,38 @@ self.addEventListener("notificationclick", (notificationEvent) => {
       }),
   );
 });
+
+self.addEventListener("push", (pushEvent) => {
+  // Muestra un aviso generico: el detalle sensible se carga desde Supabase al abrir.
+  const notificationPayload = getPushNotificationPayload(pushEvent);
+
+  pushEvent.waitUntil(
+    self.registration.showNotification(notificationPayload.title, {
+      badge: "/app-icon.svg",
+      body: notificationPayload.body,
+      data: {
+        url: "/",
+      },
+      icon: "/app-icon.svg",
+      tag: "padelito-remote-notification",
+    }),
+  );
+});
+
+function getPushNotificationPayload(pushEvent) {
+  if (!pushEvent.data) {
+    return {
+      body: "Tenés novedades en tus partidos y avisos.",
+      title: "Padelito",
+    };
+  }
+
+  try {
+    return pushEvent.data.json();
+  } catch {
+    return {
+      body: "Tenés novedades en tus partidos y avisos.",
+      title: "Padelito",
+    };
+  }
+}

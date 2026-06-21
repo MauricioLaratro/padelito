@@ -18,6 +18,8 @@ MVP local testeable disponible, publicado en GitHub, conectado a Supabase y desp
 - Migracion de reset de score aplicada en Supabase Cloud con RPC controlado y bloqueo de edicion directa por REST.
 - Migracion de actividad operativa aplicada en Supabase Cloud: refresco dinamico, borrado de avisos, cancelacion de participaciones aceptadas y recordatorios de resultado.
 - Cloudflare Pages creado en plan gratuito con proyecto beta `padelito-posadas`; deploy productivo verificado en `https://padelito-posadas.pages.dev`.
+- Cloudflare Worker gratuito `padelito-push` creado y disponible en `https://padelito-push.mauriciolaratro.workers.dev` para envio Web Push.
+- Cloudflare Pages ya tiene configuradas las variables `VITE_PUSH_WORKER_URL` y `VITE_PUSH_PUBLIC_KEY`.
 - La beta se mantiene en `pages.dev` hasta adquirir dominio propio; el SMTP propio queda diferido porque requiere un dominio verificable.
 
 ## Comprension del producto
@@ -62,12 +64,14 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - El cierre de sesion invalida refrescos remotos en curso y limpia estado local aunque Supabase devuelva sesion vencida.
 - El acceso rapido guarda el descarte en localStorage y se oculta cuando la PWA ya esta abierta como app instalada.
 - En iPhone, el acceso rapido abre una guia visual para agregar a inicio cuando no existe prompt nativo.
+- La guia de iPhone aclara que debe abrirse desde Safari o navegador predeterminado del iPhone, no desde Chrome.
 - La bandeja de notificaciones es operativa: se puede marcar todo como leido o eliminar avisos propios con gesto hacia la derecha.
 - La pantalla de notificaciones puede pedir permiso del navegador y mostrar avisos locales cuando la app detecta notificaciones internas nuevas.
 - Solicitudes e invitaciones aceptadas pueden cancelarse desde ambos lados del vinculo y liberan cupo/participante cuando corresponde.
 - Los recordatorios de resultado se materializan al refrescar/abrir la app cuando un partido propio programado ya termino.
 - Cuando el creador registra resultado, los participantes reciben una notificacion informativa.
 - La foto de perfil se puede abrir en grande desde el perfil propio y perfiles publicos.
+- Los perfiles publicos de jugadores se abren como vista completa mediante `publicProfile`, no como card incrustada dentro de la busqueda.
 - Las publicaciones de evento usan seleccion de imagen desde el dispositivo y subida a `event-images`, no URL manual.
 - Las opciones visibles de posicion y estilo usan `Drive/reves` y `Recreativo/competitivo` en lugar de `Ambos` o `Indiferente`.
 
@@ -89,7 +93,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Cloudflare Pages queda atado a la rama `codex/base-mvp-local`; si se cambia de rama principal antes del dominio propio, hay que actualizar la production branch.
 - El dominio gratuito `pages.dev` sirve para preview, pero el lanzamiento publico final necesita dominio propio, SMTP propio y revision de URLs permitidas en Supabase Auth.
 - Mientras no haya dominio propio, los emails de Auth no pueden salir como `no-reply@padelito-posadas.pages.dev` porque `pages.dev` no es un dominio controlado por Padelito.
-- Las notificaciones push remotas de fondo todavia requieren backend de envio, VAPID keys y persistencia de suscripciones; por ahora solo hay permiso y avisos locales al detectar cambios con la app abierta/refrescada.
+- Las notificaciones push remotas ya tienen cliente, service worker, Worker de Cloudflare y variables de Pages; falta aplicar la migracion `202606200001_push_subscriptions.sql` en Supabase Cloud para habilitar suscripciones y entrega real con app cerrada.
+- Web Push en iPhone requiere PWA instalada desde Safari/navegador predeterminado y permiso concedido desde la app instalada; no debe prometerse soporte desde Chrome iOS.
 - El perfil como centro de actividad puede generar consultas complejas si no se separan repositorios y casos de uso.
 - Git fue instalado a nivel de usuario y se creo el commit inicial local.
 - El remoto GitHub ya esta configurado y la rama base del MVP fue publicada.

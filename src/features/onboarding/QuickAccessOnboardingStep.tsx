@@ -167,18 +167,24 @@ export function QuickAccessOnboardingStep({
 
             <div className="mt-4 grid gap-3">
               <InstallGuideStep
-                icon={Share}
+                description="Usá Safari o el navegador predeterminado del iPhone, no Chrome."
+                icon={Smartphone}
                 label="1"
+                title="Abrila en Safari"
+              />
+              <InstallGuideStep
+                icon={Share}
+                label="2"
                 title="Tocá compartir"
               />
               <InstallGuideStep
                 icon={PlusSquare}
-                label="2"
+                label="3"
                 title="Elegí Agregar a inicio"
               />
               <InstallGuideStep
-                icon={Smartphone}
-                label="3"
+                icon={Check}
+                label="4"
                 title="Confirmá Agregar"
               />
             </div>
@@ -202,6 +208,7 @@ export function QuickAccessOnboardingStep({
 }
 
 interface InstallGuideStepProps {
+  description?: string;
   icon: LucideIcon;
   label: string;
   title: string;
@@ -213,7 +220,12 @@ interface InstallGuideStepProps {
  * Lo usa QuickAccessOnboardingStep.
  * Sirve para que el usuario entienda el gesto manual.
  */
-function InstallGuideStep({ icon: StepIcon, label, title }: InstallGuideStepProps) {
+function InstallGuideStep({
+  description,
+  icon: StepIcon,
+  label,
+  title,
+}: InstallGuideStepProps) {
   return (
     <article className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-primary p-3">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-background-primary text-accent-lime">
@@ -224,6 +236,11 @@ function InstallGuideStep({ icon: StepIcon, label, title }: InstallGuideStepProp
           Paso {label}
         </p>
         <h3 className="truncate text-sm font-black">{title}</h3>
+        {description ? (
+          <p className="mt-1 text-xs font-semibold text-text-secondary">
+            {description}
+          </p>
+        ) : null}
       </div>
     </article>
   );

@@ -17,6 +17,22 @@ export function createWhatsappContactUrl(whatsappPhone: string) {
 }
 
 /**
+ * Formatea telefono de WhatsApp para lectura.
+ * Se construye para mostrar contacto sin romper el formato guardado para wa.me.
+ * Lo usan perfiles publicos cuando el telefono ya esta disponible.
+ * Sirve para que el numero sea reconocible para usuarios argentinos.
+ */
+export function formatWhatsappDisplayPhone(whatsappPhone: string) {
+  const normalizedWhatsappPhone = whatsappPhone.replace(/\D/g, "");
+
+  if (!normalizedWhatsappPhone) {
+    return "";
+  }
+
+  return `+${normalizedWhatsappPhone}`;
+}
+
+/**
  * Obtiene la parte local del WhatsApp argentino.
  * Se construye para mostrar `+549` fijo sin duplicarlo.
  * Lo usa ProfileForm.

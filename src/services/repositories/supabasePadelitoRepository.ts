@@ -60,6 +60,7 @@ import type {
   SupabaseRecurringChallengeParticipantRow,
   SupabaseRecurringChallengeRow,
 } from "./supabasePadelitoTypes";
+import { requestRemotePushDelivery } from "../push/pushNotificationClient";
 
 type SupabaseListQuery<RowType> = PromiseLike<{
   data: RowType[] | null;
@@ -1314,12 +1315,18 @@ export function createSupabasePadelitoRepository(
   async function createNotification(
     notification: Omit<InternalNotification, "notificationId" | "createdAt">,
   ): Promise<void> {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("notifications")
-      .insert(mapNotificationToSupabaseInsert(notification));
+      .insert(mapNotificationToSupabaseInsert(notification))
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       throw createSupabaseError("crear notificación", error);
+    }
+
+    if (data?.id) {
+      void requestRemotePushDelivery(data.id).catch(() => undefined);
     }
   }
 

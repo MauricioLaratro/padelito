@@ -1,6 +1,7 @@
 import { BellRing, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/common/Button";
+import { synchronizeRemotePushSubscription } from "../../services/push/pushNotificationClient";
 
 const notificationPermissionDismissedKey =
   "padelito-notification-permission-dismissed-v1";
@@ -50,6 +51,10 @@ export function NotificationPermissionCard() {
       setStatusMessage("Podés activarlas después desde este panel.");
       return;
     }
+
+    await synchronizeRemotePushSubscription().catch(() => {
+      setStatusMessage("No se pudo activar push remoto en este dispositivo.");
+    });
 
     const serviceWorkerRegistration =
       "serviceWorker" in navigator

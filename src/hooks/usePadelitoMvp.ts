@@ -54,6 +54,7 @@ import { createWhatsappContactUrl } from "../utils/contactFormatters";
 export type MainViewIdentifier =
   | "feed"
   | "players"
+  | "publicProfile"
   | "profile"
   | "notifications";
 export type BackendModeIdentifier = "local" | "supabase";
@@ -898,12 +899,13 @@ export function usePadelitoMvp() {
    */
   function handlePublicProfileOpen(profileId: string) {
     if (sessionProfile?.profileId === profileId) {
+      setSelectedPublicProfileId(null);
       setActiveMainView("profile");
       return;
     }
 
     setSelectedPublicProfileId(profileId);
-    setActiveMainView("players");
+    setActiveMainView("publicProfile");
   }
 
   /**

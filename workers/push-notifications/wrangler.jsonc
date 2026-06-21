@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "padelito-push",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-06-20",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://padelito-posadas.pages.dev,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:4173",
+    "SUPABASE_ANON_KEY": "sb_publishable_CsRpauCDCYy-nugeUDiAOg_sdta4yiA",
+    "SUPABASE_URL": "https://zrddjpvtkqebvmazauhu.supabase.co",
+    "VAPID_PUBLIC_KEY": "BPZ0GycWcacEy-5y3u8dckyp3EJ6Xw9lVZxE1WlAovxJCmEb61VLuup_lT3dvqs0Mo4-gf_LqQ6PYhZIN6fIndg",
+    "VAPID_SUBJECT": "mailto:admin@padelito-posadas.pages.dev"
+  }
+}

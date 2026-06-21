@@ -1,14 +1,5 @@
-import {
-  ArrowLeft,
-  MapPin,
-  Search,
-  Send,
-  Swords,
-  Trophy,
-  UserPlus,
-} from "lucide-react";
+import { MapPin, Search, Send, Swords, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
-import { AvatarPreviewOverlay } from "../../components/common/AvatarPreviewOverlay";
 import { Button } from "../../components/common/Button";
 import { Chip } from "../../components/common/Chip";
 import { EmptyState } from "../../components/common/EmptyState";
@@ -27,23 +18,21 @@ interface PlayerSearchScreenProps {
   database: PadelitoLocalDatabase;
   onFollowToggle: (profileId: string) => void;
   onInvitationStart: (profileId: string) => void;
-  onProfileSelect: (profileId: string | null) => void;
-  selectedProfileId: string | null;
+  onProfileOpen: (profileId: string) => void;
 }
 
 /**
  * Pantalla de busqueda y perfil publico de jugadores.
  * Se construye para descubrir perfiles fuera del feed.
  * La usa App dentro de la navegacion principal.
- * Sirve para ver perfil, seguir e invitar a un jugador.
+ * Sirve para abrir perfiles completos, seguir e invitar a un jugador.
  */
 export function PlayerSearchScreen({
   currentProfileId,
   database,
   onFollowToggle,
   onInvitationStart,
-  onProfileSelect,
-  selectedProfileId,
+  onProfileOpen,
 }: PlayerSearchScreenProps) {
   const [playerQuery, setPlayerQuery] = useState("");
   const playerProfiles = useMemo(
@@ -52,12 +41,9 @@ export function PlayerSearchScreen({
         (profile): profile is PlayerProfile =>
           profile.profileType === "player" &&
           profile.profileId !== currentProfileId,
-      ),
+    ),
     [currentProfileId, database.profiles],
   );
-  const selectedProfile = selectedProfileId
-    ? playerProfiles.find((profile) => profile.profileId === selectedProfileId)
-    : null;
   const filteredProfiles = playerProfiles.filter((profile) => {
     const normalizedQuery = playerQuery.trim().toLowerCase();
 
@@ -95,17 +81,6 @@ export function PlayerSearchScreen({
         value={playerQuery}
       />
 
-      {selectedProfile ? (
-        <PublicPlayerProfileCard
-          currentProfileId={currentProfileId}
-          database={database}
-          onBack={() => onProfileSelect(null)}
-          onFollowToggle={onFollowToggle}
-          onInvitationStart={onInvitationStart}
-          profile={selectedProfile}
-        />
-      ) : null}
-
       <div className="grid gap-3">
         {filteredProfiles.length > 0 ? (
           filteredProfiles.map((profile) => (
@@ -115,7 +90,7 @@ export function PlayerSearchScreen({
               key={profile.profileId}
               onFollowToggle={onFollowToggle}
               onInvitationStart={onInvitationStart}
-              onProfileSelect={onProfileSelect}
+              onProfileOpen={onProfileOpen}
               profile={profile}
             />
           ))
@@ -131,112 +106,12 @@ export function PlayerSearchScreen({
   );
 }
 
-interface PublicPlayerProfileCardProps {
-  currentProfileId: string;
-  database: PadelitoLocalDatabase;
-  onBack: () => void;
-  onFollowToggle: (profileId: string) => void;
-  onInvitationStart: (profileId: string) => void;
-  profile: PlayerProfile;
-}
-
-/**
- * Card de perfil publico de jugador.
- * Se construye para mostrar informacion accionable sin exponer contacto privado.
- * La usa PlayerSearchScreen.
- * Sirve para seguir e invitar desde el perfil.
- */
-function PublicPlayerProfileCard({
-  currentProfileId,
-  database,
-  onBack,
-  onFollowToggle,
-  onInvitationStart,
-  profile,
-}: PublicPlayerProfileCardProps) {
-  const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
-  const isFollowed = isProfileFollowed(
-    database,
-    currentProfileId,
-    profile.profileId,
-  );
-
-  return (
-    <article className="rounded-lg border border-accent-lime/45 bg-surface-primary p-4 shadow-floating">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {profile.avatarUrl ? (
-            <button
-              aria-label="Ver foto de perfil"
-              className="rounded-full"
-              onClick={() => setIsAvatarPreviewOpen(true)}
-              type="button"
-            >
-              <ProfileAvatar
-                avatarUrl={profile.avatarUrl}
-                displayName={profile.displayName}
-                profileType={profile.profileType}
-                size="lg"
-              />
-            </button>
-          ) : (
-            <ProfileAvatar
-              avatarUrl={profile.avatarUrl}
-              displayName={profile.displayName}
-              profileType={profile.profileType}
-              size="lg"
-            />
-          )}
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-accent-lime">
-              Perfil
-            </p>
-            <h2 className="truncate text-2xl font-black">
-              {profile.displayName}
-            </h2>
-          </div>
-        </div>
-        <Button className="min-h-9 px-3" icon={ArrowLeft} onClick={onBack}>
-          Volver
-        </Button>
-      </div>
-
-      <PlayerProfileBody profile={profile} />
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
-          icon={UserPlus}
-          onClick={() => onFollowToggle(profile.profileId)}
-          variant={isFollowed ? "secondary" : "primary"}
-        >
-          {isFollowed ? "Siguiendo" : "Seguir"}
-        </Button>
-        <Button
-          icon={Send}
-          onClick={() => onInvitationStart(profile.profileId)}
-          variant="secondary"
-        >
-          Invitar
-        </Button>
-      </div>
-
-      {isAvatarPreviewOpen && profile.avatarUrl ? (
-        <AvatarPreviewOverlay
-          avatarUrl={profile.avatarUrl}
-          displayName={profile.displayName}
-          onClose={() => setIsAvatarPreviewOpen(false)}
-        />
-      ) : null}
-    </article>
-  );
-}
-
 interface PlayerResultCardProps {
   currentProfileId: string;
   database: PadelitoLocalDatabase;
   onFollowToggle: (profileId: string) => void;
   onInvitationStart: (profileId: string) => void;
-  onProfileSelect: (profileId: string | null) => void;
+  onProfileOpen: (profileId: string) => void;
   profile: PlayerProfile;
 }
 
@@ -251,7 +126,7 @@ function PlayerResultCard({
   database,
   onFollowToggle,
   onInvitationStart,
-  onProfileSelect,
+  onProfileOpen,
   profile,
 }: PlayerResultCardProps) {
   const isFollowed = isProfileFollowed(
@@ -265,7 +140,7 @@ function PlayerResultCard({
       <div className="flex items-start justify-between gap-3">
         <button
           className="flex min-w-0 items-center gap-3 text-left"
-          onClick={() => onProfileSelect(profile.profileId)}
+          onClick={() => onProfileOpen(profile.profileId)}
           type="button"
         >
           <ProfileAvatar
@@ -293,7 +168,7 @@ function PlayerResultCard({
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
           icon={Search}
-          onClick={() => onProfileSelect(profile.profileId)}
+          onClick={() => onProfileOpen(profile.profileId)}
           variant="secondary"
         >
           Ver perfil

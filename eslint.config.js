@@ -46,6 +46,14 @@ export default [
     },
   },
   {
+    files: ["workers/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+      },
+    },
+  },
+  {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       globals: {
