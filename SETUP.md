@@ -296,3 +296,43 @@ Auth en el dominio Pages:
 
 1. Supabase Dashboard > Authentication > Providers > Email: `Confirm email` desactivado para preview cerrado.
 2. Supabase Dashboard > Authentication > URL Configuration: agregar `https://padelito-posadas.pages.dev` como URL permitida.
+
+## Automatizacion de publicaciones
+
+Comandos locales:
+
+```powershell
+npm run social:generate
+npm run social:publish:meta
+```
+
+Variables para `.env.social.example` o secretos de GitHub:
+
+```txt
+PUBLIC_MEDIA_BASE_URL=https://padelito-posadas.pages.dev
+META_GRAPH_VERSION=v25.0
+META_ACCESS_TOKEN=
+META_IG_USER_ID=
+META_PAGE_ID=
+META_PUBLISH_FACEBOOK=false
+```
+
+Workflow:
+
+- archivo: `.github/workflows/social-daily.yml`;
+- horario: todos los dias a las 13:00 UTC;
+- genera una pieza diaria en `public/social/generated`;
+- commitea la pieza para que Cloudflare Pages la sirva publicamente;
+- espera el deploy;
+- publica en Meta si los secretos estan configurados.
+
+Pendiente externo:
+
+- obtener token oficial de Meta con permisos de publicacion para `padelito.arg`;
+- cargar `META_ACCESS_TOKEN`, `META_IG_USER_ID`, `META_PAGE_ID` y `PUBLIC_MEDIA_BASE_URL` como secretos del repositorio.
+
+URLs usadas por Meta Developers:
+
+- Politica de privacidad: `https://padelito-posadas.pages.dev/privacy.html`
+- Terminos: `https://padelito-posadas.pages.dev/terms.html`
+- Eliminacion de datos: `https://padelito-posadas.pages.dev/data-deletion.html`

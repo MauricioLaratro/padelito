@@ -296,3 +296,22 @@ El backend Supabase debe poder ser consumido luego por Flutter. Por eso:
 - modelos explicitos;
 - SQL y RLS documentados;
 - sin hacks especificos de UI para permisos o visibilidad.
+
+## Automatizacion social
+
+La automatizacion de contenido vive fuera de la UI principal para no mezclar marketing con logica del producto.
+
+Separacion actual:
+
+- `scripts/social/contentPlan.mjs` define pilares, textos y reglas editoriales;
+- `scripts/social/generate-daily-content.mjs` genera imagen PNG, SVG y manifiesto diario;
+- `scripts/social/publish-meta.mjs` publica por la API oficial de Meta cuando existen secretos;
+- `.github/workflows/social-daily.yml` ejecuta el flujo diario, guarda la pieza publica y luego intenta publicar.
+
+Decision:
+
+- la primera version publica imagen/feed diario con CTA a registro;
+- no depende de musica nativa de Instagram porque la API y permisos pueden cambiar;
+- TikTok queda registrado como canal objetivo, pero no se automatiza hasta confirmar permisos oficiales de publicacion.
+
+Esta arquitectura permite cambiar el publicador sin tocar la app, y permite medir si el mensaje convierte antes de invertir en Reels mas complejos.

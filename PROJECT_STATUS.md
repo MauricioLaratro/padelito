@@ -365,6 +365,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 
 ## Pendientes inmediatos
 
+- Conectar token oficial de Meta para activar la publicacion diaria automatica de contenido social.
+- Publicar paginas legales estaticas usadas por Meta Developers: privacidad, terminos y eliminacion de datos.
 - Probar aceptacion de solicitud/invitacion vinculada con dos sesiones reales y verificar participante agregado en ambos perfiles.
 - Probar manualmente cancelacion de jugador aceptado desde organizador y desde jugador.
 - Probar manualmente swipe-to-delete de notificaciones en celular.

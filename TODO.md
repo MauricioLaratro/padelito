@@ -177,3 +177,13 @@
 - [ ] Probar manualmente registro con una cuenta nueva real de beta desde `https://padelito-posadas.pages.dev`.
 - [ ] Probar manualmente recuperacion desde `https://padelito-posadas.pages.dev`, considerando el limite de email de Supabase sin SMTP propio.
 - [x] Reprobar logout corregido en `https://padelito-posadas.pages.dev`.
+
+## Etapa 11 - Automatizacion social
+- [x] Crear calendario editorial inicial con lenguaje argentino cercano.
+- [x] Generar pieza social diaria con estetica Padelito.
+- [x] Crear publicador por API oficial de Meta.
+- [x] Crear workflow diario de GitHub Actions.
+- [ ] Obtener token oficial de Meta para `padelito.arg`.
+- [ ] Cargar secretos `META_ACCESS_TOKEN`, `META_IG_USER_ID`, `META_PAGE_ID` y `PUBLIC_MEDIA_BASE_URL`.
+- [ ] Ejecutar primera publicacion automatica real.
+- [ ] Medir registros generados por 14 dias y ajustar pilares de contenido.
