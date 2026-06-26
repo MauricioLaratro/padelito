@@ -187,7 +187,7 @@
 - [x] Obtener token oficial de Meta para `padelito.arg`.
 - [ ] Cargar secretos `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID`.
 - [x] Ejecutar primera publicacion automatica real.
-- [ ] Ejecutar prueba real de Reel + Story desde GitHub Actions despues de instalar `ffmpeg`.
+- [x] Ejecutar prueba real de Reel + Story desde GitHub Actions despues de instalar `ffmpeg`.
 - [ ] Reemplazar el token temporal por uno de larga duracion o documentar renovacion programada.
 - [x] Verificar URL prefix de TikTok con archivo `tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt` despues del redeploy de Cloudflare Pages.
 - [x] Crear scripts OAuth y publicacion TikTok por Content Posting API.
