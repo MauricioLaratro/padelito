@@ -332,6 +332,7 @@ Pendiente externo:
 
 - cargar `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID` como secretos del repositorio;
 - reemplazar el token temporal por uno de larga duracion o renovarlo antes de que expire.
+- cuando TikTok apruebe `video.publish`, cargar `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` y `TIKTOK_REFRESH_TOKEN` como secretos del repositorio.
 
 URLs usadas por Meta Developers:
 
@@ -342,3 +343,13 @@ URLs usadas por Meta Developers:
 URL verificada por TikTok Developers:
 
 - Archivo de verificacion: `https://padelito-posadas.pages.dev/tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt`
+
+Autorizacion TikTok:
+
+```powershell
+npm run social:tiktok:auth-url
+$env:TIKTOK_AUTH_CODE="codigo_devuelto_por_tiktok"
+npm run social:tiktok:exchange-token
+```
+
+El `refresh_token` resultante debe guardarse como secreto `TIKTOK_REFRESH_TOKEN`.

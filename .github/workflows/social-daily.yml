@@ -50,3 +50,12 @@ jobs:
           META_PAGE_ID: ${{ secrets.META_PAGE_ID }}
           META_GRAPH_VERSION: ${{ secrets.META_GRAPH_VERSION }}
           META_PUBLISH_FACEBOOK: ${{ secrets.META_PUBLISH_FACEBOOK }}
+
+      - name: Publicar en TikTok
+        if: ${{ secrets.TIKTOK_REFRESH_TOKEN != '' }}
+        run: npm run social:publish:tiktok
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          TIKTOK_PRIVACY_LEVEL: ${{ secrets.TIKTOK_PRIVACY_LEVEL }}

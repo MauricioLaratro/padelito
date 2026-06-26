@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "qa:supabase": "node scripts/qa-supabase-smoke.mjs",
     "social:generate": "node scripts/social/generate-daily-content.mjs",
-    "social:publish:meta": "node scripts/social/publish-meta.mjs"
+    "social:publish:meta": "node scripts/social/publish-meta.mjs",
+    "social:tiktok:auth-url": "node scripts/social/tiktok-auth-url.mjs",
+    "social:tiktok:exchange-token": "node scripts/social/tiktok-exchange-token.mjs",
+    "social:publish:tiktok": "node scripts/social/publish-tiktok.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
