@@ -326,6 +326,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - workflow diario ajustado a las 20:30 de Argentina (`23:30 UTC`);
   - publicador Meta ahora prioriza Reel MP4, publica Story derivada y conserva imagen como fallback;
   - primera prueba del nuevo flujo publico imagen + Story porque GitHub Actions no tenia `ffmpeg`; se agrego instalacion explicita para generar MP4;
+  - segunda prueba genero MP4, pero la Story fallo porque el contenedor todavia no estaba listo; el publicador ahora espera estado `FINISHED` tambien para imagenes e historias.
   - app TikTok enviada a revision con Content Posting API y Direct Post;
   - scripts OAuth y publicador TikTok preparados para post de foto diario una vez aprobado `video.publish` y autorizado `@padelito4`;
   - secretos sensibles de TikTok quedan fuera del repositorio y deben cargarse como secretos de GitHub.

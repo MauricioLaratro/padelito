@@ -90,6 +90,8 @@ async function publishInstagramImage({ accessToken, instagramUserId, imageUrl, c
     access_token: accessToken,
   });
 
+  await waitForMediaContainer({ accessToken, containerId: container.id });
+
   const publication = await postGraph(`/${instagramUserId}/media_publish`, {
     creation_id: container.id,
     access_token: accessToken,
@@ -167,6 +169,8 @@ async function publishInstagramStory({ accessToken, instagramUserId, imageUrl })
     image_url: imageUrl,
     access_token: accessToken,
   });
+
+  await waitForMediaContainer({ accessToken, containerId: container.id });
 
   const publication = await postGraph(`/${instagramUserId}/media_publish`, {
     creation_id: container.id,
