@@ -135,25 +135,139 @@ function buildSocialSvg(content, { width = 1080, height = 1350, format = "feed" 
 }
 
 /**
- * Ejecuta ffmpeg para crear un reel simple desde la placa vertical.
- * Existe para priorizar Reels cuando el entorno de CI tiene ffmpeg disponible.
+ * Construye una escena vertical para video.
+ * Existe para que cada Reel tenga varias placas y no sea una imagen estatica.
  */
-function renderReelVideo({ imagePath, videoPath }) {
+function buildVideoSceneSvg(content, sceneIndex) {
+  const scenes = [
+    {
+      eyebrow: "Situacion real",
+      title: content.hook,
+      body: content.subhead,
+      accent: "Alguien siempre se baja a ultimo momento.",
+      cardTitle: content.cardTitle,
+      details: content.cardDetails,
+    },
+    {
+      eyebrow: "El problema",
+      title: "Coordinar no deberia costar tanto.",
+      body: "Grupos largos, mensajes cruzados y nadie confirma a tiempo.",
+      accent: "Padelito junta la movida en un solo lugar.",
+      cardTitle: "Sin vueltas",
+      details: ["Publica", "Filtra", "Solicita", "Juga"],
+    },
+    {
+      eyebrow: "Como funciona",
+      title: "Publicas el partido y aparecen jugadores.",
+      body: "Nivel, posicion, horario y club para que se sumen personas compatibles.",
+      accent: "Hecho para jugadores de Posadas.",
+      cardTitle: "En la app",
+      details: ["Nivel", "Zona", "Posicion", "Horario"],
+    },
+    {
+      eyebrow: "Sumate ahora",
+      title: "Si jugas padel en Posadas, registrate.",
+      body: "Mientras mas jugadores haya, mas facil se arman partidos, practicas, mixtos y tercer tiempo.",
+      accent: padelitoSocialChannels.siteUrl.replace("https://", ""),
+      cardTitle: "Padelito",
+      details: ["Partidos", "Practica", "Mixto", "Comunidad"],
+    },
+  ];
+  const scene = scenes[sceneIndex % scenes.length];
+  const titleLines = wrapText(scene.title, 18).slice(0, 4);
+  const bodyLines = wrapText(scene.body, 31).slice(0, 4);
+  const detailNodes = scene.details
+    .map((detail, index) => {
+      const x = 112 + (index % 2) * 420;
+      const y = 1165 + Math.floor(index / 2) * 98;
+      return `
+        <rect x="${x}" y="${y}" width="348" height="60" rx="30" fill="#23262D" stroke="rgba(245,245,245,0.12)"/>
+        <text x="${x + 30}" y="${y + 40}" font-size="28" font-weight="900" fill="#F5F5F5">${escapeXml(detail)}</text>`;
+    })
+    .join("");
+  const titleText = titleLines
+    .map(
+      (line, index) =>
+        `<text x="86" y="${304 + index * 82}" font-size="70" font-weight="900" fill="#F5F5F5">${escapeXml(line)}</text>`,
+    )
+    .join("");
+  const bodyText = bodyLines
+    .map(
+      (line, index) =>
+        `<text x="90" y="${730 + index * 46}" font-size="35" font-weight="800" fill="#B8BAC0">${escapeXml(line)}</text>`,
+    )
+    .join("");
+  const courtOffset = sceneIndex * 130;
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sceneGlow" cx="${sceneIndex % 2 === 0 ? "74%" : "18%"}" cy="18%" r="88%">
+      <stop offset="0" stop-color="#2E3B05"/>
+      <stop offset="0.44" stop-color="#101417"/>
+      <stop offset="1" stop-color="#0D1014"/>
+    </radialGradient>
+    <filter id="sceneShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="26" stdDeviation="34" flood-color="#000000" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#sceneGlow)"/>
+  <g opacity="0.28" stroke="#D7F21A" stroke-width="7" fill="none" transform="translate(${courtOffset - 220} 930) rotate(-12)">
+    <rect x="0" y="0" width="1320" height="720" rx="18"/>
+    <line x1="660" y1="0" x2="660" y2="720"/>
+    <line x1="0" y1="360" x2="1320" y2="360"/>
+    <line x1="330" y1="0" x2="330" y2="720"/>
+    <line x1="990" y1="0" x2="990" y2="720"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="86" y="112" font-size="34" font-weight="900" fill="#D7F21A">Padelito</text>
+    <text x="86" y="154" font-size="24" font-weight="800" fill="#A6A6A6">comunidad de padel en Posadas</text>
+    <rect x="86" y="204" width="300" height="54" rx="27" fill="#D7F21A"/>
+    <text x="116" y="240" font-size="25" font-weight="900" fill="#0D1014">${escapeXml(scene.eyebrow)}</text>
+    ${titleText}
+    ${bodyText}
+    <text x="90" y="965" font-size="34" font-weight="900" fill="#D7F21A">${escapeXml(scene.accent)}</text>
+    <g filter="url(#sceneShadow)">
+      <rect x="74" y="1054" width="932" height="374" rx="34" fill="#15181D" stroke="rgba(245,245,245,0.12)" stroke-width="2"/>
+      <rect x="112" y="1100" width="390" height="58" rx="29" fill="#D7F21A"/>
+      <text x="144" y="1138" font-size="26" font-weight="900" fill="#0D1014">${escapeXml(scene.cardTitle)}</text>
+      ${detailNodes}
+    </g>
+    <text x="86" y="1686" font-size="50" font-weight="900" fill="#F5F5F5">Entra al perfil</text>
+    <text x="86" y="1744" font-size="34" font-weight="900" fill="#D7F21A">registrate y carga tu nivel</text>
+  </g>
+</svg>`;
+}
+
+/**
+ * Ejecuta ffmpeg para crear un reel con escenas y movimiento.
+ * Existe para evitar publicar Reels estaticos y mantener el flujo 100% automatico.
+ */
+function renderReelVideo({ sceneImagePaths, videoPath }) {
   return new Promise((resolve) => {
+    const inputArgs = sceneImagePaths.flatMap((sceneImagePath) => ["-loop", "1", "-t", "4", "-i", sceneImagePath]);
+    const sceneFilters = sceneImagePaths
+      .map((_, index) => {
+        const zoomExpression = index % 2 === 0 ? "1+0.08*on/119" : "1.08-0.08*on/119";
+        const panExpression = index % 2 === 0 ? "iw/2-(iw/zoom/2)+(on*0.45)" : "iw/2-(iw/zoom/2)-(on*0.45)";
+        return `[${index}:v]scale=1188:2112,zoompan=z='${zoomExpression}':x='${panExpression}':y='ih/2-(ih/zoom/2)':d=120:s=1080x1920:fps=30,format=yuv420p[v${index}]`;
+      })
+      .join(";");
+    const concatInputs = sceneImagePaths.map((_, index) => `[v${index}]`).join("");
+    const filterComplex = `${sceneFilters};${concatInputs}concat=n=${sceneImagePaths.length}:v=1:a=0,format=yuv420p[v]`;
     const ffmpeg = spawn("ffmpeg", [
       "-y",
-      "-loop",
-      "1",
-      "-i",
-      imagePath,
+      ...inputArgs,
       "-f",
       "lavfi",
       "-i",
       "anullsrc=channel_layout=stereo:sample_rate=44100",
-      "-t",
-      "7",
-      "-vf",
-      "scale=1080:1920,format=yuv420p",
+      "-filter_complex",
+      filterComplex,
+      "-map",
+      "[v]",
+      "-map",
+      `${sceneImagePaths.length}:a`,
       "-c:v",
       "libx264",
       "-preset",
@@ -164,6 +278,8 @@ function renderReelVideo({ imagePath, videoPath }) {
       "30",
       "-g",
       "60",
+      "-t",
+      "16",
       "-c:a",
       "aac",
       "-b:a",
@@ -196,6 +312,8 @@ async function main() {
   const storySvgPath = path.join(outputRoot, `${baseName}-story.svg`);
   const storyImagePath = path.join(outputRoot, `${baseName}-story.png`);
   const videoPath = path.join(outputRoot, `${baseName}-reel.mp4`);
+  const sceneSvgPaths = Array.from({ length: 4 }, (_, index) => path.join(outputRoot, `${baseName}-scene-${index + 1}.svg`));
+  const sceneImagePaths = Array.from({ length: 4 }, (_, index) => path.join(outputRoot, `${baseName}-scene-${index + 1}.png`));
   const manifestPath = path.join(outputRoot, `${baseName}.json`);
   const publicMediaBaseUrl = (process.env.PUBLIC_MEDIA_BASE_URL || padelitoSocialChannels.siteUrl).replace(/\/$/, "");
 
@@ -204,8 +322,15 @@ async function main() {
   await writeFile(storySvgPath, storySvg, "utf8");
   await sharp(Buffer.from(svg)).png().toFile(imagePath);
   await sharp(Buffer.from(storySvg)).png().toFile(storyImagePath);
+  await Promise.all(
+    sceneSvgPaths.map(async (sceneSvgPath, index) => {
+      const sceneSvg = buildVideoSceneSvg(content, index);
+      await writeFile(sceneSvgPath, sceneSvg, "utf8");
+      await sharp(Buffer.from(sceneSvg)).png().toFile(sceneImagePaths[index]);
+    }),
+  );
 
-  const videoWasRendered = await renderReelVideo({ imagePath: storyImagePath, videoPath });
+  const videoWasRendered = await renderReelVideo({ sceneImagePaths, videoPath });
   const manifest = {
     publicationDate,
     title: content.hook,
@@ -214,8 +339,10 @@ async function main() {
     imageUrl: `${publicMediaBaseUrl}/social/generated/${baseName}.png`,
     storyImagePath: `/social/generated/${baseName}-story.png`,
     storyImageUrl: `${publicMediaBaseUrl}/social/generated/${baseName}-story.png`,
+    sceneImagePaths: sceneImagePaths.map((_, index) => `/social/generated/${baseName}-scene-${index + 1}.png`),
     svgPath: `/social/generated/${baseName}.svg`,
     storySvgPath: `/social/generated/${baseName}-story.svg`,
+    sceneSvgPaths: sceneSvgPaths.map((_, index) => `/social/generated/${baseName}-scene-${index + 1}.svg`),
     videoPath: videoWasRendered ? `/social/generated/${baseName}-reel.mp4` : null,
     videoUrl: videoWasRendered ? `${publicMediaBaseUrl}/social/generated/${baseName}-reel.mp4` : null,
     siteUrl: padelitoSocialChannels.siteUrl,

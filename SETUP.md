@@ -326,7 +326,9 @@ Workflow:
 - commitea la pieza para dejarla disponible como asset publico;
 - usa GitHub raw como URL publica por defecto para que Meta pueda leer la imagen aunque Cloudflare tarde en desplegar;
 - publica en Meta si los secretos estan configurados.
-- prioriza Reel MP4, publica Story derivada y usa imagen como fallback.
+- publica Reel MP4 de 16 segundos con escenas y movimiento;
+- publica Story derivada;
+- si no se genera MP4, cancela la publicacion para evitar un Reel estatico.
 
 Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/base-mvp-local` cuando el despliegue automatico no se dispare desde GitHub.
 

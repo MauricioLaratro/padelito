@@ -9,7 +9,7 @@ Este modulo genera una pieza diaria con estetica Padelito y la publica por la AP
 - Evita usar `bio` y `americano`.
 - Usa CTA hacia `padelito-posadas.pages.dev`.
 - Publica en Instagram mediante Instagram Content Publishing API.
-- Prioriza Reels si el entorno puede generar MP4.
+- Publica Reels MP4 de 16 segundos con 4 escenas y movimiento de camara.
 - Publica una Story derivada despues de la publicacion principal.
 - Opcionalmente publica la misma pieza en una pagina de Facebook.
 - Publica en TikTok mediante Content Posting API cuando la app esta aprobada y `@padelito4` autorizo la app.
@@ -63,7 +63,7 @@ El token y los IDs se cargan como secretos, no se guardan en el repositorio. Si 
 
 ## Decision actual
 
-La automatizacion prioriza Reel diario en Instagram, publica una Story derivada y deja imagen como fallback si el entorno no puede generar MP4. El objetivo inmediato es conseguir registros, por eso se prioriza consistencia diaria, CTA claro y medicion.
+La automatizacion publica Reel diario en Instagram y una Story derivada. Si no se genera MP4, la publicacion se cancela para evitar volver a subir una imagen estatica como Reel. El objetivo inmediato es conseguir registros, por eso se prioriza consistencia diaria, CTA claro y medicion.
 
 ## Flujo TikTok
 

@@ -28,6 +28,18 @@ function requireEnvironmentValue(name) {
 }
 
 /**
+ * Asegura que exista video real antes de publicar en Meta.
+ * Existe para evitar volver a subir imagen estatica como Reel.
+ */
+function requireManifestVideo(manifest) {
+  if (!manifest.videoUrl) {
+    throw new Error("No se genero video MP4; se cancela la publicacion para evitar un Reel estatico.");
+  }
+
+  return manifest.videoUrl;
+}
+
+/**
  * Ejecuta una llamada POST contra Graph API.
  * Centraliza errores para que los logs diarios sean accionables.
  */
@@ -77,30 +89,6 @@ function delay(milliseconds) {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);
   });
-}
-
-/**
- * Publica una imagen en Instagram mediante contenedor y publish.
- * La usa la automatizacion diaria cuando existen permisos oficiales.
- */
-async function publishInstagramImage({ accessToken, instagramUserId, imageUrl, caption }) {
-  const container = await postGraph(`/${instagramUserId}/media`, {
-    image_url: imageUrl,
-    caption,
-    access_token: accessToken,
-  });
-
-  await waitForMediaContainer({ accessToken, containerId: container.id });
-
-  const publication = await postGraph(`/${instagramUserId}/media_publish`, {
-    creation_id: container.id,
-    access_token: accessToken,
-  });
-
-  return {
-    containerId: container.id,
-    mediaId: publication.id,
-  };
 }
 
 /**
@@ -210,21 +198,15 @@ async function main() {
   const accessToken = requireEnvironmentValue("META_ACCESS_TOKEN");
   const instagramUserId = requireEnvironmentValue("META_IG_USER_ID");
   const pageId = process.env.META_PAGE_ID;
+  const videoUrl = requireManifestVideo(manifest);
 
-  const instagram = manifest.videoUrl
-    ? await publishInstagramReel({
-        accessToken,
-        instagramUserId,
-        videoUrl: manifest.videoUrl,
-        coverUrl: manifest.storyImageUrl || manifest.imageUrl,
-        caption: manifest.caption,
-      })
-    : await publishInstagramImage({
-        accessToken,
-        instagramUserId,
-        imageUrl: manifest.imageUrl,
-        caption: manifest.caption,
-      });
+  const instagram = await publishInstagramReel({
+    accessToken,
+    instagramUserId,
+    videoUrl,
+    coverUrl: manifest.storyImageUrl || manifest.imageUrl,
+    caption: manifest.caption,
+  });
 
   const story = process.env.META_PUBLISH_STORY === "false"
     ? null
