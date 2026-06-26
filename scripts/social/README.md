@@ -18,12 +18,12 @@ Configurar en GitHub Actions o Cloudflare:
 - `META_ACCESS_TOKEN`
 - `META_IG_USER_ID`
 - `META_PAGE_ID`
-- `PUBLIC_MEDIA_BASE_URL`
 
 Opcionales:
 
 - `META_GRAPH_VERSION`
 - `META_PUBLISH_FACEBOOK`
+- `PUBLIC_MEDIA_BASE_URL`
 
 ## Comandos
 
@@ -32,15 +32,16 @@ npm run social:generate
 npm run social:publish:meta
 ```
 
-## Paso minimo pendiente en Meta
+## Estado Meta
 
-Para publicar de forma automatica falta obtener un token oficial con permiso de publicacion. No usar usuario y contrasena.
+La publicacion en Instagram quedo validada con la cuenta `padelito.arg`.
 
-1. La cuenta `padelito.arg` debe ser profesional.
-2. Debe existir una pagina de Facebook conectada, aunque sea minima: `Padelito Posadas`.
-3. La app de Meta Developers debe estar asociada al negocio.
-4. El token debe permitir publicar contenido en la cuenta de Instagram.
-5. El token y los IDs se cargan como secretos, no se guardan en el repositorio.
+IDs actuales:
+
+- `META_IG_USER_ID`: `17841422176858876`
+- `META_PAGE_ID`: `1224153714107928`
+
+El token y los IDs se cargan como secretos, no se guardan en el repositorio. Si el token sale desde Graph API Explorer puede ser temporal; para la automatizacion diaria conviene reemplazarlo por un token de larga duracion o renovarlo antes de que expire.
 
 ## Decision actual
 

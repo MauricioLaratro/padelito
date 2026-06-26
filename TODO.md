@@ -183,7 +183,8 @@
 - [x] Generar pieza social diaria con estetica Padelito.
 - [x] Crear publicador por API oficial de Meta.
 - [x] Crear workflow diario de GitHub Actions.
-- [ ] Obtener token oficial de Meta para `padelito.arg`.
-- [ ] Cargar secretos `META_ACCESS_TOKEN`, `META_IG_USER_ID`, `META_PAGE_ID` y `PUBLIC_MEDIA_BASE_URL`.
-- [ ] Ejecutar primera publicacion automatica real.
+- [x] Obtener token oficial de Meta para `padelito.arg`.
+- [ ] Cargar secretos `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID`.
+- [x] Ejecutar primera publicacion automatica real.
+- [ ] Reemplazar el token temporal por uno de larga duracion o documentar renovacion programada.
 - [ ] Medir registros generados por 14 dias y ajustar pilares de contenido.

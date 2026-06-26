@@ -27,7 +27,7 @@ jobs:
       - name: Generar pieza diaria
         run: npm run social:generate
         env:
-          PUBLIC_MEDIA_BASE_URL: ${{ secrets.PUBLIC_MEDIA_BASE_URL }}
+          PUBLIC_MEDIA_BASE_URL: ${{ secrets.PUBLIC_MEDIA_BASE_URL || format('https://raw.githubusercontent.com/{0}/{1}/public', github.repository, github.ref_name) }}
 
       - name: Guardar pieza generada
         run: |
