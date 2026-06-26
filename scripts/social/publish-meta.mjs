@@ -49,6 +49,37 @@ async function postGraph(pathname, body) {
 }
 
 /**
+ * Ejecuta una llamada GET contra Graph API.
+ * La usa el publicador para esperar el procesamiento de Reels.
+ */
+async function getGraph(pathname, params) {
+  const url = new URL(`${graphBaseUrl}${pathname}`);
+
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  const response = await fetch(url);
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Meta Graph API fallo en ${pathname}: ${JSON.stringify(payload)}`);
+  }
+
+  return payload;
+}
+
+/**
+ * Pausa corta entre consultas de estado.
+ * Existe para no publicar un Reel antes de que Meta termine de procesarlo.
+ */
+function delay(milliseconds) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+/**
  * Publica una imagen en Instagram mediante contenedor y publish.
  * La usa la automatizacion diaria cuando existen permisos oficiales.
  */
@@ -67,6 +98,85 @@ async function publishInstagramImage({ accessToken, instagramUserId, imageUrl, c
   return {
     containerId: container.id,
     mediaId: publication.id,
+  };
+}
+
+/**
+ * Espera a que un contenedor de Reel quede listo.
+ * La API procesa videos de forma asincronica antes de permitir publicarlos.
+ */
+async function waitForMediaContainer({ accessToken, containerId }) {
+  const maxAttempts = Number(process.env.META_REEL_STATUS_ATTEMPTS || 20);
+  const delayMilliseconds = Number(process.env.META_REEL_STATUS_DELAY_MS || 15_000);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const status = await getGraph(`/${containerId}`, {
+      fields: "status_code",
+      access_token: accessToken,
+    });
+
+    if (status.status_code === "FINISHED") {
+      return status;
+    }
+
+    if (status.status_code === "ERROR" || status.status_code === "EXPIRED") {
+      throw new Error(`Meta no pudo procesar el contenedor ${containerId}: ${JSON.stringify(status)}`);
+    }
+
+    await delay(delayMilliseconds);
+  }
+
+  throw new Error(`Meta no termino de procesar el contenedor ${containerId}.`);
+}
+
+/**
+ * Publica un Reel en Instagram.
+ * Es el formato prioritario para ganar alcance y registros.
+ */
+async function publishInstagramReel({ accessToken, instagramUserId, videoUrl, coverUrl, caption }) {
+  const container = await postGraph(`/${instagramUserId}/media`, {
+    media_type: "REELS",
+    video_url: videoUrl,
+    cover_url: coverUrl,
+    caption,
+    share_to_feed: "true",
+    access_token: accessToken,
+  });
+
+  await waitForMediaContainer({ accessToken, containerId: container.id });
+
+  const publication = await postGraph(`/${instagramUserId}/media_publish`, {
+    creation_id: container.id,
+    access_token: accessToken,
+  });
+
+  return {
+    containerId: container.id,
+    mediaId: publication.id,
+    mediaType: "REELS",
+  };
+}
+
+/**
+ * Publica una historia con la misma pieza adaptada a 9:16.
+ * La API no replica el boton nativo de compartir Reel, por eso crea una Story derivada.
+ */
+async function publishInstagramStory({ accessToken, instagramUserId, imageUrl }) {
+  const container = await postGraph(`/${instagramUserId}/media`, {
+    media_type: "STORIES",
+    image_url: imageUrl,
+    access_token: accessToken,
+  });
+
+  const publication = await postGraph(`/${instagramUserId}/media_publish`, {
+    creation_id: container.id,
+    access_token: accessToken,
+  });
+
+  return {
+    containerId: container.id,
+    mediaId: publication.id,
+    mediaType: "STORIES",
   };
 }
 
@@ -97,12 +207,28 @@ async function main() {
   const instagramUserId = requireEnvironmentValue("META_IG_USER_ID");
   const pageId = process.env.META_PAGE_ID;
 
-  const instagram = await publishInstagramImage({
-    accessToken,
-    instagramUserId,
-    imageUrl: manifest.imageUrl,
-    caption: manifest.caption,
-  });
+  const instagram = manifest.videoUrl
+    ? await publishInstagramReel({
+        accessToken,
+        instagramUserId,
+        videoUrl: manifest.videoUrl,
+        coverUrl: manifest.storyImageUrl || manifest.imageUrl,
+        caption: manifest.caption,
+      })
+    : await publishInstagramImage({
+        accessToken,
+        instagramUserId,
+        imageUrl: manifest.imageUrl,
+        caption: manifest.caption,
+      });
+
+  const story = process.env.META_PUBLISH_STORY === "false"
+    ? null
+    : await publishInstagramStory({
+        accessToken,
+        instagramUserId,
+        imageUrl: manifest.storyImageUrl || manifest.imageUrl,
+      });
 
   const facebook = process.env.META_PUBLISH_FACEBOOK === "true"
     ? await publishFacebookPagePhoto({
@@ -113,7 +239,7 @@ async function main() {
       })
     : null;
 
-  console.log(JSON.stringify({ instagram, facebook, manifest }, null, 2));
+  console.log(JSON.stringify({ instagram, story, facebook, manifest }, null, 2));
 }
 
 main().catch((error) => {

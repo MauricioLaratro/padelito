@@ -3,7 +3,7 @@ name: Publicacion diaria Padelito
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * *"
+    - cron: "30 23 * * *"
 
 permissions:
   contents: write
@@ -37,23 +37,31 @@ jobs:
           git diff --cached --quiet || git commit -m "Generar pieza social diaria"
           git push
 
-      - name: Esperar despliegue publico
-        if: ${{ secrets.META_ACCESS_TOKEN != '' }}
-        run: sleep ${MEDIA_DEPLOY_WAIT_SECONDS:-180}
+      - name: Esperar disponibilidad publica
+        run: sleep ${MEDIA_DEPLOY_WAIT_SECONDS:-60}
 
       - name: Publicar en Meta
-        if: ${{ secrets.META_ACCESS_TOKEN != '' }}
-        run: npm run social:publish:meta
+        run: |
+          if [ -n "$META_ACCESS_TOKEN" ]; then
+            npm run social:publish:meta
+          else
+            echo "META_ACCESS_TOKEN no configurado; se omite Meta."
+          fi
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           META_IG_USER_ID: ${{ secrets.META_IG_USER_ID }}
           META_PAGE_ID: ${{ secrets.META_PAGE_ID }}
           META_GRAPH_VERSION: ${{ secrets.META_GRAPH_VERSION }}
           META_PUBLISH_FACEBOOK: ${{ secrets.META_PUBLISH_FACEBOOK }}
+          META_PUBLISH_STORY: ${{ secrets.META_PUBLISH_STORY }}
 
       - name: Publicar en TikTok
-        if: ${{ secrets.TIKTOK_REFRESH_TOKEN != '' }}
-        run: npm run social:publish:tiktok
+        run: |
+          if [ -n "$TIKTOK_REFRESH_TOKEN" ]; then
+            npm run social:publish:tiktok
+          else
+            echo "TIKTOK_REFRESH_TOKEN no configurado; se omite TikTok."
+          fi
         env:
           TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
           TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}

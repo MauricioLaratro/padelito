@@ -323,6 +323,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - archivo de verificacion TikTok publicado y verificado en `https://padelito-posadas.pages.dev/tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt`.
 - Automatizacion social:
   - publicacion real en Instagram validada con `padelito.arg`;
+  - workflow diario ajustado a las 20:30 de Argentina (`23:30 UTC`);
+  - publicador Meta ahora prioriza Reel MP4, publica Story derivada y conserva imagen como fallback;
   - app TikTok enviada a revision con Content Posting API y Direct Post;
   - scripts OAuth y publicador TikTok preparados para post de foto diario una vez aprobado `video.publish` y autorizado `@padelito4`;
   - secretos sensibles de TikTok quedan fuera del repositorio y deben cargarse como secretos de GitHub.

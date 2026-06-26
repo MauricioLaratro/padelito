@@ -314,17 +314,19 @@ META_ACCESS_TOKEN=
 META_IG_USER_ID=
 META_PAGE_ID=
 META_PUBLISH_FACEBOOK=false
+META_PUBLISH_STORY=true
 PUBLIC_MEDIA_BASE_URL=
 ```
 
 Workflow:
 
 - archivo: `.github/workflows/social-daily.yml`;
-- horario: todos los dias a las 13:00 UTC;
+- horario: todos los dias a las 23:30 UTC, equivalente a 20:30 de Argentina;
 - genera una pieza diaria en `public/social/generated`;
 - commitea la pieza para dejarla disponible como asset publico;
 - usa GitHub raw como URL publica por defecto para que Meta pueda leer la imagen aunque Cloudflare tarde en desplegar;
 - publica en Meta si los secretos estan configurados.
+- prioriza Reel MP4, publica Story derivada y usa imagen como fallback.
 
 Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/base-mvp-local` cuando el despliegue automatico no se dispare desde GitHub.
 

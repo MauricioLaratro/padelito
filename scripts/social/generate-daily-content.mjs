@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import path from "node:path";
 import sharp from "sharp";
 import { dailyContentPlan, padelitoSocialChannels } from "./contentPlan.mjs";
@@ -63,13 +64,18 @@ function escapeXml(value) {
  * Construye una plantilla visual de Padelito.
  * La usan las automatizaciones para generar una pieza diaria consistente.
  */
-function buildSocialSvg(content) {
-  const hookLines = wrapText(content.hook, 19).slice(0, 3);
-  const subheadLines = wrapText(content.subhead, 34).slice(0, 3);
+function buildSocialSvg(content, { width = 1080, height = 1350, format = "feed" } = {}) {
+  const isStory = format === "story";
+  const hookLines = wrapText(content.hook, isStory ? 17 : 19).slice(0, 3);
+  const subheadLines = wrapText(content.subhead, isStory ? 30 : 34).slice(0, 3);
+  const cardY = isStory ? 950 : 720;
+  const detailStartY = isStory ? 1120 : 875;
+  const ctaY = isStory ? 1698 : 1228;
+  const siteY = isStory ? 1752 : 1278;
   const detailNodes = content.cardDetails
     .map((detail, index) => {
       const x = 116 + (index % 2) * 410;
-      const y = 875 + Math.floor(index / 2) * 92;
+      const y = detailStartY + Math.floor(index / 2) * 92;
       return `
         <rect x="${x}" y="${y}" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
         <text x="${x + 28}" y="${y + 36}" font-size="26" font-weight="800" fill="#D9D9D9">${escapeXml(detail)}</text>`;
@@ -91,7 +97,7 @@ function buildSocialSvg(content) {
     .join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1080" height="1350" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <radialGradient id="glow" cx="72%" cy="16%" r="78%">
       <stop offset="0" stop-color="#243004"/>
@@ -103,7 +109,8 @@ function buildSocialSvg(content) {
     </filter>
   </defs>
   <g font-family="Arial, Helvetica, sans-serif">
-    <rect width="1080" height="1350" fill="url(#glow)"/>
+    <rect width="${width}" height="${height}" fill="url(#glow)"/>
+    <path d="M0 ${height - 360} C260 ${height - 510} 512 ${height - 250} 1080 ${height - 430} L1080 ${height} L0 ${height} Z" fill="#14181E" opacity="0.92"/>
     <circle cx="876" cy="132" r="34" fill="#D7F21A"/>
     <circle cx="812" cy="132" r="16" fill="#D9D9D9"/>
     <circle cx="765" cy="132" r="16" fill="#D9D9D9"/>
@@ -112,18 +119,64 @@ function buildSocialSvg(content) {
     <text x="92" y="153" font-size="24" font-weight="700" fill="#A6A6A6">comunidad de padel en Posadas</text>
     ${hookText}
     ${subheadText}
+    <text x="96" y="${isStory ? 690 : 650}" font-size="30" font-weight="900" fill="#D7F21A">La app para dejar de perseguir gente por WhatsApp</text>
     <g filter="url(#shadow)">
-      <rect x="82" y="720" width="916" height="388" rx="34" fill="#15181D" stroke="rgba(217,217,217,0.12)" stroke-width="2"/>
-      <rect x="116" y="766" width="244" height="52" rx="26" fill="#D7F21A"/>
-      <text x="146" y="801" font-size="25" font-weight="900" fill="#0F1115">${escapeXml(content.cardTitle)}</text>
+      <rect x="82" y="${cardY}" width="916" height="388" rx="34" fill="#15181D" stroke="rgba(217,217,217,0.12)" stroke-width="2"/>
+      <rect x="116" y="${cardY + 46}" width="244" height="52" rx="26" fill="#D7F21A"/>
+      <text x="146" y="${cardY + 81}" font-size="25" font-weight="900" fill="#0F1115">${escapeXml(content.cardTitle)}</text>
       ${detailNodes}
-      <rect x="736" y="1015" width="188" height="56" rx="28" fill="#D7F21A"/>
-      <text x="780" y="1052" font-size="24" font-weight="900" fill="#0F1115">Sumate</text>
+      <rect x="736" y="${cardY + 295}" width="188" height="56" rx="28" fill="#D7F21A"/>
+      <text x="780" y="${cardY + 332}" font-size="24" font-weight="900" fill="#0F1115">Sumate</text>
     </g>
-    <text x="92" y="1228" font-size="34" font-weight="900" fill="#F5F5F5">Entra al perfil y registrate</text>
-    <text x="92" y="1278" font-size="28" font-weight="800" fill="#D7F21A">${padelitoSocialChannels.siteUrl.replace("https://", "")}</text>
+    <text x="92" y="${ctaY}" font-size="44" font-weight="900" fill="#F5F5F5">Entra al perfil y registrate</text>
+    <text x="92" y="${siteY}" font-size="30" font-weight="800" fill="#D7F21A">${padelitoSocialChannels.siteUrl.replace("https://", "")}</text>
   </g>
 </svg>`;
+}
+
+/**
+ * Ejecuta ffmpeg para crear un reel simple desde la placa vertical.
+ * Existe para priorizar Reels cuando el entorno de CI tiene ffmpeg disponible.
+ */
+function renderReelVideo({ imagePath, videoPath }) {
+  return new Promise((resolve) => {
+    const ffmpeg = spawn("ffmpeg", [
+      "-y",
+      "-loop",
+      "1",
+      "-i",
+      imagePath,
+      "-f",
+      "lavfi",
+      "-i",
+      "anullsrc=channel_layout=stereo:sample_rate=44100",
+      "-t",
+      "7",
+      "-vf",
+      "scale=1080:1920,format=yuv420p",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-pix_fmt",
+      "yuv420p",
+      "-r",
+      "30",
+      "-g",
+      "60",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-shortest",
+      "-movflags",
+      "+faststart",
+      videoPath,
+    ]);
+
+    ffmpeg.on("error", () => resolve(false));
+    ffmpeg.on("close", (code) => resolve(code === 0));
+  });
 }
 
 /**
@@ -137,17 +190,34 @@ async function main() {
   const caption = `${content.caption}\n\n${content.hashtags.join(" ")}`;
   const baseName = `padelito-${publicationDate}`;
   const svg = buildSocialSvg(content);
+  const storySvg = buildSocialSvg(content, { width: 1080, height: 1920, format: "story" });
   const svgPath = path.join(outputRoot, `${baseName}.svg`);
   const imagePath = path.join(outputRoot, `${baseName}.png`);
+  const storySvgPath = path.join(outputRoot, `${baseName}-story.svg`);
+  const storyImagePath = path.join(outputRoot, `${baseName}-story.png`);
+  const videoPath = path.join(outputRoot, `${baseName}-reel.mp4`);
   const manifestPath = path.join(outputRoot, `${baseName}.json`);
   const publicMediaBaseUrl = (process.env.PUBLIC_MEDIA_BASE_URL || padelitoSocialChannels.siteUrl).replace(/\/$/, "");
+
+  await mkdir(outputRoot, { recursive: true });
+  await writeFile(svgPath, svg, "utf8");
+  await writeFile(storySvgPath, storySvg, "utf8");
+  await sharp(Buffer.from(svg)).png().toFile(imagePath);
+  await sharp(Buffer.from(storySvg)).png().toFile(storyImagePath);
+
+  const videoWasRendered = await renderReelVideo({ imagePath: storyImagePath, videoPath });
   const manifest = {
     publicationDate,
     title: content.hook,
     caption,
     imagePath: `/social/generated/${baseName}.png`,
     imageUrl: `${publicMediaBaseUrl}/social/generated/${baseName}.png`,
+    storyImagePath: `/social/generated/${baseName}-story.png`,
+    storyImageUrl: `${publicMediaBaseUrl}/social/generated/${baseName}-story.png`,
     svgPath: `/social/generated/${baseName}.svg`,
+    storySvgPath: `/social/generated/${baseName}-story.svg`,
+    videoPath: videoWasRendered ? `/social/generated/${baseName}-reel.mp4` : null,
+    videoUrl: videoWasRendered ? `${publicMediaBaseUrl}/social/generated/${baseName}-reel.mp4` : null,
     siteUrl: padelitoSocialChannels.siteUrl,
     channels: {
       instagram: padelitoSocialChannels.instagramUsername,
@@ -155,9 +225,6 @@ async function main() {
     },
   };
 
-  await mkdir(outputRoot, { recursive: true });
-  await writeFile(svgPath, svg, "utf8");
-  await sharp(Buffer.from(svg)).png().toFile(imagePath);
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   await writeFile(latestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
