@@ -8,8 +8,8 @@
   "storyImageUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-06-26-story.png",
   "svgPath": "/social/generated/padelito-2026-06-26.svg",
   "storySvgPath": "/social/generated/padelito-2026-06-26-story.svg",
-  "videoPath": null,
-  "videoUrl": null,
+  "videoPath": "/social/generated/padelito-2026-06-26-reel.mp4",
+  "videoUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-06-26-reel.mp4",
   "siteUrl": "https://padelito-posadas.pages.dev",
   "channels": {
     "instagram": "padelito.arg",
