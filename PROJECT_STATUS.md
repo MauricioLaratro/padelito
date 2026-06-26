@@ -319,6 +319,8 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - el primer build publico sin Supabase quedo explicado por logs: Cloudflare leia `Build environment variables: (none found)` al detectar `wrangler.jsonc`.
   - cache PWA actualizado a `padelito-static-v3` y navegacion cambiada a network-first para evitar que `/` e `index.html` queden congelados en builds viejos.
   - JS productivo `index-D20E4b4J.js` verificado con variables `VITE_SUPABASE_*` inyectadas.
+  - deploy hook de Pages creado para forzar builds de la rama `codex/base-mvp-local` cuando Cloudflare no dispare despliegues automaticos.
+  - archivo de verificacion TikTok publicado y verificado en `https://padelito-posadas.pages.dev/tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt`.
 
 ## Git
 

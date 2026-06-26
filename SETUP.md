@@ -326,6 +326,8 @@ Workflow:
 - usa GitHub raw como URL publica por defecto para que Meta pueda leer la imagen aunque Cloudflare tarde en desplegar;
 - publica en Meta si los secretos estan configurados.
 
+Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/base-mvp-local` cuando el despliegue automatico no se dispare desde GitHub.
+
 Pendiente externo:
 
 - cargar `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID` como secretos del repositorio;
@@ -336,3 +338,7 @@ URLs usadas por Meta Developers:
 - Politica de privacidad: `https://padelito-posadas.pages.dev/privacy.html`
 - Terminos: `https://padelito-posadas.pages.dev/terms.html`
 - Eliminacion de datos: `https://padelito-posadas.pages.dev/data-deletion.html`
+
+URL verificada por TikTok Developers:
+
+- Archivo de verificacion: `https://padelito-posadas.pages.dev/tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt`

@@ -187,5 +187,5 @@
 - [ ] Cargar secretos `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID`.
 - [x] Ejecutar primera publicacion automatica real.
 - [ ] Reemplazar el token temporal por uno de larga duracion o documentar renovacion programada.
-- [ ] Verificar URL prefix de TikTok con archivo `tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt` despues del redeploy de Cloudflare Pages.
+- [x] Verificar URL prefix de TikTok con archivo `tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt` despues del redeploy de Cloudflare Pages.
 - [ ] Medir registros generados por 14 dias y ajustar pilares de contenido.
