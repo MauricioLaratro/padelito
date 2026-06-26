@@ -357,6 +357,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
 - Commit push/permisos: `Corregir permisos de notificaciones push`.
 - Commit invitaciones/feed: `Corregir duplicados de invitaciones en feed`.
 - Commit listas/vencimientos: `Limitar listas y ocultar publicaciones vencidas`.
+- Commit automatizacion social: `Ajustar automatizacion social validada`.
 
 ## Regla de idioma
 
