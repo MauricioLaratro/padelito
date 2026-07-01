@@ -190,9 +190,11 @@
 - [x] Ejecutar primera publicacion automatica real.
 - [x] Ejecutar prueba real de Reel + Story desde GitHub Actions despues de instalar `ffmpeg`.
 - [ ] Ejecutar prueba real del nuevo Reel dinamico de 16 segundos.
+- [ ] Resolver bloqueo Meta `API access blocked` para reactivar publicacion diaria.
 - [ ] Reemplazar el token temporal por uno de larga duracion o documentar renovacion programada.
 - [x] Verificar URL prefix de TikTok con archivo `tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt` despues del redeploy de Cloudflare Pages.
 - [x] Crear scripts OAuth y publicacion TikTok por Content Posting API.
+- [ ] Reenviar revision TikTok despues de desplegar homepage, Terms y Privacy corregidos.
 - [ ] Esperar aprobacion de `video.publish` en TikTok Developers.
 - [ ] Autorizar `@padelito4` y guardar `TIKTOK_REFRESH_TOKEN` como secreto.
 - [ ] Medir registros generados por 14 dias y ajustar pilares de contenido.

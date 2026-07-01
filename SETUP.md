@@ -348,6 +348,14 @@ URL verificada por TikTok Developers:
 
 - Archivo de verificacion: `https://padelito-posadas.pages.dev/tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt`
 
+Requisitos visibles para TikTok Developers:
+
+- Website URL: `https://padelito-posadas.pages.dev/`
+- Privacy Policy: `https://padelito-posadas.pages.dev/privacy.html`
+- Terms of Service: `https://padelito-posadas.pages.dev/terms.html`
+- La homepage debe mostrar links activos a Privacy Policy y Terms of Service sin login.
+- Privacy y Terms deben mostrar favicon, icono de Padelito y titulo con el nombre de la app.
+
 Autorizacion TikTok:
 
 ```powershell

@@ -154,6 +154,8 @@ export function AuthScreen({
           src="/logo-padelito.svg"
         />
 
+        {!isPasswordRecoveryMode ? <PublicProductSummary /> : null}
+
         {isPasswordRecoveryMode ? (
           <h1 className="text-2xl font-black leading-tight">
             Nueva contraseña
@@ -318,8 +320,59 @@ export function AuthScreen({
             </Button>
           </div>
         ) : null}
+
+        <LegalLinks />
       </section>
     </ScreenShell>
+  );
+}
+
+/**
+ * Muestra la propuesta publica antes del login.
+ * Se construye para que revisores y nuevos usuarios entiendan la app sin iniciar sesion.
+ * Lo usa AuthScreen.
+ * Sirve para cumplir revision externa y explicar el valor de Padelito.
+ */
+function PublicProductSummary() {
+  return (
+    <div className="mb-5 grid gap-3">
+      <h1 className="text-2xl font-black leading-tight">
+        Encontra jugadores y arma partidos en Posadas.
+      </h1>
+      <p className="text-sm font-semibold leading-6 text-text-secondary">
+        Padelito conecta jugadores de padel para publicar partidos, buscar gente
+        compatible, organizar practicas, mixtos y tercer tiempo.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {["Partidos", "Practica", "Mixto", "Comunidad"].map((summaryItem) => (
+          <span
+            className="rounded-full border border-border-subtle bg-surface-secondary px-3 py-1 text-xs font-black text-text-primary"
+            key={summaryItem}
+          >
+            {summaryItem}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Expone enlaces legales en la primera pantalla publica.
+ * Se construye para que politicas y terminos sean accesibles sin menu ni login.
+ * Lo usa AuthScreen.
+ * Sirve para revision de plataformas y transparencia para usuarios.
+ */
+function LegalLinks() {
+  return (
+    <nav
+      aria-label="Enlaces legales"
+      className="mt-5 flex flex-wrap gap-3 border-t border-border-subtle pt-4 text-xs font-black text-accent-lime"
+    >
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/data-deletion.html">Eliminacion de datos</a>
+    </nav>
   );
 }
 
