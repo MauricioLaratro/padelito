@@ -330,6 +330,7 @@ Padelito es una PWA mobile-first para comunidad local de padel. El MVP centraliz
   - tercera prueba de GitHub Actions publicada con exito como Reel (`17996366150971869`) y Story (`18596849815009083`).
   - generador actualizado para crear Reels de 16 segundos con 4 escenas, movimiento de camara y cancelacion si no existe MP4.
   - runs diarios de Instagram fallan desde el 27 de junio de 2026 porque Meta responde `API access blocked` al crear el contenedor `/media`; el problema ocurre antes de procesar el MP4 y requiere reautorizar o regenerar `META_ACCESS_TOKEN` desde la app Meta correcta.
+  - publicacion Meta pausada temporalmente en GitHub Actions porque Meta restringio la cuenta de negocio el 25 de junio de 2026 por sospecha de automatizacion; no se deben hacer nuevos intentos hasta pedir revision y estabilizar la cuenta.
   - app TikTok rechazada por accesibilidad de Website URL, Terms y Privacy; homepage y paginas legales fueron ajustadas y desplegadas con links visibles, favicon PNG, icono y titulos requeridos.
   - scripts OAuth y publicador TikTok preparados para post de foto diario una vez aprobado `video.publish` y autorizado `@padelito4`;
   - secretos sensibles de TikTok quedan fuera del repositorio y deben cargarse como secretos de GitHub.

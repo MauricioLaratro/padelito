@@ -45,12 +45,15 @@ jobs:
 
       - name: Publicar en Meta
         run: |
-          if [ -n "$META_ACCESS_TOKEN" ]; then
+          if [ "$META_PUBLISH_PAUSED" = "true" ]; then
+            echo "Publicacion en Meta pausada por restriccion temporal de la cuenta de negocio."
+          elif [ -n "$META_ACCESS_TOKEN" ]; then
             npm run social:publish:meta
           else
             echo "META_ACCESS_TOKEN no configurado; se omite Meta."
           fi
         env:
+          META_PUBLISH_PAUSED: "true"
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           META_IG_USER_ID: ${{ secrets.META_IG_USER_ID }}
           META_PAGE_ID: ${{ secrets.META_PAGE_ID }}

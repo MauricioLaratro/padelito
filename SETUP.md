@@ -325,7 +325,7 @@ Workflow:
 - genera una pieza diaria en `public/social/generated`;
 - commitea la pieza para dejarla disponible como asset publico;
 - usa GitHub raw como URL publica por defecto para que Meta pueda leer la imagen aunque Cloudflare tarde en desplegar;
-- publica en Meta si los secretos estan configurados.
+- publica en Meta si los secretos estan configurados y `META_PUBLISH_PAUSED` no esta en `true`.
 - publica Reel MP4 de 16 segundos con escenas y movimiento;
 - publica Story derivada en video cuando existe MP4;
 - valida que el asset remoto este disponible antes de pedirle a Meta que lo descargue;
@@ -335,6 +335,7 @@ Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/b
 
 Pendiente externo:
 
+- solicitar revision de restriccion de negocio en Meta antes de reactivar el publicador;
 - cargar `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID` como secretos del repositorio;
 - reautorizar o regenerar `META_ACCESS_TOKEN` si GitHub Actions muestra `API access blocked` en `/{ig-user-id}/media`.
 - reemplazar el token temporal por uno de larga duracion o renovarlo antes de que expire.

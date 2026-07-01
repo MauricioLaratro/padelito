@@ -191,6 +191,7 @@
 - [x] Ejecutar prueba real de Reel + Story desde GitHub Actions despues de instalar `ffmpeg`.
 - [ ] Ejecutar prueba real del nuevo Reel dinamico de 16 segundos.
 - [ ] Reautorizar o regenerar `META_ACCESS_TOKEN` para resolver bloqueo Meta `API access blocked` y reactivar publicacion diaria.
+- [ ] Solicitar revision de restriccion de negocio en Meta antes de reactivar publicaciones automaticas.
 - [ ] Reemplazar el token temporal por uno de larga duracion o documentar renovacion programada.
 - [x] Verificar URL prefix de TikTok con archivo `tiktokIQVmKsgSVd58I3YRk4JsQIkleWtZGTuw.txt` despues del redeploy de Cloudflare Pages.
 - [x] Crear scripts OAuth y publicacion TikTok por Content Posting API.
