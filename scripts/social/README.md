@@ -10,7 +10,7 @@ Este modulo genera una pieza diaria con estetica Padelito y la publica por la AP
 - Usa CTA hacia `padelito-posadas.pages.dev`.
 - Publica en Instagram mediante Instagram Content Publishing API.
 - Publica Reels MP4 de 16 segundos con 4 escenas y movimiento de camara.
-- Publica una Story derivada despues de la publicacion principal.
+- Publica una Story derivada despues de la publicacion principal; usa video cuando el MP4 existe.
 - Opcionalmente publica la misma pieza en una pagina de Facebook.
 - Publica en TikTok mediante Content Posting API cuando la app esta aprobada y `@padelito4` autorizo la app.
 
@@ -61,9 +61,11 @@ IDs actuales:
 
 El token y los IDs se cargan como secretos, no se guardan en el repositorio. Si el token sale desde Graph API Explorer puede ser temporal; para la automatizacion diaria conviene reemplazarlo por un token de larga duracion o renovarlo antes de que expire.
 
+Desde el 27 de junio de 2026 la accion diaria llega a Meta con el MP4 generado, pero Meta responde `API access blocked` al endpoint `/{ig-user-id}/media`. Eso indica bloqueo de app/token/permisos antes de procesar el video. La correccion operativa es reautorizar o regenerar `META_ACCESS_TOKEN` desde la app Meta correcta y confirmar que tenga permiso de publicacion sobre `padelito.arg`.
+
 ## Decision actual
 
-La automatizacion publica Reel diario en Instagram y una Story derivada. Si no se genera MP4, la publicacion se cancela para evitar volver a subir una imagen estatica como Reel. El objetivo inmediato es conseguir registros, por eso se prioriza consistencia diaria, CTA claro y medicion.
+La automatizacion publica Reel diario en Instagram y una Story derivada. Si no se genera MP4, la publicacion se cancela para evitar volver a subir una imagen estatica como Reel. Antes de publicar valida que el archivo remoto exista y que Meta acepte el permiso de Content Publishing. El objetivo inmediato es conseguir registros, por eso se prioriza consistencia diaria, CTA claro y medicion.
 
 ## Flujo TikTok
 

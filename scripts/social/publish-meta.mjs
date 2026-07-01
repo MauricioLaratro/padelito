@@ -3,6 +3,27 @@ import path from "node:path";
 
 const graphVersion = process.env.META_GRAPH_VERSION || "v25.0";
 const graphBaseUrl = `https://graph.facebook.com/${graphVersion}`;
+const remoteAssetAttempts = Number(process.env.META_REMOTE_ASSET_ATTEMPTS || 8);
+const remoteAssetDelayMilliseconds = Number(process.env.META_REMOTE_ASSET_DELAY_MS || 15_000);
+
+class MetaGraphApiError extends Error {
+  /**
+   * Normaliza errores de Meta.
+   * Lo usa el publicador para diferenciar bloqueos de permisos de problemas de media.
+   */
+  constructor({ pathname, payload }) {
+    const message = payload?.error?.message || "Error desconocido de Meta Graph API.";
+
+    super(`Meta Graph API fallo en ${pathname}: ${JSON.stringify(payload)}`);
+    this.name = "MetaGraphApiError";
+    this.pathname = pathname;
+    this.payload = payload;
+    this.metaMessage = message;
+    this.metaCode = payload?.error?.code;
+    this.metaSubcode = payload?.error?.error_subcode;
+    this.metaType = payload?.error?.type;
+  }
+}
 
 /**
  * Lee la pieza generada para publicar.
@@ -36,7 +57,53 @@ function requireManifestVideo(manifest) {
     throw new Error("No se genero video MP4; se cancela la publicacion para evitar un Reel estatico.");
   }
 
+  if (!manifest.videoUrl.endsWith(".mp4")) {
+    throw new Error(`El archivo generado no parece ser MP4: ${manifest.videoUrl}`);
+  }
+
   return manifest.videoUrl;
+}
+
+/**
+ * Detecta el bloqueo especifico de permisos de Meta.
+ * Existe para convertir el error diario en una instruccion accionable.
+ */
+function isMetaAccessBlockedError(error) {
+  return (
+    error instanceof MetaGraphApiError &&
+    error.metaCode === 200 &&
+    typeof error.metaMessage === "string" &&
+    error.metaMessage.toLowerCase().includes("api access blocked")
+  );
+}
+
+/**
+ * Valida que el archivo remoto este disponible antes de pedirle a Meta que lo descargue.
+ * GitHub Pages y Raw pueden tardar unos segundos despues del push diario.
+ */
+async function waitForRemoteAsset(assetUrl) {
+  let lastStatus = "sin respuesta";
+
+  for (let attempt = 1; attempt <= remoteAssetAttempts; attempt += 1) {
+    try {
+      const response = await fetch(assetUrl, { method: "HEAD" });
+      lastStatus = `${response.status} ${response.statusText}`;
+
+      if (response.ok) {
+        const contentLength = Number(response.headers.get("content-length") || 0);
+
+        if (contentLength > 0 || !response.headers.has("content-length")) {
+          return;
+        }
+      }
+    } catch (error) {
+      lastStatus = error.message;
+    }
+
+    await delay(remoteAssetDelayMilliseconds);
+  }
+
+  throw new Error(`El archivo remoto no esta disponible para Meta: ${assetUrl}. Ultimo estado: ${lastStatus}`);
 }
 
 /**
@@ -54,7 +121,7 @@ async function postGraph(pathname, body) {
   const payload = await response.json();
 
   if (!response.ok) {
-    throw new Error(`Meta Graph API fallo en ${pathname}: ${JSON.stringify(payload)}`);
+    throw new MetaGraphApiError({ pathname, payload });
   }
 
   return payload;
@@ -75,10 +142,36 @@ async function getGraph(pathname, params) {
   const payload = await response.json();
 
   if (!response.ok) {
-    throw new Error(`Meta Graph API fallo en ${pathname}: ${JSON.stringify(payload)}`);
+    throw new MetaGraphApiError({ pathname, payload });
   }
 
   return payload;
+}
+
+/**
+ * Comprueba que el token pueda usar Content Publishing antes de crear contenedores.
+ * Lo usa la accion diaria para fallar temprano cuando Meta bloqueo el acceso de la app/token.
+ */
+async function checkInstagramPublishingAccess({ accessToken, instagramUserId }) {
+  try {
+    return await getGraph(`/${instagramUserId}/content_publishing_limit`, {
+      fields: "quota_usage",
+      access_token: accessToken,
+    });
+  } catch (error) {
+    if (isMetaAccessBlockedError(error)) {
+      throw new Error(
+        [
+          "Meta bloqueo el acceso de publicacion antes de crear el Reel.",
+          "Hay que regenerar o reautorizar META_ACCESS_TOKEN desde la app Meta correcta y confirmar que tenga acceso de publicacion para padelito.arg.",
+          "Permisos esperados: instagram_basic o instagram_business_basic, instagram_content_publish o instagram_business_content_publish, pages_show_list y pages_read_engagement segun el producto Meta usado.",
+          `Detalle Meta: ${error.metaMessage}`,
+        ].join(" "),
+      );
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -151,10 +244,11 @@ async function publishInstagramReel({ accessToken, instagramUserId, videoUrl, co
  * Publica una historia con la misma pieza adaptada a 9:16.
  * La API no replica el boton nativo de compartir Reel, por eso crea una Story derivada.
  */
-async function publishInstagramStory({ accessToken, instagramUserId, imageUrl }) {
+async function publishInstagramStory({ accessToken, instagramUserId, storyUrl, storyKind }) {
+  const mediaField = storyKind === "video" ? "video_url" : "image_url";
   const container = await postGraph(`/${instagramUserId}/media`, {
     media_type: "STORIES",
-    image_url: imageUrl,
+    [mediaField]: storyUrl,
     access_token: accessToken,
   });
 
@@ -199,6 +293,12 @@ async function main() {
   const instagramUserId = requireEnvironmentValue("META_IG_USER_ID");
   const pageId = process.env.META_PAGE_ID;
   const videoUrl = requireManifestVideo(manifest);
+  const storyUrl = manifest.videoUrl || manifest.storyImageUrl || manifest.imageUrl;
+  const storyKind = manifest.videoUrl ? "video" : "image";
+
+  await waitForRemoteAsset(videoUrl);
+  await waitForRemoteAsset(manifest.storyImageUrl || manifest.imageUrl);
+  await checkInstagramPublishingAccess({ accessToken, instagramUserId });
 
   const instagram = await publishInstagramReel({
     accessToken,
@@ -213,7 +313,8 @@ async function main() {
     : await publishInstagramStory({
         accessToken,
         instagramUserId,
-        imageUrl: manifest.storyImageUrl || manifest.imageUrl,
+        storyUrl,
+        storyKind,
       });
 
   const facebook = process.env.META_PUBLISH_FACEBOOK === "true"

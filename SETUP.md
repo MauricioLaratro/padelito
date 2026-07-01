@@ -327,7 +327,8 @@ Workflow:
 - usa GitHub raw como URL publica por defecto para que Meta pueda leer la imagen aunque Cloudflare tarde en desplegar;
 - publica en Meta si los secretos estan configurados.
 - publica Reel MP4 de 16 segundos con escenas y movimiento;
-- publica Story derivada;
+- publica Story derivada en video cuando existe MP4;
+- valida que el asset remoto este disponible antes de pedirle a Meta que lo descargue;
 - si no se genera MP4, cancela la publicacion para evitar un Reel estatico.
 
 Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/base-mvp-local` cuando el despliegue automatico no se dispare desde GitHub.
@@ -335,6 +336,7 @@ Cloudflare Pages tiene un deploy hook configurado para forzar builds de `codex/b
 Pendiente externo:
 
 - cargar `META_ACCESS_TOKEN`, `META_IG_USER_ID` y `META_PAGE_ID` como secretos del repositorio;
+- reautorizar o regenerar `META_ACCESS_TOKEN` si GitHub Actions muestra `API access blocked` en `/{ig-user-id}/media`.
 - reemplazar el token temporal por uno de larga duracion o renovarlo antes de que expire.
 - cuando TikTok apruebe `video.publish`, cargar `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` y `TIKTOK_REFRESH_TOKEN` como secretos del repositorio.
 
@@ -355,6 +357,7 @@ Requisitos visibles para TikTok Developers:
 - Terms of Service: `https://padelito-posadas.pages.dev/terms.html`
 - La homepage debe mostrar links activos a Privacy Policy y Terms of Service sin login.
 - Privacy y Terms deben mostrar favicon, icono de Padelito y titulo con el nombre de la app.
+- Si TikTok vuelve a borrarlo al pasar a Draft, subir de nuevo `public/app-icon-1024.png` antes de reenviar revision.
 
 Autorizacion TikTok:
 
