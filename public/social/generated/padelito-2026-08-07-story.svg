@@ -19,22 +19,22 @@
     <circle cx="718" cy="132" r="16" fill="#D9D9D9"/>
     <text x="92" y="116" font-size="34" font-weight="900" fill="#D7F21A">Padelito</text>
     <text x="92" y="153" font-size="24" font-weight="700" fill="#A6A6A6">comunidad de padel en Posadas</text>
-    <text x="92" y="258" font-size="70" font-weight="900" fill="#F5F5F5">Te falta 1 para</text><text x="92" y="340" font-size="70" font-weight="900" fill="#F5F5F5">jugar?</text>
-    <text x="96" y="525" font-size="34" font-weight="700" fill="#A6A6A6">Publica el partido y encontra</text><text x="96" y="569" font-size="34" font-weight="700" fill="#A6A6A6">alguien con ganas de sumarse.</text>
+    <text x="92" y="258" font-size="70" font-weight="900" fill="#F5F5F5">Queres jugar y no</text><text x="92" y="340" font-size="70" font-weight="900" fill="#F5F5F5">sabes a quien</text><text x="92" y="422" font-size="70" font-weight="900" fill="#F5F5F5">escribirle?</text>
+    <text x="96" y="525" font-size="34" font-weight="700" fill="#A6A6A6">Crea tu perfil y aparece para</text><text x="96" y="569" font-size="34" font-weight="700" fill="#A6A6A6">otros jugadores de Posadas.</text>
     <text x="96" y="690" font-size="30" font-weight="900" fill="#D7F21A">La app para dejar de perseguir gente por WhatsApp</text>
     <g filter="url(#shadow)">
       <rect x="82" y="950" width="916" height="388" rx="34" fill="#15181D" stroke="rgba(217,217,217,0.12)" stroke-width="2"/>
       <rect x="116" y="996" width="244" height="52" rx="26" fill="#D7F21A"/>
-      <text x="146" y="1031" font-size="25" font-weight="900" fill="#0F1115">Falta 1 jugador</text>
+      <text x="146" y="1031" font-size="25" font-weight="900" fill="#0F1115">Jugador disponible</text>
       
         <rect x="116" y="1120" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
-        <text x="144" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">Hoy 20:00</text>
+        <text x="144" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">Viernes</text>
         <rect x="526" y="1120" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
-        <text x="554" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">Club Norte</text>
+        <text x="554" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">18 a 22</text>
         <rect x="116" y="1212" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
-        <text x="144" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">5ta</text>
+        <text x="144" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">6ta</text>
         <rect x="526" y="1212" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
-        <text x="554" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">Reves</text>
+        <text x="554" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">Drive</text>
       <rect x="736" y="1245" width="188" height="56" rx="28" fill="#D7F21A"/>
       <text x="780" y="1282" font-size="24" font-weight="900" fill="#0F1115">Sumate</text>
     </g>
