@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="72%" cy="16%" r="78%">
+      <stop offset="0" stop-color="#243004"/>
+      <stop offset="0.38" stop-color="#101315"/>
+      <stop offset="1" stop-color="#0F1115"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="28" stdDeviation="36" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect width="1080" height="1920" fill="url(#glow)"/>
+    <path d="M0 1560 C260 1410 512 1670 1080 1490 L1080 1920 L0 1920 Z" fill="#14181E" opacity="0.92"/>
+    <circle cx="876" cy="132" r="34" fill="#D7F21A"/>
+    <circle cx="812" cy="132" r="16" fill="#D9D9D9"/>
+    <circle cx="765" cy="132" r="16" fill="#D9D9D9"/>
+    <circle cx="718" cy="132" r="16" fill="#D9D9D9"/>
+    <text x="92" y="116" font-size="34" font-weight="900" fill="#D7F21A">Padelito</text>
+    <text x="92" y="153" font-size="24" font-weight="700" fill="#A6A6A6">comunidad de padel en Posadas</text>
+    <text x="92" y="258" font-size="70" font-weight="900" fill="#F5F5F5">Tu grupo no</text><text x="92" y="340" font-size="70" font-weight="900" fill="#F5F5F5">siempre puede.</text>
+    <text x="96" y="525" font-size="34" font-weight="700" fill="#A6A6A6">Encontra otros jugadores</text><text x="96" y="569" font-size="34" font-weight="700" fill="#A6A6A6">cuando se cae alguien.</text>
+    <text x="96" y="690" font-size="30" font-weight="900" fill="#D7F21A">La app para dejar de perseguir gente por WhatsApp</text>
+    <g filter="url(#shadow)">
+      <rect x="82" y="950" width="916" height="388" rx="34" fill="#15181D" stroke="rgba(217,217,217,0.12)" stroke-width="2"/>
+      <rect x="116" y="996" width="244" height="52" rx="26" fill="#D7F21A"/>
+      <text x="146" y="1031" font-size="25" font-weight="900" fill="#0F1115">Plan B</text>
+      
+        <rect x="116" y="1120" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
+        <text x="144" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">Falta 1</text>
+        <rect x="526" y="1120" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
+        <text x="554" y="1156" font-size="26" font-weight="800" fill="#D9D9D9">Falta 2</text>
+        <rect x="116" y="1212" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
+        <text x="144" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">Mixto</text>
+        <rect x="526" y="1212" width="342" height="54" rx="27" fill="#20242B" stroke="rgba(217,217,217,0.12)"/>
+        <text x="554" y="1248" font-size="26" font-weight="800" fill="#D9D9D9">Practica</text>
+      <rect x="736" y="1245" width="188" height="56" rx="28" fill="#D7F21A"/>
+      <text x="780" y="1282" font-size="24" font-weight="900" fill="#0F1115">Sumate</text>
+    </g>
+    <text x="92" y="1698" font-size="44" font-weight="900" fill="#F5F5F5">Entra al perfil y registrate</text>
+    <text x="92" y="1752" font-size="30" font-weight="800" fill="#D7F21A">padelito-posadas.pages.dev</text>
+  </g>
+</svg>
