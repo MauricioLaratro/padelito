@@ -1,27 +1,27 @@
 {
-  "publicationDate": "2026-10-12",
-  "title": "Si jugas padel en Posadas, sumate.",
-  "caption": "Padelito necesita jugadores reales de Posadas para funcionar cada vez mejor. Si jugas, aunque sea de vez en cuando, registrate y carga tu nivel.\n\nEntra al perfil.\n\n#Padelito #Posadas #PadelPosadas #ComunidadPadel",
-  "imagePath": "/social/generated/padelito-2026-10-12.png",
-  "imageUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-12.png",
-  "storyImagePath": "/social/generated/padelito-2026-10-12-story.png",
-  "storyImageUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-12-story.png",
+  "publicationDate": "2026-10-13",
+  "title": "No todo es torneo.",
+  "caption": "Padelito tambien sirve para mover eventos sociales, practicas y juntadas de padel en Posadas. La comunidad crece cuando es facil enterarse.\n\nEntra al perfil.\n\n#Padelito #PadelPosadas #TercerTiempo #Misiones",
+  "imagePath": "/social/generated/padelito-2026-10-13.png",
+  "imageUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-13.png",
+  "storyImagePath": "/social/generated/padelito-2026-10-13-story.png",
+  "storyImageUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-13-story.png",
   "sceneImagePaths": [
-    "/social/generated/padelito-2026-10-12-scene-1.png",
-    "/social/generated/padelito-2026-10-12-scene-2.png",
-    "/social/generated/padelito-2026-10-12-scene-3.png",
-    "/social/generated/padelito-2026-10-12-scene-4.png"
+    "/social/generated/padelito-2026-10-13-scene-1.png",
+    "/social/generated/padelito-2026-10-13-scene-2.png",
+    "/social/generated/padelito-2026-10-13-scene-3.png",
+    "/social/generated/padelito-2026-10-13-scene-4.png"
   ],
-  "svgPath": "/social/generated/padelito-2026-10-12.svg",
-  "storySvgPath": "/social/generated/padelito-2026-10-12-story.svg",
+  "svgPath": "/social/generated/padelito-2026-10-13.svg",
+  "storySvgPath": "/social/generated/padelito-2026-10-13-story.svg",
   "sceneSvgPaths": [
-    "/social/generated/padelito-2026-10-12-scene-1.svg",
-    "/social/generated/padelito-2026-10-12-scene-2.svg",
-    "/social/generated/padelito-2026-10-12-scene-3.svg",
-    "/social/generated/padelito-2026-10-12-scene-4.svg"
+    "/social/generated/padelito-2026-10-13-scene-1.svg",
+    "/social/generated/padelito-2026-10-13-scene-2.svg",
+    "/social/generated/padelito-2026-10-13-scene-3.svg",
+    "/social/generated/padelito-2026-10-13-scene-4.svg"
   ],
-  "videoPath": "/social/generated/padelito-2026-10-12-reel.mp4",
-  "videoUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-12-reel.mp4",
+  "videoPath": "/social/generated/padelito-2026-10-13-reel.mp4",
+  "videoUrl": "https://raw.githubusercontent.com/MauricioLaratro/padelito/codex/base-mvp-local/public/social/generated/padelito-2026-10-13-reel.mp4",
   "siteUrl": "https://padelito-posadas.pages.dev",
   "channels": {
     "instagram": "padelito.arg",
